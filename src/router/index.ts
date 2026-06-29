@@ -37,7 +37,7 @@ const router = createRouter({
     // ── MODULE 1 : Personnel — RH ────────────────────────────────
     { path: '/hr/missions',           name: 'hr-missions',   component: () => import('../views/missions/MissionListView.vue'),  meta: { requiresAuth: true, layout: 'dashboard' } },
     { path: '/hr/expenses',           name: 'hr-expenses',   component: () => import('../views/expenses/ExpenseListView.vue'),  meta: { requiresAuth: true, layout: 'dashboard' } },
-    { path: '/hr/contracts',          name: 'hr-contracts',  component: PH, meta: { requiresAuth: true, title: 'Gestion des Contrats' } },
+    { path: '/hr/contracts', name: 'hr-contracts', component: () => import('../views/placeholders/PlaceholderView.vue'), meta: { requiresAuth: true, title: 'Gestion des Contrats' } },
     { path: '/hr/reports/statistics', name: 'hr-statistics', component: () => import('../views/reports/StatisticsView.vue'),    meta: { requiresAuth: true, layout: 'dashboard' } },
     { path: '/hr/planning',           name: 'hr-planning',   component: () => import('../views/employee/EmployeePlanningView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
 
@@ -111,7 +111,7 @@ router.beforeEach((to) => {
   if (auth.isLoggedIn) {
     if (to.path.startsWith('/hr') && auth.isEmployeeSide) return { path: '/employee' }
     if (to.path.startsWith('/employee') && auth.isHRSide) return { path: '/hr' }
-    if (auth.isHRSide && !onboarding.allStepsComplete && to.path !== '/onboarding') {
+    if ((auth.isAdmin || auth.isRH) && !onboarding.allStepsComplete && to.path !== '/onboarding') {
       return { path: '/onboarding' }
     }
   }

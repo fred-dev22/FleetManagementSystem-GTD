@@ -100,7 +100,7 @@
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue'
 import ModalShell from '../ui/ModalShell.vue'
-import { useSiteStore } from '../../stores/sites'
+import { useSitesStore } from '../../stores/sites'
 import type { TypeSite } from '../../types/index'
 
 const props = defineProps<{
@@ -113,7 +113,7 @@ const emit = defineEmits<{
   'saved': []
 }>()
 
-const siteStore = useSiteStore()
+const siteStore = useSitesStore()
 
 const form = reactive({
   code: '',

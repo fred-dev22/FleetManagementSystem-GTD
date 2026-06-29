@@ -384,7 +384,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, h, defineComponent } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   Pencil, ChevronDown, AlertTriangle, UserX,
@@ -397,15 +397,15 @@ import EmployeeFormModal from '../../components/employees/EmployeeFormModal.vue'
 import type { EmployeeStatus } from '../../types/index'
 
 // ── Sub-components ─────────────────────────────────────
-const InfoRow = {
+const InfoRow = defineComponent({
   props: ['label', 'value'],
-  template: `
-    <div class="flex justify-between gap-4 text-sm">
-      <dt class="text-gray-400 shrink-0">{{ label }}</dt>
-      <dd class="text-gray-800 font-medium text-right">{{ value ?? '—' }}</dd>
-    </div>
-  `,
-}
+  setup(props) {
+    return () => h('div', { class: 'flex justify-between gap-4 text-sm' }, [
+      h('dt', { class: 'text-gray-400 shrink-0' }, props.label),
+      h('dd', { class: 'text-gray-800 font-medium text-right' }, props.value ?? '—'),
+    ])
+  },
+})
 
 // ── Stores / Route ──────────────────────────────────────
 const route  = useRoute()

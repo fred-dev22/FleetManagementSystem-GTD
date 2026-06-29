@@ -162,11 +162,11 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useRemorqueStore } from '../../stores/remorques'
+import { useRemorquesStore } from '../../stores/remorques'
 
 const route = useRoute()
 const router = useRouter()
-const store = useRemorqueStore()
+const store = useRemorquesStore()
 
 // ── Mode detection ────────────────────────────────────────────────
 const remorqueId = computed(() => route.params.id as string | undefined)

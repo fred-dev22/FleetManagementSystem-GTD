@@ -131,14 +131,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Container, Plus, Search, Edit, Archive } from 'lucide-vue-next'
-import { useRemorqueStore } from '../../stores/remorques'
+import { useRemorquesStore } from '../../stores/remorques'
 import RemorqueFormModal from '../../components/fleet/RemorqueFormModal.vue'
 
 const router = useRouter()
-const store = useRemorqueStore()
+const store = useRemorquesStore()
 const showModal = ref(false)
 const editId = ref<string | undefined>(undefined)
 
@@ -149,9 +149,6 @@ const filterType = ref<string>('')
 const filterStatut = ref<string>('')
 const searchQuery = ref<string>('')
 
-onMounted(async () => {
-  await store.fetchRemorques()
-})
 
 // KPIs
 const kpiTotal = computed(() => store.remorques.length)

@@ -4,13 +4,7 @@
     <!-- ── En-tête minimal ── -->
     <header class="h-[60px] shrink-0 bg-card border-b border-border shadow-[0_1px_4px_rgba(0,0,0,0.06)] px-10 flex items-center justify-between max-[480px]:px-4">
       <div class="flex items-center">
-        <svg class="h-[34px] w-auto" viewBox="0 0 120 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="120" height="32" rx="4" fill="#0B4480"/>
-          <text x="10" y="22" font-family="Arial,sans-serif" font-size="16" font-weight="800" fill="#FFFFFF" letter-spacing="1">GTD</text>
-          <rect x="58" y="6" width="2" height="20" rx="1" fill="#0072C5"/>
-          <text x="65" y="15" font-family="Arial,sans-serif" font-size="7" font-weight="600" fill="#E6201C" letter-spacing="0.5">GROUPE DE</text>
-          <text x="65" y="24" font-family="Arial,sans-serif" font-size="7" font-weight="600" fill="#FFFFFF" letter-spacing="0.5">TRANSPORT</text>
-        </svg>
+        <img src="@/assets/logo-gtd.png" class="h-[34px] w-auto object-contain bg-white rounded px-1" alt="GTD" />
         <span class="w-px h-5 mx-3.5 bg-border" aria-hidden="true"></span>
         <span class="text-base font-extrabold tracking-[0.05em] text-foreground">GTD Fleet</span>
       </div>
@@ -61,11 +55,6 @@
             <template v-if="ob.currentStep === 1">
               <div :class="cardBody">
                 <WorkingDaysConfig />
-                <div v-if="calendarStore.daysPerWeek > 0" class="bg-success-bg border border-success rounded-lg px-4 py-2.5 flex items-center gap-2 text-[13px] text-success">
-                  <CircleCheck class="w-4 h-4" />
-                  {{ calendarStore.daysPerWeek }} jour{{ calendarStore.daysPerWeek > 1 ? 's' : '' }} configuré{{ calendarStore.daysPerWeek > 1 ? 's' : '' }}
-                  · {{ calendarStore.formatMinutes(calendarStore.weeklyMinutes) }} par semaine
-                </div>
               </div>
               <div :class="[cardFoot, 'justify-end']">
                 <button :class="btnPrimary" :disabled="calendarStore.daysPerWeek === 0" @click="ob.nextStep()">Continuer →</button>
@@ -238,8 +227,8 @@ function entTypeBadge(type: string): string {
 
 // Snapshot des IDs pré-existants (mock data) — pris une seule fois au montage
 // Les entités/employés créés PENDANT le wizard ne sont pas dans ces sets → ils apparaissent
-let preexistingEntityIds   = new Set<string>()
-let preexistingEmployeeIds = new Set<string>()
+let preexistingEntityIds    = new Set<string>()
+const wizardCreatedEmployeeIds = ref<Set<string>>(new Set())
 
 // Vérification auth manuelle (la route n'a pas requiresAuth pour éviter les boucles)
 onMounted(() => {
@@ -250,8 +239,7 @@ onMounted(() => {
   empStore.ensureDefaultEmployee()
 
   // Snapshot : tout ce qui est déjà là est « mock » → caché dans le wizard
-  preexistingEntityIds   = new Set(entityStore.entities.map(e => e.id))
-  preexistingEmployeeIds = new Set(empStore.employees.map(e => e.id))
+  preexistingEntityIds = new Set(entityStore.entities.map(e => e.id))
 })
 
 // ── Isolation démo ───────────────────────────────────────────────────
@@ -260,10 +248,10 @@ function isVisibleEntity(e: Entity): boolean {
   return e.id === 'e1' || !preexistingEntityIds.has(e.id)
 }
 
-// Étape 3 : n'afficher que l'employé RH connecté + employés créés PENDANT le wizard
+// Étape 3 : n'afficher que le directeur connecté + employés ajoutés PENDANT le wizard
 const obEmployees = computed<Employee[]>(() =>
   empStore.employees.filter(e =>
-    e.id === empStore.currentUserEmployee?.id || !preexistingEmployeeIds.has(e.id)
+    e.id === empStore.currentUserEmployee?.id || wizardCreatedEmployeeIds.value.has(e.id)
   )
 )
 

@@ -255,12 +255,12 @@
 import { ref, computed } from 'vue'
 import { useAffectationsChauffeursStore } from '../../stores/affectationsChauffeurs'
 import { useTracteurStore } from '../../stores/tracteurs'
-import { useEmployeesStore } from '../../stores/employees'
+import { useEmployeeStore } from '../../stores/employees'
 import type { AffectationChauffeur } from '../../types/index'
 
 const affectationStore = useAffectationsChauffeursStore()
 const tracteurStore = useTracteurStore()
-const employeesStore = useEmployeesStore()
+const employeesStore = useEmployeeStore()
 
 // ── State ──────────────────────────────────────────────────────────
 const showHistorique = ref(false)

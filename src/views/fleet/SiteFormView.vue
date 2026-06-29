@@ -163,11 +163,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { MapPinned, Save } from 'lucide-vue-next'
-import { useSiteStore } from '../../stores/sites'
+import { useSitesStore } from '../../stores/sites'
 
 const router = useRouter()
 const route = useRoute()
-const siteStore = useSiteStore()
+const siteStore = useSitesStore()
 
 const isEdit = computed(() => !!route.params.id)
 const codeError = ref('')

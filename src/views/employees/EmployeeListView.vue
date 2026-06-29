@@ -244,9 +244,9 @@ import { ListPageLayout } from '../../components'
 import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
 import EmployeeFormModal from '../../components/employees/EmployeeFormModal.vue'
 import * as L from '../../lib/listClasses'
-import { useEmployeesStore } from '../../stores/employees'
+import { useEmployeeStore } from '../../stores/employees'
 
-const store = useEmployeesStore()
+const store = useEmployeeStore()
 
 // ── KPI style tokens ──────────────────────────────────────────────────────────
 const kpiItem = 'bg-card border border-border rounded-lg px-3.5 py-3 flex items-center gap-3'

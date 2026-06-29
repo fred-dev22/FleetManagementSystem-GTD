@@ -140,10 +140,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { MapPinned, Plus } from 'lucide-vue-next'
-import { useSiteStore } from '../../stores/sites'
+import { useSitesStore } from '../../stores/sites'
 import SiteFormModal from '../../components/fleet/SiteFormModal.vue'
 
-const siteStore = useSiteStore()
+const siteStore = useSitesStore()
 const showModal = ref(false)
 const editId = ref<string | undefined>(undefined)
 
