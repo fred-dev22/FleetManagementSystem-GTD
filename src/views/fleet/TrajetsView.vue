@@ -1,114 +1,207 @@
 <template>
-  <div class="trajets-view">
-    <div class="page-header">
-      <h1>Historique des Trajets</h1>
-      <button class="btn-export" @click="exportCSV">
-        <span class="icon">⬇</span> Exporter CSV
+  <ListPageLayout
+    title="Historique des Trajets"
+    :subtitle="`${filteredTrajets.length} trajet(s) trouvé(s)`"
+    :columns="columns"
+    :items="pageItems"
+    :total="totalCount"
+    :total-text="`${totalCount} trajet(s)`"
+    search-placeholder="Rechercher par plaque, chauffeur ou site…"
+    scope-label="Tracteur :"
+    :scope-options="tracteurOptions"
+    v-model:scope="filterTracteur"
+    v-model:search-query="searchQuery"
+    v-model:sort-key="sortKey"
+    v-model:sort-dir="sortDir"
+    v-model:page="page"
+    v-model:page-size="pageSize"
+    @reset-filters="resetFilters"
+    @open-card="(e) => openDetail(e.id)"
+  >
+    <template #header-actions>
+      <button :class="L.btnOutline" @click="exportCSV">
+        <Download class="w-4 h-4" /> Exporter CSV
       </button>
-    </div>
+    </template>
 
-    <!-- Filter bar -->
-    <div class="filter-bar">
-      <div class="filter-group">
-        <label>Tracteur</label>
-        <select v-model="filterTracteur">
-          <option value="">Tous les tracteurs</option>
-          <option v-for="t in tracteurOptions" :key="t" :value="t">{{ t }}</option>
-        </select>
+    <template #above-table>
+      <div class="grid grid-cols-4 gap-2.5 mb-3.5 max-md:grid-cols-2">
+        <div :class="kpiItem"><div :class="kpiIcon" class="bg-primary/10"><Route class="w-[18px] h-[18px] text-primary" /></div><div><div :class="kpiVal">{{ mockTrajets.length }}</div><div :class="kpiLbl">Total trajets</div></div></div>
+        <div :class="kpiItem"><div :class="kpiIcon" class="bg-success-bg"><Gauge class="w-[18px] h-[18px] text-success" /></div><div><div :class="kpiVal">{{ totalKm.toLocaleString('fr-FR') }}</div><div :class="kpiLbl">km parcourus</div></div></div>
+        <div :class="kpiItem"><div :class="kpiIcon" class="bg-primary/10"><Truck class="w-[18px] h-[18px] text-primary" /></div><div><div :class="kpiVal">{{ uniqueTracteurs }}</div><div :class="kpiLbl">Tracteurs actifs</div></div></div>
+        <div :class="kpiItem"><div :class="kpiIcon" class="bg-warning-bg"><Clock class="w-[18px] h-[18px] text-warning" /></div><div><div :class="kpiVal">{{ avgDuree }}</div><div :class="kpiLbl">Durée moy.</div></div></div>
       </div>
-      <div class="filter-group">
-        <label>Du</label>
-        <input type="date" v-model="filterDateFrom" />
-      </div>
-      <div class="filter-group">
-        <label>Au</label>
-        <input type="date" v-model="filterDateTo" />
-      </div>
-      <div class="filter-group">
-        <label>Site traversé</label>
-        <input type="text" v-model="filterSite" placeholder="Rechercher un site..." />
-      </div>
-      <button class="btn-reset" @click="resetFilters">Réinitialiser</button>
-    </div>
+    </template>
 
-    <!-- Results table -->
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Tracteur</th>
-            <th>Chauffeur</th>
-            <th>Début</th>
-            <th>Fin</th>
-            <th>Distance</th>
-            <th>Sites traversés</th>
-            <th>Durée</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="trajet in filteredTrajets"
-            :key="trajet.id"
-            :class="{ selected: selectedTrajet?.id === trajet.id }"
-            @click="selectTrajet(trajet)"
-            style="cursor: pointer;"
-          >
-            <td><strong>{{ trajet.tracteurPlaque }}</strong></td>
-            <td>{{ trajet.chauffeurNom }}</td>
-            <td>{{ formatDateTime(trajet.dateDebut) }}</td>
-            <td>{{ formatDateTime(trajet.dateFin) }}</td>
-            <td>{{ trajet.distance }} km</td>
-            <td>
-              <span
-                v-for="site in trajet.sitesTraverses"
-                :key="site"
-                class="badge-site"
-              >{{ site }}</span>
-            </td>
-            <td>{{ computeDuree(trajet.dateDebut, trajet.dateFin) }}</td>
-          </tr>
-          <tr v-if="filteredTrajets.length === 0">
-            <td colspan="7" class="empty-row">Aucun trajet trouvé pour les filtres sélectionnés.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Detail panel -->
-    <div v-if="selectedTrajet" class="detail-panel">
-      <div class="detail-header">
-        <h2>Détail du trajet — {{ selectedTrajet.tracteurPlaque }}</h2>
-        <button class="btn-close" @click="selectedTrajet = null">✕ Fermer</button>
+    <template #filters>
+      <div :class="L.fpField">
+        <label :class="L.fpFieldLabel">Du</label>
+        <input type="date" v-model="filterDateFrom" :class="L.fpSelect" />
       </div>
-      <div class="detail-body">
-        <div class="map-placeholder">
-          <div class="map-inner">
-            <span class="map-icon">🗺</span>
-            <p>Carte GPS non disponible</p>
-            <p class="map-sub">Connecter le service cartographique pour afficher le tracé</p>
+      <div :class="L.fpField">
+        <label :class="L.fpFieldLabel">Au</label>
+        <input type="date" v-model="filterDateTo" :class="L.fpSelect" />
+      </div>
+      <button class="mt-auto py-[7px] bg-transparent border-0 text-xs text-muted-foreground cursor-pointer text-left hover:text-primary" @click="resetFilters">
+        Réinitialiser
+      </button>
+    </template>
+
+    <!-- Colonnes personnalisées -->
+    <template #cell-tracteurPlaque="{ item }">
+      <span class="text-[11px] font-bold px-[7px] py-0.5 rounded bg-primary/10 text-primary font-mono tracking-[0.04em]">{{ item.tracteurPlaque }}</span>
+    </template>
+    <template #cell-chauffeurNom="{ item }">
+      <span class="font-medium text-foreground">{{ item.chauffeurNom }}</span>
+    </template>
+    <template #cell-dateDebut="{ item }">
+      <span class="text-foreground text-xs">{{ formatDateTime(item.dateDebut) }}</span>
+    </template>
+    <template #cell-dateFin="{ item }">
+      <span class="text-foreground text-xs">{{ formatDateTime(item.dateFin) }}</span>
+    </template>
+    <template #cell-distance="{ item }">
+      <span class="font-semibold text-foreground">{{ item.distance }}</span>
+      <span class="text-muted-foreground text-xs"> km</span>
+    </template>
+    <template #cell-sitesTraverses="{ item }">
+      <div class="flex flex-wrap gap-1">
+        <span v-for="site in item.sitesTraverses" :key="site" class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-primary/10 text-primary">{{ site }}</span>
+      </div>
+    </template>
+    <template #cell-duree="{ item }">
+      <span class="text-muted-foreground text-xs">{{ computeDuree(item.dateDebut, item.dateFin) }}</span>
+    </template>
+
+    <!-- Panneau latéral rapide -->
+    <template #details-panel="{ item }">
+      <div class="flex flex-col gap-3">
+        <div>
+          <span class="text-[11px] font-bold px-[7px] py-0.5 rounded bg-primary/10 text-primary font-mono tracking-[0.04em]">{{ item.tracteurPlaque }}</span>
+          <div class="font-medium text-foreground mt-1.5">{{ item.chauffeurNom }}</div>
+          <div class="text-xs text-muted-foreground">{{ formatDateTime(item.dateDebut) }}</div>
+        </div>
+        <div class="grid grid-cols-2 gap-2 text-[12px]">
+          <div><div class="text-muted-foreground text-[11px]">Distance</div><span class="font-semibold">{{ item.distance }} km</span></div>
+          <div><div class="text-muted-foreground text-[11px]">Durée</div>{{ computeDuree(item.dateDebut, item.dateFin) }}</div>
+        </div>
+        <div>
+          <div class="text-muted-foreground text-[11px] mb-1">Sites traversés</div>
+          <div class="flex flex-wrap gap-1">
+            <span v-for="site in item.sitesTraverses" :key="site" class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-primary/10 text-primary">{{ site }}</span>
           </div>
         </div>
-        <div class="waypoints">
-          <h3>Points GPS principaux</h3>
-          <div class="meta-row">
-            <span><strong>Chauffeur :</strong> {{ selectedTrajet.chauffeurNom }}</span>
-            <span><strong>Distance :</strong> {{ selectedTrajet.distance }} km</span>
-            <span><strong>Durée :</strong> {{ computeDuree(selectedTrajet.dateDebut, selectedTrajet.dateFin) }}</span>
+        <button :class="L.btnPrimary" class="w-full justify-center" @click="openDetail(item.id)">
+          Voir le détail
+        </button>
+      </div>
+    </template>
+
+    <template #empty>
+      <Route class="w-8 h-8" />
+      <p class="text-[13px]">Aucun trajet trouvé</p>
+    </template>
+  </ListPageLayout>
+
+  <!-- Modal détail trajet -->
+  <Teleport to="body">
+    <div v-if="selectedTrajet" class="fixed inset-0 bg-black/40 flex items-center justify-center z-[900]" @click.self="selectedTrajet = null">
+      <div class="bg-card rounded-xl w-full max-w-2xl shadow-2xl border border-border overflow-hidden max-h-[90vh] flex flex-col">
+        <!-- Header -->
+        <div class="flex items-center justify-between px-5 py-4 border-b border-border bg-primary">
+          <div class="flex items-center gap-3">
+            <Route class="w-4 h-4 text-white/70" />
+            <div>
+              <div class="text-white font-semibold text-[14px]">Trajet — {{ selectedTrajet.tracteurPlaque }}</div>
+              <div class="text-white/70 text-xs">{{ selectedTrajet.id }} · {{ selectedTrajet.chauffeurNom }}</div>
+            </div>
           </div>
-          <ol class="waypoint-list">
-            <li v-for="(wp, idx) in getWaypoints(selectedTrajet)" :key="idx">
-              <span class="wp-time">{{ wp.time }}</span>
-              <span class="wp-label">{{ wp.label }}</span>
-            </li>
-          </ol>
+          <button class="text-white/70 hover:text-white" @click="selectedTrajet = null">
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="overflow-y-auto flex-1">
+          <!-- KPIs -->
+          <div class="grid grid-cols-3 gap-0 border-b border-border">
+            <div class="flex flex-col gap-0.5 px-5 py-4 border-r border-border">
+              <span class="text-[11px] text-muted-foreground uppercase tracking-wide">Distance</span>
+              <span class="text-[22px] font-bold text-foreground leading-none">{{ selectedTrajet.distance }}</span>
+              <span class="text-xs text-muted-foreground">km parcourus</span>
+            </div>
+            <div class="flex flex-col gap-0.5 px-5 py-4 border-r border-border">
+              <span class="text-[11px] text-muted-foreground uppercase tracking-wide">Durée</span>
+              <span class="text-[22px] font-bold text-foreground leading-none">{{ computeDuree(selectedTrajet.dateDebut, selectedTrajet.dateFin) }}</span>
+              <span class="text-xs text-muted-foreground">temps de trajet</span>
+            </div>
+            <div class="flex flex-col gap-0.5 px-5 py-4">
+              <span class="text-[11px] text-muted-foreground uppercase tracking-wide">Sites</span>
+              <span class="text-[22px] font-bold text-foreground leading-none">{{ selectedTrajet.sitesTraverses.length }}</span>
+              <span class="text-xs text-muted-foreground">points traversés</span>
+            </div>
+          </div>
+
+          <!-- Carte placeholder + itinéraire -->
+          <div class="grid grid-cols-2 border-b border-border max-md:grid-cols-1">
+            <!-- Carte -->
+            <div class="flex flex-col items-center justify-center gap-3 py-10 bg-primary/5 border-r border-border max-md:border-r-0 max-md:border-b">
+              <MapPin class="w-10 h-10 text-primary/40" />
+              <div class="text-center">
+                <p class="text-[13px] font-medium text-foreground">Tracé GPS</p>
+                <p class="text-xs text-muted-foreground mt-0.5">Disponible via le module carte en temps réel</p>
+              </div>
+            </div>
+
+            <!-- Itinéraire -->
+            <div class="px-5 py-4">
+              <p class="text-[12px] font-semibold text-foreground mb-3 uppercase tracking-wide">Itinéraire</p>
+              <ol class="relative pl-5 border-l-2 border-primary/30">
+                <li v-for="(wp, idx) in getWaypoints(selectedTrajet)" :key="idx" class="relative mb-4 last:mb-0">
+                  <div class="absolute -left-[21px] w-3 h-3 rounded-full border-2 border-primary" :class="idx === 0 || idx === selectedTrajet.sitesTraverses.length - 1 ? 'bg-primary' : 'bg-card'"></div>
+                  <div class="text-[11px] text-muted-foreground">{{ wp.time }}</div>
+                  <div class="text-[13px] font-semibold text-foreground">{{ wp.label }}</div>
+                </li>
+              </ol>
+            </div>
+          </div>
+
+          <!-- Détails -->
+          <div class="grid grid-cols-2 gap-4 px-5 py-4 text-[13px]">
+            <div class="flex flex-col gap-0.5">
+              <span class="text-[11px] text-muted-foreground uppercase tracking-wide">Départ</span>
+              <span class="font-medium text-foreground">{{ formatDateTime(selectedTrajet.dateDebut) }}</span>
+            </div>
+            <div class="flex flex-col gap-0.5">
+              <span class="text-[11px] text-muted-foreground uppercase tracking-wide">Arrivée</span>
+              <span class="font-medium text-foreground">{{ formatDateTime(selectedTrajet.dateFin) }}</span>
+            </div>
+            <div class="flex flex-col gap-0.5">
+              <span class="text-[11px] text-muted-foreground uppercase tracking-wide">Chauffeur</span>
+              <span class="font-medium text-foreground">{{ selectedTrajet.chauffeurNom }}</span>
+            </div>
+            <div class="flex flex-col gap-0.5">
+              <span class="text-[11px] text-muted-foreground uppercase tracking-wide">Tracteur</span>
+              <span class="font-mono font-bold text-primary text-[12px]">{{ selectedTrajet.tracteurPlaque }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex justify-end gap-2 px-5 py-3 border-t border-border bg-muted/30">
+          <button :class="L.btnOutline" @click="selectedTrajet = null">Fermer</button>
         </div>
       </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { Download, Route, Gauge, Truck, Clock, MapPin, X } from 'lucide-vue-next'
+import { ListPageLayout } from '../../components'
+import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
+import * as L from '../../lib/listClasses'
 
 interface Trajet {
   id: string
@@ -122,457 +215,100 @@ interface Trajet {
 }
 
 const mockTrajets: Trajet[] = [
-  {
-    id: 'TRJ-001',
-    tracteurId: 'TRC-001',
-    tracteurPlaque: '1234 TAN A',
-    chauffeurNom: 'Rakoto Jean',
-    dateDebut: '2026-06-20T06:15:00',
-    dateFin: '2026-06-20T14:30:00',
-    distance: 312,
-    sitesTraverses: ['TNR', 'AMBATONDRAZAKA', 'TOAMASINA'],
-  },
-  {
-    id: 'TRJ-002',
-    tracteurId: 'TRC-002',
-    tracteurPlaque: '2345 TNR B',
-    chauffeurNom: 'Andriantsoa Paul',
-    dateDebut: '2026-06-21T05:00:00',
-    dateFin: '2026-06-21T17:45:00',
-    distance: 487,
-    sitesTraverses: ['TNR', 'ANTSIRABE', 'FIANARANTSOA'],
-  },
-  {
-    id: 'TRJ-003',
-    tracteurId: 'TRC-003',
-    tracteurPlaque: '3456 TNR C',
-    chauffeurNom: 'Razafy Michel',
-    dateDebut: '2026-06-22T07:30:00',
-    dateFin: '2026-06-22T12:10:00',
-    distance: 178,
-    sitesTraverses: ['TNR', 'MAHITSY', 'MIARINARIVO'],
-  },
-  {
-    id: 'TRJ-004',
-    tracteurId: 'TRC-001',
-    tracteurPlaque: '1234 TAN A',
-    chauffeurNom: 'Rakoto Jean',
-    dateDebut: '2026-06-23T04:45:00',
-    dateFin: '2026-06-23T16:20:00',
-    distance: 524,
-    sitesTraverses: ['TOAMASINA', 'BRICKAVILLE', 'MORAMANGA', 'TNR'],
-  },
-  {
-    id: 'TRJ-005',
-    tracteurId: 'TRC-004',
-    tracteurPlaque: '4567 TNR D',
-    chauffeurNom: 'Rasolofo Hery',
-    dateDebut: '2026-06-24T06:00:00',
-    dateFin: '2026-06-24T19:30:00',
-    distance: 601,
-    sitesTraverses: ['TNR', 'MIANDRIVAZO', 'MORONDAVA'],
-  },
-  {
-    id: 'TRJ-006',
-    tracteurId: 'TRC-005',
-    tracteurPlaque: '5678 TNR E',
-    chauffeurNom: 'Randria Luc',
-    dateDebut: '2026-06-25T08:00:00',
-    dateFin: '2026-06-25T11:50:00',
-    distance: 142,
-    sitesTraverses: ['TNR', 'AMBOHIDRATRIMO', 'IVATO'],
-  },
-  {
-    id: 'TRJ-007',
-    tracteurId: 'TRC-002',
-    tracteurPlaque: '2345 TNR B',
-    chauffeurNom: 'Andriantsoa Paul',
-    dateDebut: '2026-06-26T05:30:00',
-    dateFin: '2026-06-26T14:00:00',
-    distance: 396,
-    sitesTraverses: ['FIANARANTSOA', 'IHOSY', 'TOLIARA'],
-  },
-  {
-    id: 'TRJ-008',
-    tracteurId: 'TRC-003',
-    tracteurPlaque: '3456 TNR C',
-    chauffeurNom: 'Razafy Michel',
-    dateDebut: '2026-06-27T07:00:00',
-    dateFin: '2026-06-27T10:45:00',
-    distance: 165,
-    sitesTraverses: ['TNR', 'ANJOZOROBE'],
-  },
+  { id: 'TRJ-001', tracteurId: 'TRC-001', tracteurPlaque: '1234 TAN A', chauffeurNom: 'Rakoto Jean',       dateDebut: '2026-06-20T06:15:00', dateFin: '2026-06-20T14:30:00', distance: 312, sitesTraverses: ['TNR', 'AMBATONDRAZAKA', 'TOAMASINA'] },
+  { id: 'TRJ-002', tracteurId: 'TRC-002', tracteurPlaque: '2345 TNR B', chauffeurNom: 'Andriantsoa Paul', dateDebut: '2026-06-21T05:00:00', dateFin: '2026-06-21T17:45:00', distance: 487, sitesTraverses: ['TNR', 'ANTSIRABE', 'FIANARANTSOA'] },
+  { id: 'TRJ-003', tracteurId: 'TRC-003', tracteurPlaque: '3456 TNR C', chauffeurNom: 'Razafy Michel',    dateDebut: '2026-06-22T07:30:00', dateFin: '2026-06-22T12:10:00', distance: 178, sitesTraverses: ['TNR', 'MAHITSY', 'MIARINARIVO'] },
+  { id: 'TRJ-004', tracteurId: 'TRC-001', tracteurPlaque: '1234 TAN A', chauffeurNom: 'Rakoto Jean',       dateDebut: '2026-06-23T04:45:00', dateFin: '2026-06-23T16:20:00', distance: 524, sitesTraverses: ['TOAMASINA', 'BRICKAVILLE', 'MORAMANGA', 'TNR'] },
+  { id: 'TRJ-005', tracteurId: 'TRC-004', tracteurPlaque: '4567 TNR D', chauffeurNom: 'Rasolofo Hery',    dateDebut: '2026-06-24T06:00:00', dateFin: '2026-06-24T19:30:00', distance: 601, sitesTraverses: ['TNR', 'MIANDRIVAZO', 'MORONDAVA'] },
+  { id: 'TRJ-006', tracteurId: 'TRC-005', tracteurPlaque: '5678 TNR E', chauffeurNom: 'Randria Luc',      dateDebut: '2026-06-25T08:00:00', dateFin: '2026-06-25T11:50:00', distance: 142, sitesTraverses: ['TNR', 'AMBOHIDRATRIMO', 'IVATO'] },
+  { id: 'TRJ-007', tracteurId: 'TRC-002', tracteurPlaque: '2345 TNR B', chauffeurNom: 'Andriantsoa Paul', dateDebut: '2026-06-26T05:30:00', dateFin: '2026-06-26T14:00:00', distance: 396, sitesTraverses: ['FIANARANTSOA', 'IHOSY', 'TOLIARA'] },
+  { id: 'TRJ-008', tracteurId: 'TRC-003', tracteurPlaque: '3456 TNR C', chauffeurNom: 'Razafy Michel',    dateDebut: '2026-06-27T07:00:00', dateFin: '2026-06-27T10:45:00', distance: 165, sitesTraverses: ['TNR', 'ANJOZOROBE'] },
 ]
 
+const kpiItem = 'bg-card border border-border rounded-lg px-3.5 py-3 flex items-center gap-3'
+const kpiIcon = 'w-9 h-9 rounded-lg flex items-center justify-center shrink-0'
+const kpiVal  = 'text-[22px] font-bold leading-none'
+const kpiLbl  = 'text-xs text-muted-foreground mt-0.5'
+
+const selectedTrajet = ref<Trajet | null>(null)
 const filterTracteur = ref('')
 const filterDateFrom = ref('')
-const filterDateTo = ref('')
-const filterSite = ref('')
-const selectedTrajet = ref<Trajet | null>(null)
+const filterDateTo   = ref('')
+const searchQuery    = ref('')
+const sortKey        = ref('')
+const sortDir        = ref<'asc' | 'desc'>('asc')
+const page           = ref(1)
+const pageSize       = ref(15)
 
-const tracteurOptions = computed(() => {
-  return [...new Set(mockTrajets.map((t) => t.tracteurPlaque))].sort()
-})
+const tracteurOptions = computed(() => [
+  { value: '', label: 'Tous' },
+  ...[...new Set(mockTrajets.map(t => t.tracteurPlaque))].sort().map(p => ({ value: p, label: p })),
+])
+
+const columns = computed<ListColumn[]>(() => [
+  { key: 'tracteurPlaque', label: 'Tracteur',    sortable: true, width: 130 },
+  { key: 'chauffeurNom',   label: 'Chauffeur',   sortable: true, width: 160 },
+  { key: 'dateDebut',      label: 'Départ',       sortable: true, width: 140 },
+  { key: 'dateFin',        label: 'Arrivée',      width: 140 },
+  { key: 'distance',       label: 'Distance',     sortable: true, align: 'center', width: 100 },
+  { key: 'sitesTraverses', label: 'Sites traversés', width: 260 },
+  { key: 'duree',          label: 'Durée',        align: 'center', width: 90 },
+])
+
+watch([filterTracteur, filterDateFrom, filterDateTo, searchQuery, pageSize], () => { page.value = 1 })
+function resetFilters() { filterTracteur.value = ''; filterDateFrom.value = ''; filterDateTo.value = ''; searchQuery.value = ''; page.value = 1 }
 
 const filteredTrajets = computed(() => {
-  return mockTrajets.filter((t) => {
+  return mockTrajets.filter(t => {
     if (filterTracteur.value && t.tracteurPlaque !== filterTracteur.value) return false
     if (filterDateFrom.value && t.dateDebut < filterDateFrom.value) return false
     if (filterDateTo.value && t.dateFin > filterDateTo.value + 'T23:59:59') return false
-    if (filterSite.value) {
-      const q = filterSite.value.toLowerCase()
-      if (!t.sitesTraverses.some((s) => s.toLowerCase().includes(q))) return false
+    if (searchQuery.value) {
+      const q = searchQuery.value.toLowerCase()
+      if (!t.tracteurPlaque.toLowerCase().includes(q) && !t.chauffeurNom.toLowerCase().includes(q) && !t.sitesTraverses.some(s => s.toLowerCase().includes(q))) return false
     }
     return true
   })
 })
 
-function formatDateTime(dt: string): string {
-  const d = new Date(dt)
-  return d.toLocaleString('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
+const totalCount     = computed(() => filteredTrajets.value.length)
+const pageItems      = computed(() => { const s = (page.value - 1) * pageSize.value; return filteredTrajets.value.slice(s, s + pageSize.value) })
+const totalKm        = computed(() => mockTrajets.reduce((acc, t) => acc + t.distance, 0))
+const uniqueTracteurs = computed(() => new Set(mockTrajets.map(t => t.tracteurId)).size)
+const avgDuree       = computed(() => {
+  if (!mockTrajets.length) return '—'
+  const avgMs = mockTrajets.reduce((acc, t) => acc + (new Date(t.dateFin).getTime() - new Date(t.dateDebut).getTime()), 0) / mockTrajets.length
+  const h = Math.floor(avgMs / 3600000); const m = Math.floor((avgMs % 3600000) / 60000)
+  return `${h}h${m.toString().padStart(2, '0')}`
+})
 
-function computeDuree(debut: string, fin: string): string {
+function formatDateTime(dt: string) {
+  return new Date(dt).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
+function computeDuree(debut: string, fin: string) {
   const diff = new Date(fin).getTime() - new Date(debut).getTime()
-  const h = Math.floor(diff / 3600000)
-  const m = Math.floor((diff % 3600000) / 60000)
+  const h = Math.floor(diff / 3600000); const m = Math.floor((diff % 3600000) / 60000)
   return `${h}h ${m.toString().padStart(2, '0')}min`
 }
-
-function selectTrajet(t: Trajet) {
-  selectedTrajet.value = selectedTrajet.value?.id === t.id ? null : t
-}
-
-function resetFilters() {
-  filterTracteur.value = ''
-  filterDateFrom.value = ''
-  filterDateTo.value = ''
-  filterSite.value = ''
-}
-
 function getWaypoints(t: Trajet) {
-  const depart = new Date(t.dateDebut)
-  const arrive = new Date(t.dateFin)
-  const total = arrive.getTime() - depart.getTime()
-  const sites = t.sitesTraverses
-
-  return sites.map((site, idx) => {
-    const ratio = idx / (sites.length - 1 || 1)
+  const depart = new Date(t.dateDebut); const arrive = new Date(t.dateFin); const total = arrive.getTime() - depart.getTime()
+  return t.sitesTraverses.map((site, idx) => {
+    const ratio = idx / (t.sitesTraverses.length - 1 || 1)
     const ts = new Date(depart.getTime() + ratio * total)
-    return {
-      time: ts.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-      label: site,
-    }
+    return { time: ts.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }), label: site }
   })
+}
+
+function openDetail(id: string) {
+  selectedTrajet.value = mockTrajets.find(t => t.id === id) ?? null
 }
 
 function exportCSV() {
   const headers = ['ID', 'Tracteur', 'Chauffeur', 'Début', 'Fin', 'Distance (km)', 'Sites traversés', 'Durée']
-  const rows = filteredTrajets.value.map((t) => [
-    t.id,
-    t.tracteurPlaque,
-    t.chauffeurNom,
-    t.dateDebut,
-    t.dateFin,
-    t.distance,
-    t.sitesTraverses.join(' | '),
-    computeDuree(t.dateDebut, t.dateFin),
-  ])
-  const csv = [headers, ...rows].map((r) => r.join(';')).join('\n')
+  const rows = filteredTrajets.value.map(t => [t.id, t.tracteurPlaque, t.chauffeurNom, t.dateDebut, t.dateFin, t.distance, t.sitesTraverses.join(' | '), computeDuree(t.dateDebut, t.dateFin)])
+  const csv = [headers, ...rows].map(r => r.join(';')).join('\n')
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = 'trajets_gtd.csv'
-  a.click()
-  URL.revokeObjectURL(url)
+  const url = URL.createObjectURL(blob); const a = document.createElement('a')
+  a.href = url; a.download = 'trajets_gtd.csv'; a.click(); URL.revokeObjectURL(url)
 }
 </script>
-
-<style scoped>
-.trajets-view {
-  padding: 24px;
-  font-family: inherit;
-}
-
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-}
-
-.page-header h1 {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: #1a1a2e;
-}
-
-.btn-export {
-  background: #16213e;
-  color: #fff;
-  border: none;
-  padding: 8px 18px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.btn-export:hover {
-  background: #0f3460;
-}
-
-.filter-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: flex-end;
-  background: #f8f9fc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 20px;
-}
-
-.filter-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 160px;
-}
-
-.filter-group label {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.filter-group select,
-.filter-group input {
-  padding: 7px 10px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  background: #fff;
-}
-
-.btn-reset {
-  background: #e2e8f0;
-  border: none;
-  padding: 7px 14px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.88rem;
-  color: #475569;
-  align-self: flex-end;
-}
-
-.btn-reset:hover {
-  background: #cbd5e1;
-}
-
-.table-container {
-  overflow-x: auto;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
-}
-
-thead th {
-  background: #1a1a2e;
-  color: #fff;
-  padding: 12px 14px;
-  text-align: left;
-  font-weight: 600;
-  font-size: 0.83rem;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-tbody tr {
-  border-bottom: 1px solid #f1f5f9;
-  transition: background 0.15s;
-}
-
-tbody tr:hover {
-  background: #f0f4ff;
-}
-
-tbody tr.selected {
-  background: #dbeafe;
-}
-
-tbody td {
-  padding: 11px 14px;
-  color: #334155;
-}
-
-.empty-row {
-  text-align: center;
-  color: #94a3b8;
-  padding: 32px !important;
-}
-
-.badge-site {
-  display: inline-block;
-  background: #e0f2fe;
-  color: #0369a1;
-  border-radius: 4px;
-  padding: 2px 7px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  margin-right: 4px;
-  margin-bottom: 2px;
-}
-
-/* Detail panel */
-.detail-panel {
-  margin-top: 24px;
-  border: 1px solid #bfdbfe;
-  border-radius: 10px;
-  background: #f8fbff;
-  overflow: hidden;
-}
-
-.detail-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #1e3a8a;
-  color: #fff;
-  padding: 14px 20px;
-}
-
-.detail-header h2 {
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.btn-close {
-  background: rgba(255, 255, 255, 0.15);
-  border: none;
-  color: #fff;
-  padding: 5px 12px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 0.88rem;
-}
-
-.btn-close:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.detail-body {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0;
-}
-
-.map-placeholder {
-  background: #e2eaf8;
-  min-height: 280px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-right: 1px solid #bfdbfe;
-}
-
-.map-inner {
-  text-align: center;
-  color: #64748b;
-}
-
-.map-icon {
-  font-size: 3rem;
-}
-
-.map-inner p {
-  margin: 8px 0 0;
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-
-.map-sub {
-  font-size: 0.8rem !important;
-  font-weight: normal !important;
-  color: #94a3b8;
-}
-
-.waypoints {
-  padding: 20px;
-}
-
-.waypoints h3 {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #1e3a8a;
-  margin-bottom: 12px;
-}
-
-.meta-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  font-size: 0.85rem;
-  color: #475569;
-  margin-bottom: 14px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.waypoint-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.waypoint-list li {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 0;
-  border-bottom: 1px dashed #e2e8f0;
-  font-size: 0.88rem;
-}
-
-.waypoint-list li:last-child {
-  border-bottom: none;
-}
-
-.wp-time {
-  color: #64748b;
-  font-size: 0.8rem;
-  min-width: 48px;
-}
-
-.wp-label {
-  font-weight: 600;
-  color: #1e3a8a;
-}
-
-@media (max-width: 768px) {
-  .detail-body {
-    grid-template-columns: 1fr;
-  }
-  .map-placeholder {
-    border-right: none;
-    border-bottom: 1px solid #bfdbfe;
-  }
-}
-</style>

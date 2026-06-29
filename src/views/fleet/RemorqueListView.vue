@@ -1,552 +1,178 @@
 <template>
-  <div class="remorque-list-view">
-    <!-- Header -->
-    <div class="page-header">
-      <div class="header-left">
-        <Container class="header-icon" :size="28" />
-        <h1 class="page-title">Remorques</h1>
-      </div>
-      <button class="btn-primary" @click="openCreate">
-        <Plus :size="18" />
-        Nouvelle remorque
+  <ListPageLayout
+    title="Remorques"
+    :subtitle="`${store.remorques.length} remorque(s) enregistrée(s)`"
+    :columns="columns"
+    :items="pageItems"
+    :total="totalCount"
+    :total-text="`${totalCount} remorque(s)`"
+    search-placeholder="Rechercher par plaque ou VIN…"
+    scope-label="Statut :"
+    :scope-options="scopeOptions"
+    v-model:scope="activeScope"
+    v-model:search-query="searchQuery"
+    v-model:sort-key="sortKey"
+    v-model:sort-dir="sortDir"
+    v-model:page="page"
+    v-model:page-size="pageSize"
+    @reset-filters="resetFilters"
+    @open-card="(e) => openCard(e.id)"
+  >
+    <template #header-actions>
+      <button :class="L.btnPrimary" @click="openCreate">
+        <Plus class="w-4 h-4" /> Nouvelle remorque
       </button>
-    </div>
+    </template>
 
-    <!-- KPI Chips -->
-    <div class="kpi-row">
-      <div class="kpi-chip">
-        <span class="kpi-value">{{ kpiTotal }}</span>
-        <span class="kpi-label">Total</span>
+    <template #above-table>
+      <div class="grid grid-cols-4 gap-2.5 mb-3.5 max-md:grid-cols-2">
+        <div :class="kpiItem"><div :class="kpiIcon" class="bg-primary/10"><Container class="w-[18px] h-[18px] text-primary" /></div><div><div :class="kpiVal">{{ store.remorques.length }}</div><div :class="kpiLbl">Total</div></div></div>
+        <div :class="kpiItem"><div :class="kpiIcon" class="bg-success-bg"><Check class="w-[18px] h-[18px] text-success" /></div><div><div :class="kpiVal">{{ store.remorques.filter(r => r.statutAdmin === 'en_service').length }}</div><div :class="kpiLbl">En service</div></div></div>
+        <div :class="kpiItem"><div :class="kpiIcon" class="bg-warning-bg"><AlertTriangle class="w-[18px] h-[18px] text-warning" /></div><div><div :class="kpiVal">{{ store.remorques.filter(r => r.statutAdmin === 'hors_service').length }}</div><div :class="kpiLbl">Hors service</div></div></div>
+        <div :class="kpiItem"><div :class="kpiIcon" class="bg-background"><Archive class="w-[18px] h-[18px] text-muted-foreground" /></div><div><div :class="kpiVal">{{ store.remorques.filter(r => r.statutAdmin === 'archive').length }}</div><div :class="kpiLbl">Archivées</div></div></div>
       </div>
-      <div class="kpi-chip kpi-green">
-        <span class="kpi-value">{{ kpiActives }}</span>
-        <span class="kpi-label">Actives</span>
-      </div>
-      <div class="kpi-chip kpi-orange">
-        <span class="kpi-value">{{ kpiHorsService }}</span>
-        <span class="kpi-label">Hors service</span>
-      </div>
-      <div class="kpi-chip kpi-gray">
-        <span class="kpi-value">{{ kpiArchivees }}</span>
-        <span class="kpi-label">Archivées</span>
-      </div>
-    </div>
+    </template>
 
-    <!-- Filter Bar -->
-    <div class="filter-bar">
-      <div class="filter-group">
-        <label class="filter-label">Type</label>
-        <select v-model="filterType" class="filter-select">
+    <template #filters>
+      <div :class="L.fpField">
+        <label :class="L.fpFieldLabel">Type</label>
+        <select v-model="filterType" :class="L.fpSelect">
           <option value="">Tous</option>
           <option value="Citerne">Citerne</option>
           <option value="Bâchée">Bâchée</option>
           <option value="Plateau">Plateau</option>
+          <option value="Frigorifique">Frigorifique</option>
+          <option value="Autre">Autre</option>
         </select>
       </div>
-      <div class="filter-group">
-        <label class="filter-label">Statut</label>
-        <select v-model="filterStatut" class="filter-select">
-          <option value="">Tous</option>
-          <option value="en_service">En service</option>
-          <option value="hors_service">Hors service</option>
-          <option value="archive">Archivée</option>
-        </select>
-      </div>
-      <div class="search-group">
-        <Search :size="16" class="search-icon" />
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Rechercher par plaque ou VIN…"
-          class="search-input"
-        />
-      </div>
-    </div>
+      <button class="mt-auto py-[7px] bg-transparent border-0 text-xs text-muted-foreground cursor-pointer text-left hover:text-primary" @click="resetFilters">
+        Réinitialiser
+      </button>
+    </template>
 
-    <!-- Table -->
-    <div class="table-wrapper">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Plaque</th>
-            <th>Type</th>
-            <th>Capacité</th>
-            <th>Tracteur attelé</th>
-            <th>Statut</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-if="filteredRemorques.length === 0">
-            <td colspan="7" class="empty-state">Aucune remorque trouvée.</td>
-          </tr>
-          <tr
-            v-for="remorque in filteredRemorques"
-            :key="remorque.id"
-            class="table-row"
-            @click="goToDetail(remorque.id)"
-          >
-            <td class="cell-id">{{ remorque.id }}</td>
-            <td class="cell-plaque">{{ remorque.plaque }}</td>
-            <td>
-              <span :class="['pill', typeClass(remorque.type)]">{{ remorque.type ?? '—' }}</span>
-            </td>
-            <td class="cell-capacite">
-              <span v-if="remorque.capacite">
-                {{ remorque.capacite }}
-                <span class="unit">{{ remorque.uniteCapacite ?? '' }}</span>
-              </span>
-              <span v-else>—</span>
-            </td>
-            <td>{{ remorque.tracteurPlaque ?? '—' }}</td>
-            <td>
-              <span :class="['pill', statutClass(remorque.statutAdmin)]">
-                {{ statutLabel(remorque.statutAdmin) }}
-              </span>
-            </td>
-            <td class="cell-actions" @click.stop>
-              <button
-                class="action-btn edit-btn"
-                title="Modifier"
-                @click="openEdit(remorque.id)"
-              >
-                <Edit :size="16" />
-              </button>
-              <button
-                class="action-btn archive-btn"
-                title="Archiver"
-                @click="archiver(remorque.id)"
-              >
-                <Archive :size="16" />
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+    <template #cell-id="{ item }">
+      <span class="text-[11px] font-bold px-[7px] py-0.5 rounded bg-primary/10 text-primary tracking-[0.04em]">{{ item.id }}</span>
+    </template>
+    <template #cell-plaque="{ item }">
+      <button class="font-mono font-semibold text-foreground hover:text-primary hover:underline bg-transparent border-0 p-0 cursor-pointer" @click="openCard(item.id)">
+        {{ item.plaque }}
+      </button>
+    </template>
+    <template #cell-type="{ item }">
+      <span :class="['text-[11px] font-medium px-2 py-0.5 rounded-full', typeClass(item.type)]">{{ item.type ?? '—' }}</span>
+    </template>
+    <template #cell-capacite="{ item }">
+      <span class="text-foreground font-medium">{{ item.capacite ? `${item.capacite} ${item.uniteCapacite ?? ''}` : '—' }}</span>
+    </template>
+    <template #cell-tracteur="{ item }">
+      <span class="font-mono text-xs text-muted-foreground">{{ item.tracteurPlaque ?? '—' }}</span>
+    </template>
+    <template #cell-statut="{ item }">
+      <span :class="['text-[11px] font-medium px-2 py-0.5 rounded-full', statutClass(item.statutAdmin)]">{{ statutLabel(item.statutAdmin) }}</span>
+    </template>
 
-  <RemorqueFormModal v-model="showModal" :edit-id="editId" @saved="editId = undefined" />
+    <template #details-panel="{ item }">
+      <div class="flex flex-col gap-3">
+        <div>
+          <span class="text-[11px] font-bold px-[7px] py-0.5 rounded bg-primary/10 text-primary tracking-[0.04em]">{{ item.id }}</span>
+          <div class="font-mono font-semibold text-foreground mt-1.5">{{ item.plaque }}</div>
+          <span :class="['text-[11px] font-medium px-2 py-0.5 rounded-full mt-1 inline-block', typeClass(item.type)]">{{ item.type }}</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2 text-[12px]">
+          <div><div class="text-muted-foreground text-[11px]">Capacité</div>{{ item.capacite ? `${item.capacite} ${item.uniteCapacite ?? ''}` : '—' }}</div>
+          <div><div class="text-muted-foreground text-[11px]">Tracteur attelé</div><span class="font-mono">{{ item.tracteurPlaque ?? '—' }}</span></div>
+          <div class="col-span-2"><div class="text-muted-foreground text-[11px]">Statut</div>
+            <span :class="['text-[11px] font-medium px-2 py-0.5 rounded-full', statutClass(item.statutAdmin)]">{{ statutLabel(item.statutAdmin) }}</span>
+          </div>
+        </div>
+        <button :class="L.btnPrimary" class="w-full justify-center" @click="openCard(item.id)">Ouvrir la fiche</button>
+        <button :class="L.btnOutline" class="w-full justify-center" @click="openEdit(item.id)">Modifier</button>
+      </div>
+    </template>
+
+    <template #empty>
+      <Container class="w-8 h-8" />
+      <p class="text-[13px]">Aucune remorque trouvée</p>
+    </template>
+
+    <RemorqueCard v-if="openCardId !== null" :remorques="store.remorques" :remorque-id="openCardId" @close="openCardId = null" />
+    <RemorqueFormModal v-model="showCreate" :edit-id="editId" @saved="editId = undefined" />
+  </ListPageLayout>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { Container, Plus, Search, Edit, Archive } from 'lucide-vue-next'
-import { useRemorquesStore } from '../../stores/remorques'
+import { ref, computed, watch } from 'vue'
+import { Plus, Container, Check, AlertTriangle, Archive } from 'lucide-vue-next'
+import { ListPageLayout } from '../../components'
+import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
+import RemorqueCard from '../../components/fleet/RemorqueCard.vue'
 import RemorqueFormModal from '../../components/fleet/RemorqueFormModal.vue'
+import * as L from '../../lib/listClasses'
+import { useRemorquesStore } from '../../stores/remorques'
 
-const router = useRouter()
 const store = useRemorquesStore()
-const showModal = ref(false)
-const editId = ref<string | undefined>(undefined)
 
-function openCreate() { editId.value = undefined; showModal.value = true }
-function openEdit(id: number | string) { editId.value = String(id); showModal.value = true }
+const kpiItem = 'bg-card border border-border rounded-lg px-3.5 py-3 flex items-center gap-3'
+const kpiIcon = 'w-9 h-9 rounded-lg flex items-center justify-center shrink-0'
+const kpiVal  = 'text-[22px] font-bold leading-none'
+const kpiLbl  = 'text-xs text-muted-foreground mt-0.5'
 
-const filterType = ref<string>('')
-const filterStatut = ref<string>('')
-const searchQuery = ref<string>('')
+const showCreate  = ref(false)
+const editId      = ref<string | undefined>(undefined)
+const openCardId  = ref<string | null>(null)
+const searchQuery = ref('')
+const activeScope = ref('')
+const filterType  = ref('')
+const sortKey     = ref('')
+const sortDir     = ref<'asc' | 'desc'>('asc')
+const page        = ref(1)
+const pageSize    = ref(15)
 
+function openCreate()          { editId.value = undefined; showCreate.value = true }
+function openEdit(id: string)  { editId.value = id; showCreate.value = true }
+function openCard(id: string)  { openCardId.value = id }
 
-// KPIs
-const kpiTotal = computed(() => store.remorques.length)
-const kpiActives = computed(() =>
-  store.remorques.filter((r) => r.statutAdmin === 'en_service').length
-)
-const kpiHorsService = computed(() =>
-  store.remorques.filter((r) => r.statutAdmin === 'hors_service').length
-)
-const kpiArchivees = computed(() =>
-  store.remorques.filter((r) => r.statutAdmin === 'archive').length
-)
+const scopeOptions = [
+  { value: '', label: 'Toutes' },
+  { value: 'en_service', label: 'En service' },
+  { value: 'hors_service', label: 'Hors service' },
+  { value: 'archive', label: 'Archivées' },
+]
 
-// Filtered list
-const filteredRemorques = computed(() => {
-  let list = store.remorques
-  if (filterType.value) {
-    list = list.filter((r) => r.type === filterType.value)
-  }
-  if (filterStatut.value) {
-    list = list.filter((r) => r.statutAdmin === filterStatut.value)
-  }
-  const q = searchQuery.value.trim().toLowerCase()
-  if (q) {
-    list = list.filter(
-      (r) =>
-        (r.plaque ?? '').toLowerCase().includes(q) ||
-        (r.vin ?? '').toLowerCase().includes(q)
-    )
-  }
-  return list
+const columns = computed<ListColumn[]>(() => [
+  { key: 'id', label: 'ID', width: 110 },
+  { key: 'plaque', label: 'Plaque', sortable: true, width: 120 },
+  { key: 'type', label: 'Type', sortable: true, width: 130 },
+  { key: 'capacite', label: 'Capacité', width: 120 },
+  { key: 'tracteur', label: 'Tracteur attelé', width: 130 },
+  { key: 'statut', label: 'Statut', sortable: true, width: 130 },
+])
+
+watch([activeScope, filterType, searchQuery, pageSize], () => { page.value = 1 })
+function resetFilters() { activeScope.value = ''; filterType.value = ''; searchQuery.value = ''; page.value = 1 }
+
+const filtered = computed(() => {
+  let rows = store.remorques.filter(r => {
+    if (activeScope.value && r.statutAdmin !== activeScope.value) return false
+    if (filterType.value && r.type !== filterType.value) return false
+    if (searchQuery.value) {
+      const q = searchQuery.value.toLowerCase()
+      if (!r.plaque.toLowerCase().includes(q) && !(r.vin ?? '').toLowerCase().includes(q)) return false
+    }
+    return true
+  })
+  return rows
 })
 
-// Navigation
-function goToDetail(id: number | string) {
-  router.push({ name: 'fleet-remorque-detail', params: { id } })
-}
+const totalCount = computed(() => filtered.value.length)
+const pageItems  = computed(() => {
+  const start = (page.value - 1) * pageSize.value
+  return filtered.value.slice(start, start + pageSize.value)
+})
 
-async function archiver(id: number | string) {
-  if (confirm('Archiver cette remorque ?')) {
-    await store.archiverRemorque(id)
-  }
-}
-
-// Statut
-function statutLabel(statut: string): string {
-  const map: Record<string, string> = {
-    en_service: 'En service',
-    hors_service: 'Hors service',
-    archive: 'Archivée',
-  }
-  return map[statut] ?? statut
-}
-
-function statutClass(statut: string): string {
-  const map: Record<string, string> = {
-    en_service: 'pill-green',
-    hors_service: 'pill-orange',
-    archive: 'pill-gray',
-  }
-  return map[statut] ?? 'pill-gray'
-}
-
-// Type
-function typeClass(type: string): string {
-  const map: Record<string, string> = {
-    Citerne: 'pill-blue',
-    Bâchée: 'pill-teal',
-    Plateau: 'pill-yellow',
-    Frigorifique: 'pill-purple',
-    Autre: 'pill-gray',
-  }
-  return map[type] ?? 'pill-gray'
+function statutLabel(s?: string) { return ({ en_service: 'En service', hors_service: 'Hors service', archive: 'Archivée' } as any)[s ?? ''] ?? s ?? '—' }
+function statutClass(s?: string) { return ({ en_service: 'bg-success-bg text-success', hors_service: 'bg-warning-bg text-warning', archive: 'bg-background text-muted-foreground border border-border' } as any)[s ?? ''] ?? '' }
+function typeClass(type?: string) {
+  return ({ Citerne: 'bg-primary/10 text-primary', Bâchée: 'bg-success-bg text-success', Plateau: 'bg-warning-bg text-warning', Frigorifique: 'bg-danger-bg text-danger', Autre: 'bg-background text-muted-foreground' } as any)[type ?? ''] ?? 'bg-background text-muted-foreground'
 }
 </script>
-
-<style scoped>
-/* ── Layout ── */
-.remorque-list-view {
-  padding: 24px 28px;
-  min-height: 100vh;
-  background: #f4f6f9;
-  font-family: 'Inter', sans-serif;
-}
-
-/* ── Header ── */
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.header-icon {
-  color: #1a56db;
-}
-
-.page-title {
-  font-size: 22px;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0;
-}
-
-.btn-primary {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: #1a56db;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 9px 18px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.18s;
-}
-
-.btn-primary:hover {
-  background: #1648c0;
-}
-
-/* ── KPI Chips ── */
-.kpi-row {
-  display: flex;
-  gap: 14px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-
-.kpi-chip {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 14px 28px;
-  min-width: 110px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-}
-
-.kpi-value {
-  font-size: 26px;
-  font-weight: 700;
-  color: #1e293b;
-  line-height: 1;
-}
-
-.kpi-label {
-  font-size: 12px;
-  color: #64748b;
-  margin-top: 4px;
-  text-align: center;
-}
-
-.kpi-green .kpi-value { color: #16a34a; }
-.kpi-orange .kpi-value { color: #ea580c; }
-.kpi-gray .kpi-value { color: #6b7280; }
-
-/* ── Filter Bar ── */
-.filter-bar {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 14px 18px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-}
-
-.filter-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.filter-label {
-  font-size: 13px;
-  font-weight: 500;
-  color: #475569;
-  white-space: nowrap;
-}
-
-.filter-select {
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  padding: 6px 10px;
-  font-size: 13px;
-  color: #1e293b;
-  background: #f8fafc;
-  cursor: pointer;
-  outline: none;
-}
-
-.filter-select:focus {
-  border-color: #1a56db;
-}
-
-.search-group {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex: 1;
-  min-width: 200px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  padding: 6px 10px;
-  background: #f8fafc;
-}
-
-.search-icon {
-  color: #94a3b8;
-  flex-shrink: 0;
-}
-
-.search-input {
-  border: none;
-  background: transparent;
-  outline: none;
-  font-size: 13px;
-  color: #1e293b;
-  width: 100%;
-}
-
-.search-input::placeholder {
-  color: #94a3b8;
-}
-
-/* ── Table ── */
-.table-wrapper {
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
-}
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13.5px;
-}
-
-.data-table thead tr {
-  background: #1a56db;
-}
-
-.data-table th {
-  text-align: left;
-  padding: 12px 14px;
-  color: #fff;
-  font-weight: 600;
-  font-size: 12.5px;
-  letter-spacing: 0.03em;
-  white-space: nowrap;
-}
-
-.table-row {
-  border-bottom: 1px solid #f1f5f9;
-  cursor: pointer;
-  transition: background 0.12s;
-}
-
-.table-row:last-child {
-  border-bottom: none;
-}
-
-.table-row:hover {
-  background: #f0f5ff;
-}
-
-.data-table td {
-  padding: 11px 14px;
-  color: #334155;
-  vertical-align: middle;
-}
-
-.cell-id {
-  color: #94a3b8;
-  font-size: 12px;
-}
-
-.cell-plaque {
-  font-weight: 600;
-  color: #1e293b;
-  letter-spacing: 0.04em;
-}
-
-.cell-capacite {
-  font-weight: 500;
-  color: #1e293b;
-}
-
-.unit {
-  font-size: 11px;
-  color: #64748b;
-  margin-left: 2px;
-}
-
-.empty-state {
-  text-align: center;
-  color: #94a3b8;
-  padding: 40px 0;
-  font-size: 14px;
-}
-
-/* ── Pills ── */
-.pill {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 11.5px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.pill-green {
-  background: #dcfce7;
-  color: #16a34a;
-}
-
-.pill-orange {
-  background: #ffedd5;
-  color: #ea580c;
-}
-
-.pill-gray {
-  background: #f1f5f9;
-  color: #6b7280;
-}
-
-.pill-blue {
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-
-.pill-teal {
-  background: #ccfbf1;
-  color: #0f766e;
-}
-
-.pill-yellow {
-  background: #fef9c3;
-  color: #a16207;
-}
-
-.pill-purple {
-  background: #ede9fe;
-  color: #7c3aed;
-}
-
-/* ── Actions ── */
-.cell-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.action-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-
-.edit-btn {
-  background: #eff6ff;
-  color: #1a56db;
-}
-
-.edit-btn:hover {
-  background: #1a56db;
-  color: #fff;
-}
-
-.archive-btn {
-  background: #f8fafc;
-  color: #64748b;
-}
-
-.archive-btn:hover {
-  background: #fee2e2;
-  color: #dc2626;
-}
-</style>

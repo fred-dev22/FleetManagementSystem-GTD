@@ -1,194 +1,178 @@
 <template>
-  <div class="p-6 space-y-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <MapPinned class="w-7 h-7 text-blue-700" />
-        <div>
-          <h1 class="text-2xl font-bold text-slate-800">Sites & Géofences</h1>
-          <p class="text-sm text-slate-500">Référentiel des sites géographiques</p>
-        </div>
-      </div>
-      <button
-        class="inline-flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-        @click="openCreate"
-      >
-        <Plus class="w-4 h-4" />
-        Nouveau site
+  <ListPageLayout
+    title="Sites & Géofences"
+    subtitle="Référentiel des sites géographiques GTD"
+    :columns="columns"
+    :items="pageItems"
+    :total="totalCount"
+    :total-text="`${totalCount} site(s)`"
+    search-placeholder="Rechercher par code ou nom…"
+    scope-label="Statut :"
+    :scope-options="scopeOptions"
+    v-model:scope="activeScope"
+    v-model:search-query="searchQuery"
+    v-model:sort-key="sortKey"
+    v-model:sort-dir="sortDir"
+    v-model:page="page"
+    v-model:page-size="pageSize"
+    @reset-filters="resetFilters"
+    @open-card="(e) => openCard(e.id)"
+  >
+    <template #header-actions>
+      <button :class="L.btnPrimary" @click="openCreate">
+        <Plus class="w-4 h-4" /> Nouveau site
       </button>
-    </div>
+    </template>
 
-    <!-- KPIs -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4">
-        <div class="bg-blue-100 rounded-lg p-3">
-          <MapPinned class="w-6 h-6 text-blue-700" />
-        </div>
+    <template #above-table>
+      <div class="grid grid-cols-3 gap-2.5 mb-3.5">
+        <div :class="kpiItem"><div :class="kpiIcon" class="bg-primary/10"><MapPinned class="w-[18px] h-[18px] text-primary" /></div><div><div :class="kpiVal">{{ store.sites.length }}</div><div :class="kpiLbl">Total sites</div></div></div>
+        <div :class="kpiItem"><div :class="kpiIcon" class="bg-success-bg"><Check class="w-[18px] h-[18px] text-success" /></div><div><div :class="kpiVal">{{ store.sites.filter((s: any) => s.actif).length }}</div><div :class="kpiLbl">Actifs</div></div></div>
+        <div :class="kpiItem"><div :class="kpiIcon" class="bg-primary/10"><MapPinned class="w-[18px] h-[18px] text-primary" /></div><div><div :class="kpiVal">{{ uniqueTypes }}</div><div :class="kpiLbl">Types</div></div></div>
+      </div>
+    </template>
+
+    <template #filters>
+      <div :class="L.fpField">
+        <label :class="L.fpFieldLabel">Type</label>
+        <select v-model="filterType" :class="L.fpSelect">
+          <option value="">Tous</option>
+          <option value="Garage">Garage</option>
+          <option value="Dépôt chargement">Dépôt chargement</option>
+          <option value="Dépôt déchargement">Dépôt déchargement</option>
+          <option value="Zone à risque">Zone à risque</option>
+          <option value="Point de contrôle">Point de contrôle</option>
+        </select>
+      </div>
+      <button class="mt-auto py-[7px] bg-transparent border-0 text-xs text-muted-foreground cursor-pointer text-left hover:text-primary" @click="resetFilters">
+        Réinitialiser
+      </button>
+    </template>
+
+    <template #cell-code="{ item }">
+      <span class="text-[11px] font-bold px-[7px] py-0.5 rounded bg-primary/10 text-primary tracking-[0.04em] font-mono">{{ item.code }}</span>
+    </template>
+    <template #cell-nom="{ item }">
+      <button class="font-medium text-foreground hover:text-primary hover:underline bg-transparent border-0 p-0 cursor-pointer text-left" @click="openCard(item.id)">
+        {{ item.nom }}
+      </button>
+    </template>
+    <template #cell-ville="{ item }">
+      <span class="text-muted-foreground text-xs">{{ item.ville }}</span>
+    </template>
+    <template #cell-type="{ item }">
+      <span :class="['text-[11px] font-medium px-2 py-0.5 rounded-full', typeBadge(item.type)]">{{ item.type }}</span>
+    </template>
+    <template #cell-statut="{ item }">
+      <span :class="['text-[11px] font-medium px-2 py-0.5 rounded-full', item.actif ? 'bg-success-bg text-success' : 'bg-background text-muted-foreground border border-border']">
+        {{ item.actif ? 'Actif' : 'Inactif' }}
+      </span>
+    </template>
+
+    <template #details-panel="{ item }">
+      <div class="flex flex-col gap-3">
         <div>
-          <p class="text-xs text-slate-500 uppercase tracking-wide">Total sites</p>
-          <p class="text-2xl font-bold text-slate-800">{{ siteStore.sites.length }}</p>
+          <span class="text-[11px] font-bold px-[7px] py-0.5 rounded bg-primary/10 text-primary tracking-[0.04em] font-mono">{{ item.code }}</span>
+          <div class="text-sm font-semibold text-foreground mt-1.5">{{ item.nom }}</div>
+          <div class="text-xs text-muted-foreground">{{ item.ville }}{{ item.region ? ` · ${item.region}` : '' }}</div>
         </div>
+        <div class="flex gap-2 flex-wrap">
+          <span :class="['text-[11px] font-medium px-2 py-0.5 rounded-full', typeBadge(item.type)]">{{ item.type }}</span>
+          <span :class="['text-[11px] font-medium px-2 py-0.5 rounded-full', item.actif ? 'bg-success-bg text-success' : 'bg-background text-muted-foreground border border-border']">
+            {{ item.actif ? 'Actif' : 'Inactif' }}
+          </span>
+        </div>
+        <button :class="L.btnPrimary" class="w-full justify-center" @click="openCard(item.id)">Ouvrir la fiche</button>
+        <button :class="L.btnOutline" class="w-full justify-center" @click="openEdit(item.id)">Modifier</button>
       </div>
-      <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4">
-        <div class="bg-green-100 rounded-lg p-3">
-          <MapPinned class="w-6 h-6 text-green-600" />
-        </div>
-        <div>
-          <p class="text-xs text-slate-500 uppercase tracking-wide">Actifs</p>
-          <p class="text-2xl font-bold text-slate-800">{{ activeSites }}</p>
-        </div>
-      </div>
-      <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4">
-        <div class="bg-purple-100 rounded-lg p-3">
-          <MapPinned class="w-6 h-6 text-purple-600" />
-        </div>
-        <div>
-          <p class="text-xs text-slate-500 uppercase tracking-wide">Types</p>
-          <p class="text-2xl font-bold text-slate-800">{{ uniqueTypes }}</p>
-        </div>
-      </div>
-    </div>
+    </template>
 
-    <!-- Filters -->
-    <div class="bg-white rounded-xl border border-slate-200 p-4 flex flex-wrap gap-3">
-      <input
-        v-model="search"
-        type="text"
-        placeholder="Rechercher par code ou nom..."
-        class="flex-1 min-w-48 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-      <select
-        v-model="filterType"
-        class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-      >
-        <option value="">Tous les types</option>
-        <option v-for="type in typeOptions" :key="type" :value="type">{{ type }}</option>
-      </select>
-    </div>
+    <template #empty>
+      <MapPinned class="w-8 h-8" />
+      <p class="text-[13px]">Aucun site trouvé</p>
+    </template>
 
-    <!-- Table -->
-    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead class="bg-slate-50 border-b border-slate-200">
-            <tr>
-              <th class="text-left px-4 py-3 font-semibold text-slate-600">Code</th>
-              <th class="text-left px-4 py-3 font-semibold text-slate-600">Nom</th>
-              <th class="text-left px-4 py-3 font-semibold text-slate-600">Ville</th>
-              <th class="text-left px-4 py-3 font-semibold text-slate-600">Type</th>
-              <th class="text-left px-4 py-3 font-semibold text-slate-600">Rayon (m)</th>
-              <th class="text-left px-4 py-3 font-semibold text-slate-600">Alerte</th>
-              <th class="text-left px-4 py-3 font-semibold text-slate-600">Statut</th>
-              <th class="text-left px-4 py-3 font-semibold text-slate-600">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="site in filteredSites"
-              :key="site.id"
-              class="border-b border-slate-100 hover:bg-slate-50 transition-colors"
-            >
-              <td class="px-4 py-3 font-mono font-medium text-slate-800">{{ site.code }}</td>
-              <td class="px-4 py-3 text-slate-700">{{ site.nom }}</td>
-              <td class="px-4 py-3 text-slate-600">{{ site.ville }}</td>
-              <td class="px-4 py-3">
-                <span :class="typeBadgeClass(site.type)" class="px-2 py-0.5 rounded-full text-xs font-medium">
-                  {{ site.type }}
-                </span>
-              </td>
-              <td class="px-4 py-3 text-slate-600">{{ site.rayon ?? 500 }}</td>
-              <td class="px-4 py-3 text-slate-600 capitalize">{{ site.typeAlerte ?? '—' }}</td>
-              <td class="px-4 py-3">
-                <span
-                  :class="site.actif ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'"
-                  class="px-2 py-0.5 rounded-full text-xs font-medium"
-                >
-                  {{ site.actif ? 'Actif' : 'Inactif' }}
-                </span>
-              </td>
-              <td class="px-4 py-3">
-                <div class="flex items-center gap-2">
-                  <button
-                    class="text-blue-600 hover:text-blue-800 text-xs font-medium"
-                    @click="openEdit(site.id)"
-                  >
-                    Modifier
-                  </button>
-                  <button
-                    @click="deleteSite(site.id)"
-                    class="text-red-500 hover:text-red-700 text-xs font-medium"
-                  >
-                    Supprimer
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <tr v-if="filteredSites.length === 0">
-              <td colspan="8" class="px-4 py-10 text-center text-slate-400 text-sm">
-                Aucun site trouvé.
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <SiteFormModal v-model="showModal" :edit-id="editId" @saved="editId = undefined" />
+    <SiteCard v-if="openCardId !== null" :sites="store.sites" :site-id="openCardId" @close="openCardId = null" />
+    <SiteFormModal v-model="showCreate" :edit-id="editId" @saved="editId = undefined" />
+  </ListPageLayout>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { MapPinned, Plus } from 'lucide-vue-next'
-import { useSitesStore } from '../../stores/sites'
+import { ref, computed, watch } from 'vue'
+import { Plus, MapPinned, Check } from 'lucide-vue-next'
+import { ListPageLayout } from '../../components'
+import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
+import SiteCard from '../../components/fleet/SiteCard.vue'
 import SiteFormModal from '../../components/fleet/SiteFormModal.vue'
+import * as L from '../../lib/listClasses'
+import { useSitesStore } from '../../stores/sites'
 
-const siteStore = useSitesStore()
-const showModal = ref(false)
-const editId = ref<string | undefined>(undefined)
+const store = useSitesStore()
 
-function openCreate() { editId.value = undefined; showModal.value = true }
-function openEdit(id: string) { editId.value = id; showModal.value = true }
+const kpiItem = 'bg-card border border-border rounded-lg px-3.5 py-3 flex items-center gap-3'
+const kpiIcon = 'w-9 h-9 rounded-lg flex items-center justify-center shrink-0'
+const kpiVal  = 'text-[22px] font-bold leading-none'
+const kpiLbl  = 'text-xs text-muted-foreground mt-0.5'
 
-const search = ref('')
-const filterType = ref('')
+const showCreate  = ref(false)
+const editId      = ref<string | undefined>(undefined)
+const openCardId  = ref<string | null>(null)
+const searchQuery = ref('')
+const activeScope = ref('')
+const filterType  = ref('')
+const sortKey     = ref('')
+const sortDir     = ref<'asc' | 'desc'>('asc')
+const page        = ref(1)
+const pageSize    = ref(15)
 
-const typeOptions = [
-  'Garage',
-  'Dépôt chargement',
-  'Dépôt déchargement',
-  'Zone à risque',
-  'Point de contrôle',
+function openCreate()          { editId.value = undefined; showCreate.value = true }
+function openEdit(id: string)  { editId.value = id; showCreate.value = true }
+function openCard(id: string)  { openCardId.value = id }
+
+const scopeOptions = [
+  { value: '', label: 'Tous' },
+  { value: 'actif', label: 'Actifs' },
+  { value: 'inactif', label: 'Inactifs' },
 ]
 
-const activeSites = computed(() => siteStore.sites.filter((s: any) => s.actif).length)
-const uniqueTypes = computed(() => new Set(siteStore.sites.map((s: any) => s.type)).size)
+const columns = computed<ListColumn[]>(() => [
+  { key: 'code', label: 'Code', sortable: true, width: 110 },
+  { key: 'nom', label: 'Nom', sortable: true, width: 220 },
+  { key: 'ville', label: 'Ville', width: 150 },
+  { key: 'type', label: 'Type', sortable: true, width: 170 },
+  { key: 'statut', label: 'Statut', sortable: true, width: 110 },
+])
 
-const filteredSites = computed(() => {
-  return siteStore.sites.filter((s: any) => {
-    const matchSearch =
-      !search.value ||
-      s.code.toLowerCase().includes(search.value.toLowerCase()) ||
-      s.nom.toLowerCase().includes(search.value.toLowerCase())
-    const matchType = !filterType.value || s.type === filterType.value
-    return matchSearch && matchType
+const uniqueTypes = computed(() => new Set(store.sites.map((s: any) => s.type)).size)
+
+watch([activeScope, filterType, searchQuery, pageSize], () => { page.value = 1 })
+function resetFilters() { activeScope.value = ''; filterType.value = ''; searchQuery.value = ''; page.value = 1 }
+
+const filtered = computed(() => {
+  return store.sites.filter((s: any) => {
+    if (activeScope.value === 'actif' && !s.actif) return false
+    if (activeScope.value === 'inactif' && s.actif) return false
+    if (filterType.value && s.type !== filterType.value) return false
+    if (searchQuery.value) {
+      const q = searchQuery.value.toLowerCase()
+      if (!s.code.toLowerCase().includes(q) && !s.nom.toLowerCase().includes(q)) return false
+    }
+    return true
   })
 })
 
-function typeBadgeClass(type: string): string {
-  const map: Record<string, string> = {
-    Garage: 'bg-blue-100 text-blue-700',
-    'Dépôt chargement': 'bg-green-100 text-green-700',
-    'Dépôt déchargement': 'bg-orange-100 text-orange-700',
-    'Zone à risque': 'bg-red-100 text-red-700',
-    'Point de contrôle': 'bg-purple-100 text-purple-700',
-  }
-  return map[type] ?? 'bg-slate-100 text-slate-600'
-}
+const totalCount = computed(() => filtered.value.length)
+const pageItems  = computed(() => {
+  const start = (page.value - 1) * pageSize.value
+  return filtered.value.slice(start, start + pageSize.value)
+})
 
-function deleteSite(id: string) {
-  if (confirm('Supprimer ce site ?')) {
-    siteStore.deleteSite(id)
+function typeBadge(type: string) {
+  const m: Record<string, string> = {
+    Garage: 'bg-primary/10 text-primary', 'Dépôt chargement': 'bg-success-bg text-success',
+    'Dépôt déchargement': 'bg-warning-bg text-warning', 'Zone à risque': 'bg-danger-bg text-danger',
+    'Point de contrôle': 'bg-primary/10 text-primary',
   }
+  return m[type] ?? 'bg-background text-muted-foreground'
 }
 </script>
