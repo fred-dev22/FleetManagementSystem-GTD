@@ -1,0 +1,234 @@
+<template>
+  <div class="px-7 py-6 max-md:p-4">
+
+        <div class="flex items-center justify-between mb-3.5">
+          <div>
+            <div class="text-lg font-semibold">{{ t('dashboard.welcome_employee') }}</div>
+            <div class="text-[13px] text-muted-foreground">{{ auth.user?.name }}</div>
+          </div>
+          <button :class="btnPrimary" @click="openModal()">
+            <Plus class="w-4 h-4" /> {{ t('absence.new') }}
+          </button>
+        </div>
+
+        <div class="grid grid-cols-4 gap-2.5 mb-3.5 max-md:grid-cols-2">
+          <div :class="kpiCard" class="border-t-[3px] border-t-primary">
+            <div :class="kpiLabel">{{ t('balances.annual') }}</div>
+            <div :class="kpiValue" class="text-primary">12</div>
+            <div :class="kpiSub">{{ t('balances.on', { total: 24 }) }}</div>
+            <div v-if="annualLeaveType?.daysPerMonth" class="text-[10px] text-muted-foreground mt-[3px]">+{{ annualLeaveType.daysPerMonth }}j/mois</div>
+          </div>
+          <div :class="kpiCard" class="border-t-[3px] border-t-success">
+            <div :class="kpiLabel">{{ t('balances.recovery') }}</div>
+            <div :class="kpiValue" class="text-success">3</div>
+            <div :class="kpiSub">{{ t('balances.acquired') }}</div>
+          </div>
+          <div :class="kpiCard" class="border-t-[3px] border-t-success">
+            <div :class="kpiLabel">{{ t('balances.sick') }}</div>
+            <div :class="kpiValue" class="text-success">8</div>
+            <div :class="kpiSub">{{ t('balances.available') }}</div>
+          </div>
+          <div :class="kpiCard" class="border-t-[3px]" style="border-top-color:#854F0B">
+            <div :class="kpiLabel">{{ t('balances.remote') }}</div>
+            <div :class="kpiValue" style="color:#854F0B">5</div>
+            <div :class="kpiSub">{{ t('balances.used') }}</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 max-md:grid-cols-1">
+          <div :class="card">
+            <div :class="cardHeader">
+              <div :class="cardTitle">
+                <List class="w-4 h-4 text-primary" /> {{ t('absence.my_requests') }}
+              </div>
+              <router-link :to="{ name: 'employee-absences' }" class="text-xs text-info no-underline hover:underline">
+                {{ t('absence.history') }}
+              </router-link>
+            </div>
+            <div v-for="r in myRequests" :key="r.id" class="flex items-center gap-2.5 py-[9px] border-b border-border last:border-b-0">
+              <div class="flex-1">
+                <div class="text-sm font-medium">{{ typeLabel(r.type) }}</div>
+                <div class="text-xs text-muted-foreground">{{ r.startDate }} → {{ r.endDate }} · {{ r.workingDays }} jour{{ r.workingDays > 1 ? 's' : '' }}</div>
+              </div>
+              <span class="text-xs font-medium px-2.5 py-[3px] rounded-full whitespace-nowrap" :class="pillClass(r.status)">
+                {{ statusLabel(r.status) }}
+              </span>
+              <button v-if="r.status === 'pending'" class="px-2.5 py-[5px] rounded text-[10px] font-medium cursor-pointer bg-warning-bg text-warning">
+                {{ t('absence.actions.cancel') }}
+              </button>
+              <button v-else class="px-2.5 py-[5px] rounded text-xs font-medium cursor-pointer bg-background text-muted-foreground">{{ t('absence.actions.view') }}</button>
+            </div>
+            <div class="flex gap-2 flex-wrap mt-3 pt-2.5 border-t border-border">
+              <button :class="[btnOutline, 'text-[11px]']" @click="openModal('Télétravail')">
+                <Building class="w-4 h-4" /> {{ t('absence.types.remote') }}
+              </button>
+              <button :class="[btnOutline, 'text-[11px]']" @click="openModal('Récupération')">
+                <Clock class="w-4 h-4" /> {{ t('absence.types.recovery') }}
+              </button>
+              <button :class="[btnOutline, 'text-[11px]']" @click="router.push({ name: 'employee-missions' })">
+                <Plane class="w-4 h-4" /> {{ t('nav.my_missions') }}
+              </button>
+            </div>
+          </div>
+
+          <div :class="card">
+            <div :class="cardHeader">
+              <div :class="cardTitle">
+                <Calendar class="w-4 h-4 text-primary" /> {{ t('absence.calendar_title') }} — {{ calTitle }}
+              </div>
+            </div>
+            <div class="grid grid-cols-7 gap-0.5">
+              <div v-for="(d, i) in weekDays" :key="i" class="text-xs text-muted-foreground text-center py-[3px] font-medium">{{ d }}</div>
+              <div v-for="(day, i) in calDays" :key="i" class="text-xs text-center py-[5px] px-0.5 rounded cursor-pointer text-foreground hover:bg-background" :class="dayClass(day)">
+                {{ day.n ?? '' }}
+              </div>
+            </div>
+            <div class="flex gap-3 mt-2.5">
+              <span :class="legClass"><span class="w-2 h-2 rounded-full shrink-0" style="background:#B5D4F4"></span>{{ t('absence.types.annual') }}</span>
+              <span :class="legClass"><span class="w-2 h-2 rounded-full shrink-0 bg-primary"></span>Aujourd'hui</span>
+            </div>
+          </div>
+        </div>
+
+  </div>
+
+  <!-- Modale nouvelle demande -->
+  <AbsenceRequestModal
+    v-model="showModal"
+    :initial-type="modalInitialType || undefined"
+    @submitted="showToast(t('absence.submitted_toast'))"
+  />
+
+  <!-- Toast -->
+  <div v-if="toastMsg" class="fixed bottom-6 right-6 bg-success-bg text-success px-[18px] py-3 rounded-lg text-[13px] font-medium flex items-center gap-2 shadow-[0_4px_12px_rgba(0,0,0,0.12)] z-[2000]">
+    <Check class="w-4 h-4" /> {{ toastMsg }}
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import { Plus, List, Building, Clock, Plane, Calendar, Check } from 'lucide-vue-next'
+import AbsenceRequestModal from '../components/AbsenceRequestModal.vue'
+import { useAuthStore }       from '../stores/auth'
+import { useAbsenceStore }    from '../stores/absences'
+import { useLeaveTypesStore } from '../stores/leaveTypes'
+import type { LeaveStatus, LeaveType } from '../types'
+
+const auth         = useAuthStore()
+const leaves       = useAbsenceStore()
+const leaveTypes   = useLeaveTypesStore()
+const { t }        = useI18n()
+const router       = useRouter()
+
+const annualLeaveType = computed(() => leaveTypes.activeTypes.find(lt => lt.name === 'Congé annuel'))
+
+// ── Classes du design system ─────────────────────────────────
+const btnPrimary = 'px-4 py-[7px] rounded-md text-[13px] font-medium cursor-pointer flex items-center gap-1.5 bg-primary text-primary-foreground transition-colors hover:bg-primary/90'
+const btnOutline = 'px-4 py-[7px] rounded-md text-[13px] font-medium cursor-pointer flex items-center gap-1.5 bg-card text-foreground border border-border transition-colors hover:bg-background'
+const kpiCard = 'bg-card border border-border rounded-lg px-3.5 py-3'
+const kpiLabel = 'text-[13px] text-muted-foreground mb-1'
+const kpiValue = 'text-[28px] font-semibold leading-none'
+const kpiSub = 'text-xs text-muted-foreground mt-[3px]'
+const card = 'bg-card border border-border rounded-lg p-3.5'
+const cardHeader = 'flex items-center justify-between mb-3'
+const cardTitle = 'flex items-center gap-1.5 text-sm font-semibold'
+const legClass = 'flex items-center gap-1.5 text-[11px] text-muted-foreground'
+
+const myRequests = computed(() => leaves.myLeaves.slice(0, 5))
+
+// ── Modale ───────────────────────────────────────────────────
+const showModal        = ref(false)
+const modalInitialType = ref<LeaveType | ''>('')
+
+function openModal(type: LeaveType | '' = '') {
+  modalInitialType.value = type
+  showModal.value = true
+}
+
+// ── Toast ────────────────────────────────────────────────────
+const toastMsg = ref('')
+function showToast(msg: string) {
+  toastMsg.value = msg
+  setTimeout(() => { toastMsg.value = '' }, 3000)
+}
+
+// ── Helpers traduction ───────────────────────────────────────
+const typeI18nKey: Record<string, string> = {
+  'Congé annuel':              'absence.types.annual',
+  'Congé maladie':             'absence.types.sick',
+  'Récupération':              'absence.types.recovery',
+  'Télétravail':               'absence.types.remote',
+  'Congé maternité':           'absence.types.maternity',
+  'Assistance parentale':      'absence.types.parental',
+  'Permission exceptionnelle': 'absence.types.exceptional',
+}
+
+function typeLabel(type: string): string {
+  const key = typeI18nKey[type]
+  return key ? t(key) : type
+}
+
+function pillClass(s: LeaveStatus) {
+  return {
+    'bg-warning-bg text-warning':   s === 'pending',
+    'bg-success-bg text-success':  s === 'approved',
+    'bg-danger-bg text-danger':  s === 'rejected',
+    'bg-background text-muted-foreground': s === 'cancelled',
+    'bg-transparent text-foreground/60 border border-border': s === 'draft',
+  }
+}
+
+function statusLabel(s: LeaveStatus): string {
+  const map: Record<LeaveStatus, string> = {
+    draft:       t('absence.status.draft'),
+    pending:     t('absence.status.pending'),
+    approved:    t('absence.status.approved'),
+    rejected:    t('absence.status.rejected'),
+    cancelled:   t('absence.status.cancelled'),
+    returned:    t('absence.status.returned'),
+    registered:  t('absence.status.registered'),
+    done:        t('absence.status.done'),
+    regularized: t('absence.status.regularized'),
+  }
+  return map[s]
+}
+
+// ── Calendrier (mock juillet 2026) ───────────────────────────
+const weekDays = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
+interface CalDay { n: number | null; cls: string }
+
+const _now      = new Date()
+const _calYear  = _now.getFullYear()
+const _calMonth = _now.getMonth()
+
+const calTitle = new Date(_calYear, _calMonth, 1)
+  .toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+  .replace(/^\w/, c => c.toUpperCase())
+
+const _daysInMonth = new Date(_calYear, _calMonth + 1, 0).getDate()
+const _firstDay    = (new Date(_calYear, _calMonth, 1).getDay() + 6) % 7
+const _todayNum    = _now.getDate()
+
+const calDays: CalDay[] = [
+  ...Array<CalDay>(_firstDay).fill({ n: null, cls: 'empty' }),
+  ...Array.from({ length: _daysInMonth }, (_, i): CalDay => {
+    const n      = i + 1
+    const mm     = String(_calMonth + 1).padStart(2, '0')
+    const dd     = String(n).padStart(2, '0')
+    const ds     = `${_calYear}-${mm}-${dd}`
+    const hasLv  = leaves.myLeaves.some(
+      l => l.status === 'approved' && l.startDate <= ds && l.endDate >= ds
+    )
+    return { n, cls: n === _todayNum ? 'today' : hasLv ? 'has-leave' : '' }
+  }),
+]
+
+function dayClass(day: CalDay): string {
+  if (day.cls === 'empty') return 'text-transparent pointer-events-none'
+  if (day.cls === 'today') return 'bg-primary text-primary-foreground font-semibold'
+  if (day.cls === 'has-leave') return 'bg-success-bg text-success font-medium'
+  return ''
+}
+</script>
