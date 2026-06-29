@@ -1,7 +1,7 @@
 <template>
   <ListPageLayout
     title="Entités organisationnelles"
-    subtitle="Structure hiérarchique de Galana Petroleum Ltd"
+    subtitle="Structure hiérarchique de GTD"
     :columns="columns"
     :items="pageItems"
     :total="totalCount"
@@ -22,12 +22,14 @@
     @open-card="(e) => openCard(e.id)"
   >
     <template #header-actions>
-      <button :class="L.btnOutline" @click="showImport = true">
-        <Upload class="w-4 h-4" /> Importer
-      </button>
-      <button :class="L.btnPrimary" @click="showCreate = true">
-        <Plus class="w-4 h-4" /> Nouvelle entité
-      </button>
+      <div class="flex gap-2">
+        <button :class="L.btnOutline" @click="showImport = true">
+          <Upload class="w-4 h-4" /> Importer
+        </button>
+        <button :class="L.btnPrimary" @click="showCreate = true">
+          <Plus class="w-4 h-4" /> Nouvelle entité
+        </button>
+      </div>
     </template>
 
     <!-- KPIs -->

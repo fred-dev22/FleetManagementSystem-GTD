@@ -115,23 +115,23 @@ const typeIcon = computed(() => {
   return map[props.entity.type] ?? Building
 })
 
-// Accent bordure gauche selon le niveau (couleurs organigramme Galana)
+// Accent bordure gauche selon le niveau hiérarchique
 const cardBorder = computed(() => {
   const map: Record<string, string> = {
-    direction:  '4px solid var(--galana-direction-bg)',
-    department: '3px solid var(--galana-department-bg)',
-    service:    '2px solid var(--galana-service-border)',
+    direction:  '4px solid var(--color-primary-dark)',
+    department: '3px solid var(--color-primary)',
+    service:    '2px solid var(--color-danger)',
   }
   return { borderLeft: map[props.entity.type] ?? '2px solid var(--color-border)' }
 })
 
 const typeColor = computed(() => {
   const map: Record<string, { background: string; color: string }> = {
-    direction:  { background: 'var(--galana-red-light)',   color: 'var(--galana-red)' },
-    department: { background: 'var(--galana-green-light)', color: 'var(--galana-green)' },
-    service:    { background: 'var(--galana-green-light)', color: 'var(--galana-green)' },
+    direction:  { background: 'var(--color-primary-light)', color: 'var(--color-primary-dark)' },
+    department: { background: 'var(--color-primary-light)', color: 'var(--color-primary)' },
+    service:    { background: 'var(--color-danger-bg)',     color: 'var(--color-danger)' },
   }
-  return map[props.entity.type] ?? { background: 'var(--galana-green-light)', color: 'var(--galana-green)' }
+  return map[props.entity.type] ?? { background: 'var(--color-primary-light)', color: 'var(--color-primary)' }
 })
 
 // ── Status helpers ────────────────────────────────────────────
@@ -164,7 +164,7 @@ function approveEntity() { store.approveEntity(props.entity.id) }
 .org-children {
   margin-left: 32px;
   padding-left: 22px;
-  border-left: 2px solid var(--galana-green-mid);
+  border-left: 2px solid var(--color-primary-light);
   margin-top: 6px;
   padding-bottom: 2px;
 }
@@ -179,7 +179,7 @@ function approveEntity() { store.approveEntity(props.entity.id) }
   top: 22px;
   width: 22px;
   height: 2px;
-  background: var(--galana-green-mid);
+  background: var(--color-primary-light);
 }
 .org-child:last-child::after {
   content: '';

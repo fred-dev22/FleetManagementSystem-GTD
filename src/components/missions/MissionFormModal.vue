@@ -1,248 +1,122 @@
 <template>
-  <Teleport to="body">
-    <div v-if="modelValue" class="modal-overlay" @click.self="close">
-      <div class="modal-card">
+  <CreateModalShell
+    v-if="modelValue"
+    :title="editId ? 'Modifier la mission' : 'Nouvelle mission'"
+    :banner-label="editId ? 'Missions · Modification' : 'Missions · Création'"
+    create-label="Soumettre la mission"
+    @close="close"
+    @create="handleSubmit"
+  >
+  <template #form><div class="flex-1 overflow-y-auto px-8 py-6 max-w-3xl mx-auto">
 
-        <!-- ── En-tête ── -->
-        <div class="modal-header">
-          <span class="modal-title-text">
-            {{ editId ? 'Modifier la mission' : 'Nouvelle mission' }}
-          </span>
-          <button class="modal-close-btn" @click="close">
-            <X class="w-[14px] h-[14px]" aria-hidden="true" />
-          </button>
+    <FormSection title="Informations générales">
+      <ForWhomSelector v-model="forWhom" :available-employees="employeeItems" :error-employee="errors.employee" />
+      <div v-if="selectedEmployee" class="emp-badge mt-3">
+        <UserAvatar :name="selectedEmployee.name" size="sm" />
+        <div class="emp-badge-info">
+          <div class="emp-badge-name">{{ selectedEmployee.name }}</div>
+          <div class="emp-badge-cat"><Tag class="w-3 h-3" /> {{ perdiemCategoryLabel }}</div>
         </div>
-
-        <div class="modal-body">
-
-          <!-- Section : Informations générales -->
-          <div class="section-title">Informations générales</div>
-
-          <!-- Sélecteur de bénéficiaire -->
-          <ForWhomSelector
-            v-model="forWhom"
-            :available-employees="employeeItems"
-            :error-employee="errors.employee"
-          />
-
-          <!-- Badge employé avec catégorie -->
-          <div v-if="selectedEmployee" class="emp-badge">
-            <UserAvatar :name="selectedEmployee.name" size="sm" />
-            <div class="emp-badge-info">
-              <div class="emp-badge-name">{{ selectedEmployee.name }}</div>
-              <div class="emp-badge-cat">
-                <Tag class="w-3 h-3" aria-hidden="true" />
-                {{ perdiemCategoryLabel }}
-              </div>
-            </div>
-          </div>
-
-          <!-- Destination -->
-          <div class="field">
-            <label class="field-label">Destination *</label>
-            <input
-              v-model="form.destination"
-              class="field-input"
-              :class="{ 'input-error': errors.destination }"
-              placeholder="ex: Antananarivo, Toamasina..."
-            />
-            <div v-if="errors.destination" class="field-error">{{ errors.destination }}</div>
-          </div>
-
-          <!-- Objet / Motif -->
-          <div class="field">
-            <label class="field-label">Objet / Motif de la mission *</label>
-            <textarea
-              v-model="form.purpose"
-              class="field-textarea"
-              rows="2"
-              :class="{ 'input-error': errors.purpose }"
-              placeholder="Décrivez l'objet de la mission..."
-            ></textarea>
-            <div v-if="errors.purpose" class="field-error">{{ errors.purpose }}</div>
-          </div>
-
-          <!-- Section : Déplacement -->
-          <div class="section-title">Déplacement</div>
-
-          <div class="field-row">
-            <div class="field">
-              <label class="field-label">Date et heure de départ *</label>
-              <input
-                type="datetime-local"
-                v-model="form.departureDate"
-                class="field-input"
-                :class="{ 'input-error': errors.departureDate }"
-              />
-              <div v-if="errors.departureDate" class="field-error">{{ errors.departureDate }}</div>
-            </div>
-            <div class="field">
-              <label class="field-label">Date et heure de retour *</label>
-              <input
-                type="datetime-local"
-                v-model="form.returnDate"
-                class="field-input"
-                :class="{ 'input-error': errors.returnDate }"
-                :min="form.departureDate"
-              />
-              <div v-if="errors.returnDate" class="field-error">{{ errors.returnDate }}</div>
-            </div>
-          </div>
-
-          <div class="field-row">
-            <div class="field">
-              <label class="field-label">Transport aller</label>
-              <SearchableDropdown
-                :items="transportItems"
-                :model-value="form.transportMode"
-                :show-avatar="false"
-                @update:model-value="form.transportMode = $event as TransportMode"
-              />
-            </div>
-            <div class="field">
-              <label class="field-label">Transport retour</label>
-              <SearchableDropdown
-                :items="transportItems"
-                :model-value="form.transportModeReturn"
-                :show-avatar="false"
-                @update:model-value="form.transportModeReturn = $event as TransportMode"
-              />
-            </div>
-          </div>
-
-          <!-- Section : Indemnité per diem -->
-          <div class="section-title">Indemnité per diem</div>
-
-          <div v-if="selectedEmployee && form.departureDate && form.returnDate && perdiemRate" class="perdiem-card">
-            <div class="pd-row">
-              <span class="pd-label">Catégorie</span>
-              <span class="pd-val">{{ perdiemCategoryLabel }}</span>
-            </div>
-            <div class="pd-row">
-              <span class="pd-label">Taux journalier</span>
-              <span class="pd-val">{{ fmt(perdiemRate.ratePerDay) }} {{ perdiemRate.currency }}</span>
-            </div>
-            <div class="pd-row">
-              <span class="pd-label">Nombre de jours</span>
-              <span class="pd-val">{{ computedDays }} jour(s)</span>
-            </div>
-            <div class="pd-divider"></div>
-            <div class="pd-row pd-total">
-              <span class="pd-label">Total per diem</span>
-              <span class="pd-val">{{ fmt(perdiemTotal) }} {{ perdiemRate.currency }}</span>
-            </div>
-          </div>
-          <div v-else class="allowance-empty">
-            <Calculator class="w-[14px] h-[14px]" aria-hidden="true" />
-            {{
-              !selectedEmployee
-                ? 'Sélectionnez un employé et des dates pour calculer le per diem'
-                : 'Sélectionnez des dates pour calculer le per diem'
-            }}
-          </div>
-
-          <!-- Section : Frais supplémentaires -->
-          <div class="section-title">
-            Frais supplémentaires
-            <span class="section-opt">(optionnel)</span>
-          </div>
-
-          <div v-if="expenseLines.length > 0" class="expense-table">
-            <div class="expense-header">
-              <span>Catégorie</span>
-              <span>Description</span>
-              <span>Montant</span>
-              <span></span>
-            </div>
-            <div v-for="(line, i) in expenseLines" :key="i" class="expense-row">
-              <select v-model="line.category" class="field-input field-input-sm">
-                <option v-for="cat in EXPENSE_CATS" :key="cat.value" :value="cat.value">{{ cat.label }}</option>
-              </select>
-              <input
-                v-model="line.description"
-                class="field-input field-input-sm"
-                placeholder="Description..."
-              />
-              <input
-                v-model.number="line.amount"
-                type="number"
-                class="field-input field-input-sm"
-                min="0"
-                placeholder="0"
-              />
-              <button class="remove-line-btn" @click="removeLine(i)" title="Supprimer">
-                <Trash2 class="w-[14px] h-[14px]" aria-hidden="true" />
-              </button>
-            </div>
-          </div>
-
-          <button class="add-line-btn" @click="addLine">
-            <Plus class="w-3 h-3" aria-hidden="true" /> Ajouter un frais
-          </button>
-
-          <!-- Section : Récapitulatif -->
-          <template v-if="perdiemRate || expenseLines.length > 0">
-            <div class="section-title">Récapitulatif</div>
-            <div class="recap-card">
-              <div v-if="perdiemRate" class="recap-row">
-                <span>Per diem ({{ computedDays }}j × {{ fmt(perdiemRate.ratePerDay) }})</span>
-                <span>{{ fmt(perdiemTotal) }} {{ perdiemRate.currency }}</span>
-              </div>
-              <div v-if="expenseLines.length > 0" class="recap-row">
-                <span>Frais supplémentaires</span>
-                <span>{{ fmt(expenseTotal) }} {{ perdiemRate?.currency ?? 'MGA' }}</span>
-              </div>
-              <div class="recap-divider"></div>
-              <div class="recap-row recap-total">
-                <span>TOTAL MISSION</span>
-                <span>{{ fmt(grandTotal) }} {{ perdiemRate?.currency ?? 'MGA' }}</span>
-              </div>
-              <div class="field" style="margin-top:12px">
-                <label class="field-label">Acompte demandé (optionnel)</label>
-                <input
-                  type="number"
-                  v-model.number="form.advance"
-                  class="field-input"
-                  :max="grandTotal"
-                  min="0"
-                  placeholder="0"
-                />
-              </div>
-            </div>
-          </template>
-
-          <!-- Section : Notes -->
-          <div class="section-title">Notes</div>
-          <div class="field">
-            <label class="field-label">Description (optionnelle)</label>
-            <textarea
-              v-model="form.description"
-              class="field-textarea"
-              rows="2"
-              placeholder="Informations complémentaires..."
-            ></textarea>
-          </div>
-
-        </div>
-
-        <!-- ── Pied ── -->
-        <div class="modal-footer">
-          <button class="btn btn-outline" @click="handleDraft">
-            <Save class="w-[14px] h-[14px]" aria-hidden="true" /> Brouillon
-          </button>
-          <button class="btn btn-primary" @click="handleSubmit">
-            <Send class="w-[14px] h-[14px]" aria-hidden="true" /> Soumettre
-          </button>
-        </div>
-
       </div>
+      <div class="grid grid-cols-2 gap-x-6 gap-y-4 max-sm:grid-cols-1 mt-4">
+        <div class="col-span-2 field">
+          <label class="field-label">Destination *</label>
+          <input v-model="form.destination" class="field-input" :class="{ 'input-error': errors.destination }" placeholder="ex: Antananarivo, Toamasina..." />
+          <div v-if="errors.destination" class="field-error">{{ errors.destination }}</div>
+        </div>
+        <div class="col-span-2 field">
+          <label class="field-label">Objet / Motif de la mission *</label>
+          <textarea v-model="form.purpose" class="field-textarea" rows="2" :class="{ 'input-error': errors.purpose }" placeholder="Décrivez l'objet de la mission..."></textarea>
+          <div v-if="errors.purpose" class="field-error">{{ errors.purpose }}</div>
+        </div>
+      </div>
+    </FormSection>
+
+    <FormSection title="Déplacement">
+      <div class="grid grid-cols-2 gap-x-6 gap-y-4 max-sm:grid-cols-1">
+        <div class="field">
+          <label class="field-label">Date et heure de départ *</label>
+          <input type="datetime-local" v-model="form.departureDate" class="field-input" :class="{ 'input-error': errors.departureDate }" />
+          <div v-if="errors.departureDate" class="field-error">{{ errors.departureDate }}</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Date et heure de retour *</label>
+          <input type="datetime-local" v-model="form.returnDate" class="field-input" :class="{ 'input-error': errors.returnDate }" :min="form.departureDate" />
+          <div v-if="errors.returnDate" class="field-error">{{ errors.returnDate }}</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Transport aller</label>
+          <SearchableDropdown :items="transportItems" :model-value="form.transportMode" :show-avatar="false" @update:model-value="form.transportMode = $event as TransportMode" />
+        </div>
+        <div class="field">
+          <label class="field-label">Transport retour</label>
+          <SearchableDropdown :items="transportItems" :model-value="form.transportModeReturn" :show-avatar="false" @update:model-value="form.transportModeReturn = $event as TransportMode" />
+        </div>
+      </div>
+    </FormSection>
+
+    <FormSection title="Indemnité per diem">
+      <div v-if="selectedEmployee && form.departureDate && form.returnDate && perdiemRate" class="perdiem-card">
+        <div class="pd-row"><span class="pd-label">Catégorie</span><span class="pd-val">{{ perdiemCategoryLabel }}</span></div>
+        <div class="pd-row"><span class="pd-label">Taux journalier</span><span class="pd-val">{{ fmt(perdiemRate.ratePerDay) }} {{ perdiemRate.currency }}</span></div>
+        <div class="pd-row"><span class="pd-label">Nombre de jours</span><span class="pd-val">{{ computedDays }} jour(s)</span></div>
+        <div class="pd-divider"></div>
+        <div class="pd-row pd-total"><span class="pd-label">Total per diem</span><span class="pd-val">{{ fmt(perdiemTotal) }} {{ perdiemRate.currency }}</span></div>
+      </div>
+      <div v-else class="allowance-empty">
+        <Calculator class="w-[14px] h-[14px]" />
+        {{ !selectedEmployee ? 'Sélectionnez un employé et des dates pour calculer le per diem' : 'Sélectionnez des dates pour calculer le per diem' }}
+      </div>
+    </FormSection>
+
+    <FormSection title="Frais supplémentaires" :default-open="false">
+      <div v-if="expenseLines.length > 0" class="expense-table">
+        <div class="expense-header"><span>Catégorie</span><span>Description</span><span>Montant</span><span></span></div>
+        <div v-for="(line, i) in expenseLines" :key="i" class="expense-row">
+          <select v-model="line.category" class="field-input field-input-sm"><option v-for="cat in EXPENSE_CATS" :key="cat.value" :value="cat.value">{{ cat.label }}</option></select>
+          <input v-model="line.description" class="field-input field-input-sm" placeholder="Description..." />
+          <input v-model.number="line.amount" type="number" class="field-input field-input-sm" min="0" placeholder="0" />
+          <button class="remove-line-btn" @click="removeLine(i)" title="Supprimer"><Trash2 class="w-[14px] h-[14px]" /></button>
+        </div>
+      </div>
+      <button class="add-line-btn mt-2" @click="addLine"><Plus class="w-3 h-3" /> Ajouter un frais</button>
+    </FormSection>
+
+    <FormSection v-if="perdiemRate || expenseLines.length > 0" title="Récapitulatif">
+      <div class="recap-card">
+        <div v-if="perdiemRate" class="recap-row"><span>Per diem ({{ computedDays }}j × {{ fmt(perdiemRate.ratePerDay) }})</span><span>{{ fmt(perdiemTotal) }} {{ perdiemRate.currency }}</span></div>
+        <div v-if="expenseLines.length > 0" class="recap-row"><span>Frais supplémentaires</span><span>{{ fmt(expenseTotal) }} {{ perdiemRate?.currency ?? 'MGA' }}</span></div>
+        <div class="recap-divider"></div>
+        <div class="recap-row recap-total"><span>TOTAL MISSION</span><span>{{ fmt(grandTotal) }} {{ perdiemRate?.currency ?? 'MGA' }}</span></div>
+        <div class="field" style="margin-top:12px">
+          <label class="field-label">Acompte demandé (optionnel)</label>
+          <input type="number" v-model.number="form.advance" class="field-input" :max="grandTotal" min="0" placeholder="0" />
+        </div>
+      </div>
+    </FormSection>
+
+    <FormSection title="Notes" :default-open="false">
+      <div class="field">
+        <label class="field-label">Description (optionnelle)</label>
+        <textarea v-model="form.description" class="field-textarea" rows="2" placeholder="Informations complémentaires..."></textarea>
+      </div>
+    </FormSection>
+
+    <div class="pt-2">
+      <button class="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium border border-border rounded text-foreground hover:bg-background transition cursor-pointer" @click="handleDraft">
+        <Save class="w-4 h-4" /> Enregistrer en brouillon
+      </button>
     </div>
-  </Teleport>
+
+  </div></template>
+  </CreateModalShell>
 </template>
 
 <script setup lang="ts">
 import { reactive, ref, computed, watch } from 'vue'
-import { X, Tag, Calculator, Trash2, Plus, Save, Send } from 'lucide-vue-next'
+import { Tag, Calculator, Trash2, Plus, Save, Send } from 'lucide-vue-next'
+import CreateModalShell from '../shared/CreateModalShell.vue'
+import FormSection from '../ui/form-field/FormSection.vue'
 import SearchableDropdown from '../ui/SearchableDropdown.vue'
 import ForWhomSelector from '../ui/ForWhomSelector.vue'
 import type { BeneficiaryValue } from '../ui/ForWhomSelector.vue'

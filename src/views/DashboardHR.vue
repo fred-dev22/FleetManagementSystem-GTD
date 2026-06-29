@@ -7,11 +7,8 @@
             <div class="text-[13px] text-muted-foreground mt-px">{{ t('dashboard.greeting') }} {{ auth.user?.name }} — {{ today }}</div>
           </div>
           <div class="flex gap-2">
-            <button :class="btnOutline">
-              <FileDown class="w-4 h-4" /> {{ t('dashboard.export') }}
-            </button>
             <button :class="btnPrimary" @click="absenceModalOpen = true">
-              <Plus class="w-4 h-4" /> {{ t('dashboard.new_request') }}
+              <Plus class="w-4 h-4" /> Nouvelle demande de congé
             </button>
           </div>
         </div>

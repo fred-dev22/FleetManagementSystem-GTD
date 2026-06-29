@@ -63,8 +63,8 @@ const mobileItemClass =
   'flex items-center px-5 py-3 text-sm font-medium text-foreground/80 cursor-pointer border-b border-border last:border-0 no-underline hover:bg-background hover:text-primary'
 
 const navItems = computed(() => [
-  { key: 'fleet',          label: t('nav.fleet') },
   { key: 'administration', label: t('nav.admin') },
+  { key: 'fleet',          label: t('nav.fleet') },
 ])
 
 function handleNav(key: string) {

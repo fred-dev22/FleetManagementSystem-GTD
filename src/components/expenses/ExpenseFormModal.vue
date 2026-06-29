@@ -1,118 +1,84 @@
 <template>
-  <Teleport to="body">
-    <div v-if="modelValue" class="overlay" @click.self="$emit('update:modelValue', false)">
-      <div class="modal">
-        <div class="modal-header">
-          <h2 class="modal-title">{{ editId ? 'Modifier la note de frais' : 'Nouvelle note de frais' }}</h2>
-          <button class="close-btn" @click="$emit('update:modelValue', false)"><X class="w-4 h-4" /></button>
+  <CreateModalShell
+    v-if="modelValue"
+    :title="editId ? 'Modifier la note de frais' : 'Nouvelle note de frais'"
+    :banner-label="editId ? 'Notes de frais · Modification' : 'Notes de frais · Création'"
+    create-label="Soumettre"
+    @close="$emit('update:modelValue', false)"
+    @create="submit"
+  >
+  <template #form><div class="flex-1 overflow-y-auto px-8 py-6 max-w-3xl mx-auto">
+
+    <ForWhomSelector v-model="forWhom" :available-employees="availableEmployees" />
+
+    <FormSection title="Informations générales">
+      <div class="grid grid-cols-2 gap-x-6 gap-y-4 max-sm:grid-cols-1">
+        <div class="col-span-2 flex flex-col gap-1">
+          <label class="text-[12px] font-medium text-muted-foreground">Titre *</label>
+          <input v-model="form.title" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary" type="text" placeholder="Ex: Mission Antananarivo – Juin 2026" />
         </div>
-
-        <div class="modal-body">
-
-          <!-- Bénéficiaire -->
-          <div class="section">
-            <ForWhomSelector
-              v-model="forWhom"
-              :available-employees="availableEmployees"
-            />
-          </div>
-
-          <!-- Infos générales -->
-          <div class="section">
-            <div class="section-title">Informations générales</div>
-            <div class="form-grid">
-              <div class="form-field form-full">
-                <label class="field-label">Titre *</label>
-                <input v-model="form.title" class="field-input" type="text" placeholder="Ex: Mission Antananarivo – Juin 2026" />
-              </div>
-              <div class="form-field">
-                <label class="field-label">Mission liée (optionnel)</label>
-                <select v-model="form.missionId" class="field-input">
-                  <option value="">Aucune</option>
-                  <option v-for="m in missionStore.missions.filter(m => m.status === 'approved')" :key="m.id" :value="m.id">
-                    {{ m.code }} — {{ m.destination }}
-                  </option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- Lignes de dépense -->
-          <div class="section">
-            <div class="section-header">
-              <div class="section-title">Lignes de dépense</div>
-              <button class="add-line-btn" @click="addLine"><Plus class="w-3 h-3" /> Ajouter</button>
-            </div>
-            <table class="lines-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Catégorie</th>
-                  <th>Description</th>
-                  <th>Montant (MGA)</th>
-                  <th>Justif.</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(line, idx) in form.lines" :key="line.id">
-                  <td><input v-model="line.date" class="cell-input" type="date" /></td>
-                  <td>
-                    <select v-model="line.category" class="cell-input">
-                      <option v-for="(label, key) in CATEGORY_LABELS" :key="key" :value="key">{{ label }}</option>
-                    </select>
-                  </td>
-                  <td><input v-model="line.description" class="cell-input" type="text" placeholder="Description..." /></td>
-                  <td><input v-model.number="line.amount" class="cell-input cell-amount" type="number" min="0" /></td>
-                  <td class="center">
-                    <input type="checkbox" v-model="line.receipt" />
-                  </td>
-                  <td>
-                    <button class="remove-line-btn" @click="removeLine(idx)"><Trash2 class="w-[14px] h-[14px]" /></button>
-                  </td>
-                </tr>
-                <tr v-if="form.lines.length === 0">
-                  <td colspan="6" class="no-lines">Aucune ligne — cliquez "Ajouter" pour commencer</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Récapitulatif -->
-          <div class="recap">
-            <div class="recap-row">
-              <span class="recap-label">Nombre de lignes</span>
-              <span class="recap-val">{{ form.lines.length }}</span>
-            </div>
-            <div class="recap-row">
-              <span class="recap-label">Lignes avec justificatif</span>
-              <span class="recap-val">{{ form.lines.filter(l => l.receipt).length }} / {{ form.lines.length }}</span>
-            </div>
-            <div class="recap-row recap-total">
-              <span class="recap-label">Total</span>
-              <span class="recap-val">{{ fmt(totalAmount) }} MGA</span>
-            </div>
-          </div>
-
-        </div>
-
-        <div class="modal-footer">
-          <button class="btn btn-outline" @click="$emit('update:modelValue', false)">Annuler</button>
-          <button class="btn btn-secondary" @click="saveDraft">
-            <Save class="w-[14px] h-[14px]" /> Brouillon
-          </button>
-          <button class="btn btn-primary" @click="submit">
-            <Send class="w-[14px] h-[14px]" /> Soumettre
-          </button>
+        <div class="flex flex-col gap-1">
+          <label class="text-[12px] font-medium text-muted-foreground">Mission liée <span class="font-normal">(optionnel)</span></label>
+          <select v-model="form.missionId" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary">
+            <option value="">Aucune</option>
+            <option v-for="m in missionStore.missions.filter(m => m.status === 'approved')" :key="m.id" :value="m.id">{{ m.code }} — {{ m.destination }}</option>
+          </select>
         </div>
       </div>
-    </div>
-  </Teleport>
+    </FormSection>
+
+    <FormSection title="Lignes de dépense">
+      <template #default>
+        <div class="flex justify-end mb-2">
+          <button class="inline-flex items-center gap-1 px-3 py-1.5 rounded text-[12px] font-semibold bg-primary/10 text-primary cursor-pointer" @click="addLine"><Plus class="w-3 h-3" /> Ajouter</button>
+        </div>
+        <table class="lines-table w-full border-collapse text-[12px]">
+          <thead>
+            <tr>
+              <th class="text-left text-[11px] font-semibold text-muted-foreground bg-background border-b border-border px-2 py-2">Date</th>
+              <th class="text-left text-[11px] font-semibold text-muted-foreground bg-background border-b border-border px-2 py-2">Catégorie</th>
+              <th class="text-left text-[11px] font-semibold text-muted-foreground bg-background border-b border-border px-2 py-2">Description</th>
+              <th class="text-left text-[11px] font-semibold text-muted-foreground bg-background border-b border-border px-2 py-2">Montant (MGA)</th>
+              <th class="text-center text-[11px] font-semibold text-muted-foreground bg-background border-b border-border px-2 py-2">Justif.</th>
+              <th class="border-b border-border px-2 py-2"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(line, idx) in form.lines" :key="line.id">
+              <td class="border-b border-border px-1 py-1"><input v-model="line.date" class="cell-input w-full h-[30px] px-1.5 border border-border rounded text-[12px] bg-background text-foreground focus:outline-none focus:border-primary" type="date" /></td>
+              <td class="border-b border-border px-1 py-1"><select v-model="line.category" class="cell-input w-full h-[30px] px-1.5 border border-border rounded text-[12px] bg-background text-foreground focus:outline-none focus:border-primary"><option v-for="(label, key) in CATEGORY_LABELS" :key="key" :value="key">{{ label }}</option></select></td>
+              <td class="border-b border-border px-1 py-1"><input v-model="line.description" class="cell-input w-full h-[30px] px-1.5 border border-border rounded text-[12px] bg-background text-foreground focus:outline-none focus:border-primary" type="text" placeholder="Description..." /></td>
+              <td class="border-b border-border px-1 py-1"><input v-model.number="line.amount" class="cell-input w-full h-[30px] px-1.5 border border-border rounded text-[12px] bg-background text-foreground focus:outline-none focus:border-primary text-right" type="number" min="0" /></td>
+              <td class="border-b border-border px-1 py-1 text-center"><input type="checkbox" v-model="line.receipt" /></td>
+              <td class="border-b border-border px-1 py-1"><button class="w-6 h-6 flex items-center justify-center rounded bg-red-50 text-red-500 cursor-pointer border-0" @click="removeLine(idx)"><Trash2 class="w-3.5 h-3.5" /></button></td>
+            </tr>
+            <tr v-if="form.lines.length === 0">
+              <td colspan="6" class="text-center py-5 text-muted-foreground italic text-[12px]">Aucune ligne — cliquez "Ajouter" pour commencer</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="mt-3 bg-background border border-border rounded-lg px-4 py-3 flex flex-col gap-1.5 text-[13px]">
+          <div class="flex justify-between"><span class="text-muted-foreground">Nombre de lignes</span><span class="font-medium">{{ form.lines.length }}</span></div>
+          <div class="flex justify-between"><span class="text-muted-foreground">Lignes avec justificatif</span><span class="font-medium">{{ form.lines.filter(l => l.receipt).length }} / {{ form.lines.length }}</span></div>
+          <div class="flex justify-between border-t border-border pt-2 mt-1"><span class="text-muted-foreground">Total</span><span class="font-bold text-primary text-[15px]">{{ fmt(totalAmount) }} MGA</span></div>
+        </div>
+        <div class="pt-4">
+          <button class="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium border border-border rounded text-foreground hover:bg-background transition cursor-pointer" @click="saveDraft">
+            <Save class="w-4 h-4" /> Enregistrer en brouillon
+          </button>
+        </div>
+      </template>
+    </FormSection>
+
+  </div></template>
+  </CreateModalShell>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue'
-import { X, Plus, Trash2, Save, Send } from 'lucide-vue-next'
+import { Plus, Trash2, Save, Send } from 'lucide-vue-next'
+import CreateModalShell from '../shared/CreateModalShell.vue'
+import FormSection from '../ui/form-field/FormSection.vue'
 import ForWhomSelector from '../ui/ForWhomSelector.vue'
 import type { BeneficiaryValue } from '../ui/ForWhomSelector.vue'
 import { useAuthStore }     from '../../stores/auth'

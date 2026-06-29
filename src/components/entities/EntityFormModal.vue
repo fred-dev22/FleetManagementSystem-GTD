@@ -1,50 +1,29 @@
 <template>
-  <ModalShell
-    :open="modelValue"
+  <CreateModalShell
+    v-if="modelValue"
     :title="isEditMode ? 'Modifier l\'entité' : 'Nouvelle entité'"
-    max-width="max-w-[660px]"
+    :banner-label="isEditMode ? 'Entités · Modification' : 'Entités · Création'"
+    :create-label="isEditMode ? 'Enregistrer' : 'Soumettre l\'entité'"
     @close="close"
+    @create="handleSubmit"
   >
+  <template #form><div class="flex-1 overflow-y-auto px-8 py-6 max-w-3xl mx-auto">
 
-    <!-- ── Section 1 : Informations générales ── -->
-    <div class="flex flex-col gap-3">
-      <p class="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        <Building class="w-3.5 h-3.5" />
-        Informations générales
-      </p>
-
-      <div class="grid grid-cols-2 gap-3 max-sm:grid-cols-1">
+    <FormSection title="Informations générales">
+      <div class="grid grid-cols-2 gap-x-6 gap-y-4 max-sm:grid-cols-1">
         <div :class="[cls.field, 'col-span-2 max-sm:col-span-1']">
           <label :class="cls.fieldLabel">Intitulé *</label>
-          <input
-            v-model="form.name"
-            :class="[cls.fieldInput, errors.name ? cls.inputError : '']"
-            placeholder="ex: Direction des Ressources Humaines"
-          />
+          <input v-model="form.name" :class="[cls.fieldInput, errors.name ? cls.inputError : '']" placeholder="ex: Direction des Ressources Humaines" />
           <div v-if="errors.name" :class="cls.fieldError">{{ errors.name }}</div>
         </div>
-
         <div :class="cls.field">
-          <label :class="cls.fieldLabel">
-            Code *
-            <span :class="cls.fieldOptional">(max 10 car.)</span>
-          </label>
-          <input
-            v-model="form.code"
-            :class="[cls.fieldInput, errors.code ? cls.inputError : '']"
-            placeholder="ex: DRH"
-            maxlength="10"
-            @input="form.code = form.code.toUpperCase()"
-          />
+          <label :class="cls.fieldLabel">Code * <span :class="cls.fieldOptional">(max 10 car.)</span></label>
+          <input v-model="form.code" :class="[cls.fieldInput, errors.code ? cls.inputError : '']" placeholder="ex: DRH" maxlength="10" @input="form.code = form.code.toUpperCase()" />
           <div v-if="errors.code" :class="cls.fieldError">{{ errors.code }}</div>
         </div>
-
         <div :class="cls.field">
           <label :class="cls.fieldLabel">Type *</label>
-          <select
-            v-model="form.type"
-            :class="[cls.fieldSelect, errors.type ? cls.inputError : '']"
-          >
+          <select v-model="form.type" :class="[cls.fieldSelect, errors.type ? cls.inputError : '']">
             <option value="">-- Choisir un type --</option>
             <option value="direction">Direction</option>
             <option value="department">Département</option>
@@ -52,183 +31,78 @@
           </select>
           <div v-if="errors.type" :class="cls.fieldError">{{ errors.type }}</div>
         </div>
-
         <div :class="cls.field">
           <label :class="cls.fieldLabel">Entité parente</label>
-          <SearchableDropdown
-            v-model="form.parentId"
-            :items="entityItems"
-            placeholder="Rechercher une entité..."
-            :show-avatar="false"
-          />
+          <SearchableDropdown v-model="form.parentId" :items="entityItems" placeholder="Rechercher une entité..." :show-avatar="false" />
         </div>
-
         <div :class="cls.field">
-          <label :class="cls.fieldLabel">
-            Identifiant légal
-            <span :class="cls.fieldOptional">(optionnel)</span>
-          </label>
-          <input
-            v-model="form.legalIdentifier"
-            :class="cls.fieldInput"
-            placeholder="ex: GPL-001"
-          />
+          <label :class="cls.fieldLabel">Identifiant légal <span :class="cls.fieldOptional">(optionnel)</span></label>
+          <input v-model="form.legalIdentifier" :class="cls.fieldInput" placeholder="ex: GTD-001" />
         </div>
-
         <div :class="[cls.field, 'col-span-2 max-sm:col-span-1']">
-          <label :class="cls.fieldLabel">
-            Adresse
-            <span :class="cls.fieldOptional">(optionnel)</span>
-          </label>
-          <textarea
-            v-model="form.address"
-            :class="cls.fieldTextarea"
-            rows="2"
-            placeholder="Adresse physique de l'entité…"
-          ></textarea>
+          <label :class="cls.fieldLabel">Adresse <span :class="cls.fieldOptional">(optionnel)</span></label>
+          <textarea v-model="form.address" :class="cls.fieldTextarea" rows="2" placeholder="Adresse physique de l'entité…"></textarea>
         </div>
       </div>
-    </div>
+    </FormSection>
 
-    <!-- ── Section 2 : Contact & Responsable ── -->
-    <div class="flex flex-col gap-3 border-t border-border pt-3.5">
-      <p class="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        <User class="w-3.5 h-3.5" />
-        Contact &amp; Responsable
-      </p>
-
-      <div class="grid grid-cols-2 gap-3 max-sm:grid-cols-1">
+    <FormSection title="Contact & Responsable">
+      <div class="grid grid-cols-2 gap-x-6 gap-y-4 max-sm:grid-cols-1">
         <div :class="cls.field">
           <label :class="cls.fieldLabel">Responsable</label>
-          <SearchableDropdown
-            v-model="form.responsibleId"
-            :items="employeeItems"
-            placeholder="Rechercher un responsable..."
-            :show-avatar="true"
-          />
+          <SearchableDropdown v-model="form.responsibleId" :items="employeeItems" placeholder="Rechercher un responsable..." :show-avatar="true" />
         </div>
-
         <div :class="cls.field">
           <label :class="cls.fieldLabel">Téléphone principal</label>
-          <input
-            v-model="form.phone"
-            type="tel"
-            :class="cls.fieldInput"
-            placeholder="+230 2xx xxxx"
-          />
+          <input v-model="form.phone" type="tel" :class="cls.fieldInput" placeholder="+261 3x xxx xxxx" />
         </div>
-
         <div :class="[cls.field, 'col-span-2 max-sm:col-span-1']">
           <label :class="cls.fieldLabel">Courrier électronique</label>
-          <input
-            v-model="form.email"
-            type="email"
-            :class="[cls.fieldInput, errors.email ? cls.inputError : '']"
-            placeholder="service@gtd.mg"
-          />
+          <input v-model="form.email" type="email" :class="[cls.fieldInput, errors.email ? cls.inputError : '']" placeholder="service@gtd.mg" />
           <div v-if="errors.email" :class="cls.fieldError">{{ errors.email }}</div>
         </div>
       </div>
-    </div>
+    </FormSection>
 
-    <!-- ── Section 3 : Pools de validation ── -->
-    <div class="flex flex-col gap-3 border-t border-border pt-3.5">
-      <div>
-        <p class="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-          <ShieldCheck class="w-3.5 h-3.5" />
-          Configuration des validateurs
-        </p>
-        <p class="text-xs text-muted-foreground mt-1">
-          Définissez qui approuve les demandes des employés de cette entité.
-        </p>
-      </div>
-
+    <FormSection title="Configuration des validateurs">
+      <p class="text-xs text-muted-foreground -mt-2 mb-3">Définissez qui approuve les demandes des employés de cette entité.</p>
       <div class="flex flex-col gap-2">
-        <div
-          v-for="level in ([1, 2, 3, 4] as const)"
-          :key="level"
-          class="flex items-center gap-2"
-        >
-          <span class="text-[11px] font-semibold text-muted-foreground bg-background border border-border rounded px-2 py-0.5 min-w-[36px] text-center shrink-0">
-            N+{{ level }}
-          </span>
-
+        <div v-for="level in ([1, 2, 3, 4] as const)" :key="level" class="flex items-center gap-2">
+          <span class="text-[11px] font-semibold text-muted-foreground bg-background border border-border rounded px-2 py-0.5 min-w-[36px] text-center shrink-0">N+{{ level }}</span>
           <template v-if="getPool(level)">
-            <select
-              class="flex-1 h-[36px] px-2.5 border border-border rounded-md bg-background text-[13px] text-foreground outline-none transition-colors focus:border-primary focus:bg-card cursor-pointer"
-              :value="getPool(level)!.employeeId ?? ''"
-              @change="updatePoolEmployee(level, ($event.target as HTMLSelectElement).value)"
-            >
+            <select class="flex-1 h-[36px] px-2.5 border border-border rounded-md bg-background text-[13px] text-foreground outline-none transition-colors focus:border-primary focus:bg-card cursor-pointer" :value="getPool(level)!.employeeId ?? ''" @change="updatePoolEmployee(level, ($event.target as HTMLSelectElement).value)">
               <option value="">-- Choisir --</option>
-              <optgroup label="Directeurs RH">
-                <option
-                  v-for="e in empStore.employees.filter(x => x.role === 'hr_director')"
-                  :key="e.id"
-                  :value="e.id"
-                >{{ e.name }} · {{ e.jobTitle }}</option>
-              </optgroup>
-              <optgroup label="Admins RH">
-                <option
-                  v-for="e in empStore.employees.filter(x => x.role === 'hr_admin')"
-                  :key="e.id"
-                  :value="e.id"
-                >{{ e.name }} · {{ e.jobTitle }}</option>
-              </optgroup>
-              <optgroup label="Validateurs">
-                <option
-                  v-for="e in empStore.employees.filter(x => x.role === 'validator')"
-                  :key="e.id"
-                  :value="e.id"
-                >{{ e.name }} · {{ e.jobTitle }}</option>
-              </optgroup>
+              <optgroup label="Directeurs RH"><option v-for="e in empStore.employees.filter(x => x.role === 'hr_director')" :key="e.id" :value="e.id">{{ e.name }} · {{ e.jobTitle }}</option></optgroup>
+              <optgroup label="Admins RH"><option v-for="e in empStore.employees.filter(x => x.role === 'hr_admin')" :key="e.id" :value="e.id">{{ e.name }} · {{ e.jobTitle }}</option></optgroup>
+              <optgroup label="Validateurs"><option v-for="e in empStore.employees.filter(x => x.role === 'validator')" :key="e.id" :value="e.id">{{ e.name }} · {{ e.jobTitle }}</option></optgroup>
             </select>
-
-            <div
-              class="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0"
-              :style="{ background: getPool(level)!.validatorColor }"
-            >{{ getPool(level)!.validatorInitials }}</div>
-
-            <button
-              class="w-7 h-7 flex items-center justify-center rounded text-danger hover:bg-danger-bg transition-colors cursor-pointer shrink-0 border-0 bg-transparent"
-              @click="removePool(level)"
-              title="Supprimer"
-            >
-              <Trash2 class="w-3.5 h-3.5" />
-            </button>
+            <div class="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0" :style="{ background: getPool(level)!.validatorColor }">{{ getPool(level)!.validatorInitials }}</div>
+            <button class="w-7 h-7 flex items-center justify-center rounded text-danger hover:bg-danger-bg transition-colors cursor-pointer shrink-0 border-0 bg-transparent" @click="removePool(level)" title="Supprimer"><Trash2 class="w-3.5 h-3.5" /></button>
           </template>
-
           <template v-else>
             <span class="flex-1 text-xs text-muted-foreground italic">Non configuré</span>
-            <button
-              class="px-2.5 py-1 rounded text-[12px] font-medium cursor-pointer inline-flex items-center gap-1 border border-border bg-card text-foreground hover:bg-background transition-colors"
-              @click="addPool(level)"
-            >
-              <Plus class="w-3 h-3" /> Ajouter
-            </button>
+            <button class="px-2.5 py-1 rounded text-[12px] font-medium cursor-pointer inline-flex items-center gap-1 border border-border bg-card text-foreground hover:bg-background transition-colors" @click="addPool(level)"><Plus class="w-3 h-3" /> Ajouter</button>
           </template>
         </div>
       </div>
-    </div>
+    </FormSection>
 
-    <!-- ── Pied ── -->
-    <template #footer>
-      <button :class="cls.btnPrimary" @click="handleSubmit">
-        <Send class="w-4 h-4" />
-        Enregistrer et soumettre
-      </button>
+    <div class="pt-2">
       <button :class="cls.btnOutline" @click="handleDraft">
         <Save class="w-4 h-4" />
-        {{ isEditMode ? 'Enregistrer' : 'Brouillon' }}
+        {{ isEditMode ? 'Enregistrer sans soumettre' : 'Enregistrer en brouillon' }}
       </button>
-    </template>
+    </div>
 
-  </ModalShell>
+  </div></template>
+  </CreateModalShell>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
 import { Building, User, ShieldCheck, Save, Send, Trash2, Plus } from 'lucide-vue-next'
-import ModalShell from '../ui/ModalShell.vue'
+import CreateModalShell from '../shared/CreateModalShell.vue'
+import FormSection from '../ui/form-field/FormSection.vue'
 import SearchableDropdown from '../ui/SearchableDropdown.vue'
 import type { DropdownItem } from '../ui/SearchableDropdown.vue'
 import * as cls from '../../lib/formClasses'

@@ -1,225 +1,153 @@
 <template>
-  <Teleport to="body">
-    <div v-if="modelValue" class="modal-overlay" @click.self="close">
-      <div class="modal-card">
+  <CreateModalShell
+    v-if="modelValue"
+    :title="t('absence.new')"
+    banner-label="Demandes d'absence · Création"
+    :create-label="t('absence.actions.submit')"
+    @close="close"
+    @create="handleSubmit"
+  >
+  <template #form><div class="flex-1 overflow-y-auto px-8 py-6">
+    <div class="max-w-3xl space-y-5">
 
-        <!-- ── En-tête ── -->
-        <div class="modal-header">
-          <span class="modal-title-text">{{ t('absence.new') }}</span>
-          <button class="modal-close-btn" @click="close" :title="t('absence.close')">
-            <X class="w-[14px] h-[14px]" aria-hidden="true" />
-          </button>
-        </div>
+      <!-- Bénéficiaire (pleine largeur) -->
+      <ForWhomSelector
+        v-model="forWhom"
+        :available-employees="availableEmployees"
+        :error-employee="errors.employee"
+      />
 
-        <!-- ── Corps ── -->
-        <div class="modal-body">
+      <!-- Grille 2 colonnes -->
+      <div class="grid grid-cols-2 gap-x-6 gap-y-4 max-sm:grid-cols-1">
 
-          <!-- Champ 0 : Bénéficiaire -->
-          <ForWhomSelector
-            v-model="forWhom"
-            :available-employees="availableEmployees"
-            :error-employee="errors.employee"
+        <!-- Type d'absence -->
+        <div class="col-span-2 field">
+          <label class="field-label">{{ t('absence.fields.type') }} *</label>
+          <SearchableDropdown
+            :items="leaveTypeItems"
+            :model-value="form.type"
+            :placeholder="t('absence.select_type')"
+            :show-avatar="false"
+            :class="{ 'input-error-wrap': errors.type }"
+            @update:model-value="form.type = $event as LeaveType"
           />
-
-          <!-- Champ 1: Type d'absence -->
-          <div class="field">
-            <label class="field-label">{{ t('absence.fields.type') }} *</label>
-            <SearchableDropdown
-              :items="leaveTypeItems"
-              :model-value="form.type"
-              :placeholder="t('absence.select_type')"
-              :show-avatar="false"
-              :class="{ 'input-error-wrap': errors.type }"
-              @update:model-value="form.type = $event as LeaveType"
-            />
-            <div v-if="errors.type" class="field-error">{{ errors.type }}</div>
-
-            <div v-if="currentRule" class="rule-hint">
-              <span class="hint-chip hint-chip--neutral">
-                <Calendar class="w-3 h-3" aria-hidden="true" />
-                Solde : {{ currentRule.daysPerYear }} j/an
-              </span>
-              <span v-if="currentRule.noticeDays > 0" class="hint-chip hint-chip--info">
-                <Clock class="w-3 h-3" aria-hidden="true" />
-                Préavis : {{ currentRule.noticeDays }} jour(s)
-              </span>
-              <span class="hint-chip" :class="currentRule.requiresDocument ? 'hint-chip--warning' : 'hint-chip--neutral'">
-                <Paperclip class="w-3 h-3" aria-hidden="true" />
-                Justificatif : {{ currentRule.requiresDocument ? 'Requis' : 'Non requis' }}
-              </span>
-            </div>
-            <div v-if="currentLeaveType?.daysPerMonth" class="acquisition-hint">
-              <Info class="w-3 h-3" aria-hidden="true" />
-              Acquisition : +{{ currentLeaveType.daysPerMonth }}j/mois — prochain crédit le 1er {{ nextMonthLabel }}
-            </div>
+          <div v-if="errors.type" class="field-error">{{ errors.type }}</div>
+          <div v-if="currentRule" class="rule-hint">
+            <span class="hint-chip hint-chip--neutral">
+              <Calendar class="w-3 h-3" /> Solde : {{ currentRule.daysPerYear }} j/an
+            </span>
+            <span v-if="currentRule.noticeDays > 0" class="hint-chip hint-chip--info">
+              <Clock class="w-3 h-3" /> Préavis : {{ currentRule.noticeDays }} jour(s)
+            </span>
+            <span class="hint-chip" :class="currentRule.requiresDocument ? 'hint-chip--warning' : 'hint-chip--neutral'">
+              <Paperclip class="w-3 h-3" /> Justificatif : {{ currentRule.requiresDocument ? 'Requis' : 'Non requis' }}
+            </span>
           </div>
-
-          <!-- Champ 2: Date de début -->
-          <div class="field">
-            <label class="field-label">{{ t('absence.fields.start_date') }} *</label>
-            <input
-              type="date"
-              v-model="form.startDate"
-              class="field-input"
-              :class="{ 'input-error': errors.startDate }"
-            />
-            <div v-if="errors.startDate" class="field-error">{{ errors.startDate }}</div>
-            <div v-if="isPastDate" class="field-warning">
-              <AlertTriangle class="w-3.5 h-3.5" aria-hidden="true" />
-              La date est dans le passé, confirmez-vous ?
-            </div>
-            <div v-if="isNotWorkingDay" class="field-error">
-              <AlertCircle class="w-3.5 h-3.5" aria-hidden="true" />
-              Ce jour n'est pas un jour ouvrable
-            </div>
+          <div v-if="currentLeaveType?.daysPerMonth" class="acquisition-hint">
+            <Info class="w-3 h-3" /> Acquisition : +{{ currentLeaveType.daysPerMonth }}j/mois — prochain crédit le 1er {{ nextMonthLabel }}
           </div>
-
-          <!-- Champ 3: Période début -->
-          <div class="field">
-            <span class="field-label">Période de début</span>
-            <div class="radio-group">
-              <label class="radio-item">
-                <input type="radio" v-model="form.startPeriod" value="full" />
-                <span>Journée entière</span>
-              </label>
-              <label class="radio-item">
-                <input type="radio" v-model="form.startPeriod" value="am" />
-                <span>Matin</span>
-              </label>
-              <label class="radio-item">
-                <input type="radio" v-model="form.startPeriod" value="pm" />
-                <span>Après-midi</span>
-              </label>
-            </div>
-          </div>
-
-          <!-- Champ 4 + 5: Nombre de jours + Date de fin -->
-          <div class="field-row">
-            <div class="field">
-              <label class="field-label">Nombre de jours *</label>
-              <input
-                type="number"
-                min="0.5"
-                step="0.5"
-                v-model.number="form.workingDaysCount"
-                class="field-input"
-                :class="{ 'input-error': errors.workingDays }"
-                placeholder="ex: 3.5"
-                @input="onDaysInput"
-              />
-              <div v-if="errors.workingDays" class="field-error">{{ errors.workingDays }}</div>
-            </div>
-
-            <div class="field">
-              <label class="field-label">Date de fin</label>
-              <div class="field-readonly-wrap">
-                <input
-                  type="date"
-                  v-model="form.endDate"
-                  class="field-input"
-                  :class="{ 'days-computed': daysMode === 'from-days' }"
-                  @change="onEndDateChange"
-                />
-                <span v-if="form.endDate && form.workingDaysCount" class="days-badge"
-                  :class="isBalanceInsufficient ? 'days-badge--over' : 'days-badge--ok'">
-                  {{ form.workingDaysCount }} j ouvrables
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Champ 6: Période fin -->
-          <div class="field">
-            <span class="field-label">Période de fin</span>
-            <div class="radio-group">
-              <label class="radio-item">
-                <input type="radio" v-model="form.endPeriod" value="full" />
-                <span>Journée entière</span>
-              </label>
-              <label class="radio-item">
-                <input type="radio" v-model="form.endPeriod" value="am" />
-                <span>Matin</span>
-              </label>
-              <label class="radio-item">
-                <input type="radio" v-model="form.endPeriod" value="pm" />
-                <span>Après-midi</span>
-              </label>
-            </div>
-          </div>
-
-          <!-- Note planning personnel -->
-          <div v-if="employeeSchedule?.customWorkingDays && resumeDate" class="resume-info" style="background:var(--color-info-bg);color:var(--color-info)">
-            <CalendarCheck class="w-[15px] h-[15px]" aria-hidden="true" />
-            Calculé selon votre planning personnel
-          </div>
-
-          <!-- Champ 7: Date de reprise (auto) -->
-          <div v-if="resumeDate" class="resume-info">
-            <CalendarCheck class="w-[15px] h-[15px]" aria-hidden="true" />
-            Reprise prévue le <strong>{{ formatDateFR(resumeDate) }}</strong>
-          </div>
-
-          <!-- Erreurs de validation métier -->
-          <div v-if="isBalanceInsufficient" class="field-error field-error--block">
-            <AlertCircle class="w-3.5 h-3.5" aria-hidden="true" />
-            Solde insuffisant ({{ currentRule?.daysPerYear ?? 0 }} jours disponibles)
-          </div>
-          <div v-if="isNoticePeriodViolated" class="field-error field-error--block">
-            <AlertCircle class="w-3.5 h-3.5" aria-hidden="true" />
-            Préavis de {{ currentRule?.noticeDays }} jour(s) requis pour ce type
-          </div>
-
-          <!-- Champ 8: Intérimaire (masqué pour Télétravail) -->
-          <div v-if="form.type && form.type !== 'Télétravail'" class="field">
-            <label class="field-label">
-              Intérimaire
-              <span class="optional">(optionnel)</span>
-            </label>
-            <input
-              type="text"
-              v-model="form.interim"
-              class="field-input"
-              placeholder="Qui assure votre intérim ?"
-            />
-          </div>
-
-          <!-- Champ 9: Commentaire -->
-          <div class="field">
-            <label class="field-label">
-              {{ t('absence.fields.reason') }}
-              <span class="optional">({{ t('absence.optional') }})</span>
-            </label>
-            <textarea
-              v-model="form.comment"
-              class="field-textarea"
-              rows="3"
-              placeholder="Précisez si nécessaire..."
-            ></textarea>
-          </div>
-
         </div>
 
-        <!-- ── Pied ── -->
-        <div class="modal-footer">
-          <button class="btn btn-outline" @click="handleDraft">
-            <Save class="w-[14px] h-[14px]" aria-hidden="true" />
-            {{ t('absence.actions.save_draft') }}
-          </button>
-          <button class="btn btn-primary" @click="handleSubmit">
-            <Send class="w-[14px] h-[14px]" aria-hidden="true" />
-            {{ t('absence.actions.submit') }}
-          </button>
+        <!-- Date de début -->
+        <div class="field">
+          <label class="field-label">{{ t('absence.fields.start_date') }} *</label>
+          <input type="date" v-model="form.startDate" class="field-input" :class="{ 'input-error': errors.startDate }" />
+          <div v-if="errors.startDate" class="field-error">{{ errors.startDate }}</div>
+          <div v-if="isPastDate" class="field-warning">
+            <AlertTriangle class="w-3.5 h-3.5" /> La date est dans le passé, confirmez-vous ?
+          </div>
+          <div v-if="isNotWorkingDay" class="field-error">
+            <AlertCircle class="w-3.5 h-3.5" /> Ce jour n'est pas un jour ouvrable
+          </div>
+        </div>
+
+        <!-- Date de fin -->
+        <div class="field">
+          <label class="field-label">Date de fin</label>
+          <div class="field-readonly-wrap">
+            <input type="date" v-model="form.endDate" class="field-input" :class="{ 'days-computed': daysMode === 'from-days' }" @change="onEndDateChange" />
+            <span v-if="form.endDate && form.workingDaysCount" class="days-badge" :class="isBalanceInsufficient ? 'days-badge--over' : 'days-badge--ok'">
+              {{ form.workingDaysCount }} j ouvrables
+            </span>
+          </div>
+        </div>
+
+        <!-- Période de début -->
+        <div class="field">
+          <span class="field-label">Période de début</span>
+          <div class="radio-group">
+            <label class="radio-item"><input type="radio" v-model="form.startPeriod" value="full" /><span>Journée entière</span></label>
+            <label class="radio-item"><input type="radio" v-model="form.startPeriod" value="am" /><span>Matin</span></label>
+            <label class="radio-item"><input type="radio" v-model="form.startPeriod" value="pm" /><span>Après-midi</span></label>
+          </div>
+        </div>
+
+        <!-- Période de fin -->
+        <div class="field">
+          <span class="field-label">Période de fin</span>
+          <div class="radio-group">
+            <label class="radio-item"><input type="radio" v-model="form.endPeriod" value="full" /><span>Journée entière</span></label>
+            <label class="radio-item"><input type="radio" v-model="form.endPeriod" value="am" /><span>Matin</span></label>
+            <label class="radio-item"><input type="radio" v-model="form.endPeriod" value="pm" /><span>Après-midi</span></label>
+          </div>
+        </div>
+
+        <!-- Nombre de jours -->
+        <div class="field">
+          <label class="field-label">Nombre de jours *</label>
+          <input type="number" min="0.5" step="0.5" v-model.number="form.workingDaysCount" class="field-input" :class="{ 'input-error': errors.workingDays }" placeholder="ex: 3.5" @input="onDaysInput" />
+          <div v-if="errors.workingDays" class="field-error">{{ errors.workingDays }}</div>
+        </div>
+
+        <!-- Intérimaire -->
+        <div v-if="form.type && form.type !== 'Télétravail'" class="field">
+          <label class="field-label">Intérimaire <span class="optional">(optionnel)</span></label>
+          <input type="text" v-model="form.interim" class="field-input" placeholder="Qui assure votre intérim ?" />
+        </div>
+
+        <!-- Commentaire (pleine largeur) -->
+        <div class="col-span-2 field">
+          <label class="field-label">{{ t('absence.fields.reason') }} <span class="optional">({{ t('absence.optional') }})</span></label>
+          <textarea v-model="form.comment" class="field-textarea" rows="3" placeholder="Précisez si nécessaire..."></textarea>
         </div>
 
       </div>
+
+      <!-- Infos calculées -->
+      <div v-if="employeeSchedule?.customWorkingDays && resumeDate" class="resume-info" style="background:var(--color-info-bg);color:var(--color-info)">
+        <CalendarCheck class="w-[15px] h-[15px]" /> Calculé selon votre planning personnel
+      </div>
+      <div v-if="resumeDate" class="resume-info">
+        <CalendarCheck class="w-[15px] h-[15px]" /> Reprise prévue le <strong>{{ formatDateFR(resumeDate) }}</strong>
+      </div>
+      <div v-if="isBalanceInsufficient" class="field-error field-error--block">
+        <AlertCircle class="w-3.5 h-3.5" /> Solde insuffisant ({{ currentRule?.daysPerYear ?? 0 }} jours disponibles)
+      </div>
+      <div v-if="isNoticePeriodViolated" class="field-error field-error--block">
+        <AlertCircle class="w-3.5 h-3.5" /> Préavis de {{ currentRule?.noticeDays }} jour(s) requis pour ce type
+      </div>
+
     </div>
-  </Teleport>
+
+    <!-- Action secondaire : Brouillon -->
+    <div class="pt-2">
+      <button :class="btnOutline" @click="handleDraft">
+        <Save class="w-4 h-4" aria-hidden="true" />
+        {{ t('absence.actions.save_draft') }}
+      </button>
+    </div>
+
+  </div></template>
+  </CreateModalShell>
 </template>
 
 <script setup lang="ts">
 import { reactive, ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { X, Calendar, Clock, Paperclip, AlertTriangle, AlertCircle, CalendarCheck, Save, ClipboardCheck, Send, Info } from 'lucide-vue-next'
+import { Calendar, Clock, Paperclip, AlertTriangle, AlertCircle, CalendarCheck, Save, Send, Info } from 'lucide-vue-next'
+import CreateModalShell from './shared/CreateModalShell.vue'
+import * as cls from '../lib/formClasses'
+const btnOutline = cls.btnOutline
 import SearchableDropdown from './ui/SearchableDropdown.vue'
 import ForWhomSelector from './ui/ForWhomSelector.vue'
 import type { BeneficiaryValue } from './ui/ForWhomSelector.vue'

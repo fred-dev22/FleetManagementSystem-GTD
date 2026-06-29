@@ -10,7 +10,7 @@ export const useEntityStore = defineStore('entities', {
       {
         id: 'e1', code: 'DG', name: 'Direction Générale',
         type: 'direction', parentId: null,
-        legalIdentifier: 'GPL-001', address: 'Antananarivo, Madagascar',
+        legalIdentifier: 'GTD-001', address: 'Antananarivo, Madagascar',
         responsibleName: 'Gary Ellis', responsibleId: 'emp-001',
         headcount: 5, status: 'approved',
         validatorPools: [], createdAt: '2024-01-15',
@@ -119,7 +119,7 @@ export const useEntityStore = defineStore('entities', {
         createdAt: '2024-01-15',
       },
       {
-        id: 'e9', code: 'STP', name: 'Service Terminal Pétrolier',
+        id: 'e9', code: 'SEXP', name: 'Service Exploitation Flotte',
         type: 'service', parentId: 'e8',
         responsibleName: 'Morad Cassam', responsibleId: 'emp-009',
         headcount: 18, status: 'approved',
@@ -129,7 +129,7 @@ export const useEntityStore = defineStore('entities', {
         createdAt: '2024-01-15',
       },
       {
-        id: 'e10', code: 'SRAF', name: 'Service Raffinerie',
+        id: 'e10', code: 'SMNT', name: 'Service Maintenance & Atelier',
         type: 'service', parentId: 'e8',
         responsibleName: 'Thierry Randriamanga', responsibleId: 'emp-010',
         headcount: 15, status: 'approved',
@@ -145,7 +145,7 @@ export const useEntityStore = defineStore('entities', {
         createdAt: '2024-01-15',
       },
       {
-        id: 'e13', code: 'SSS', name: 'Service Stations-Service',
+        id: 'e13', code: 'SAGE', name: 'Service Agences & Sites',
         type: 'service', parentId: 'e12',
         responsibleName: 'Ashvin Pertab', responsibleId: 'emp-013',
         headcount: 10, status: 'approved',

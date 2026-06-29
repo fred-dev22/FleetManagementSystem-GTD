@@ -4,7 +4,7 @@
         <div :class="L.pageHeader">
           <div>
             <div :class="L.pageTitle">Organigramme</div>
-            <div :class="L.pageSub">Structure organisationnelle de Galana Petroleum Ltd</div>
+            <div :class="L.pageSub">Structure organisationnelle de GTD</div>
           </div>
           <router-link :to="{ name: 'hr-entities' }" :class="L.btnOutline">
             <Building class="w-4 h-4" /> Gérer les entités

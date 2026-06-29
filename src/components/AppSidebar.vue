@@ -25,12 +25,11 @@
         <SidebarSection label="RH">
           <SidebarItem :icon="Plane"   label="Missions"   :to="{ name: 'hr-missions' }" />
           <SidebarItem :icon="Receipt" label="Frais"      :to="{ name: 'hr-expenses' }" />
-          <SidebarItem :icon="BarChart3" label="Statistiques" :to="{ name: 'hr-statistics' }" />
         </SidebarSection>
 
         <SidebarSection label="Configuration">
-          <SidebarItem :icon="CalendarDays" label="Calendrier" :to="{ name: 'hr-config-calendar' }" />
-          <SidebarItem :icon="Coins"        label="Barèmes"    :to="{ name: 'hr-config-mission-fees' }" />
+          <SidebarItem :icon="CalendarDays" label="Calendrier"      :to="{ name: 'hr-config-calendar' }" />
+          <SidebarItem :icon="Coins"        label="Frais & Per diem" :to="{ name: 'hr-config-mission-fees' }" />
         </SidebarSection>
       </template>
 
@@ -95,7 +94,7 @@ import { RouterLink, useRoute } from 'vue-router'
 import {
   LayoutDashboard, CalendarRange, CalendarOff, PieChart, Users, Building, Plane,
   Receipt, Network, CalendarDays, Coins,
-  BarChart3, FileText, ClipboardCheck,
+  FileText, ClipboardCheck,
   // Fleet icons
   Truck, Link2, UserCheck, MapPin, MapPinned, Route, Cpu, Container,
 } from 'lucide-vue-next'
@@ -114,7 +113,7 @@ const myPendingCount = computed(() => absenceStore.myPendingLeaves.length)
 const itemClass =
   'flex items-center gap-2 py-[7px] pr-4 pl-6 text-[13px] text-sidebar-foreground/75 cursor-pointer transition-colors no-underline select-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
 const itemActiveClass =
-  'bg-sidebar-accent text-sidebar-accent-foreground font-semibold border-r-2 border-sidebar-primary'
+  'bg-sidebar-accent text-white font-semibold border-l-[3px] border-sidebar-primary pl-[21px]'
 const badgeClass =
   'ml-auto bg-primary text-primary-foreground text-[9px] font-bold px-1.5 py-px rounded-full'
 const badgeOrangeClass =

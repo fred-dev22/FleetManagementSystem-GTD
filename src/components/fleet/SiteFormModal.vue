@@ -1,105 +1,64 @@
 <template>
-  <ModalShell
-    :open="modelValue"
+  <CreateModalShell
+    v-if="modelValue"
     :title="editId ? 'Modifier le site' : 'Nouveau site'"
-    max-width="max-w-[600px]"
+    :banner-label="editId ? 'Sites & Géofences · Modification' : 'Sites & Géofences · Création'"
+    :create-label="editId ? 'Enregistrer' : 'Créer le site'"
+    :is-saving="submitting"
+    :save-error="submitError || undefined"
     @close="$emit('update:modelValue', false)"
+    @create="handleSubmit"
   >
-    <form @submit.prevent="handleSubmit" novalidate class="p-6 space-y-4">
-
-      <!-- Code -->
-      <div>
-        <label class="block text-sm font-medium text-foreground mb-1">Code <span class="text-red-500">*</span></label>
-        <input
-          v-model="form.code"
-          type="text"
-          required
-          placeholder="ex: GAR-TNR-01"
-          @input="form.code = (form.code as string).toUpperCase()"
-          class="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary font-mono"
-        />
-        <p v-if="errors.code" class="text-red-500 text-xs mt-1">{{ errors.code }}</p>
+    <template #form>
+      <div class="flex-1 overflow-y-auto px-8 py-6 max-w-2xl mx-auto">
+        <FormSection title="Informations du site">
+          <div class="grid grid-cols-2 gap-x-6 gap-y-4 max-sm:grid-cols-1">
+            <div class="flex flex-col gap-1">
+              <label class="text-[12px] font-medium text-muted-foreground">Code *</label>
+              <input v-model="form.code" type="text" placeholder="ex: GAR-TNR-01" @input="form.code = (form.code as string).toUpperCase()" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] font-mono text-foreground focus:outline-none focus:border-primary" />
+              <p v-if="errors.code" class="text-red-500 text-[11px]">{{ errors.code }}</p>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-[12px] font-medium text-muted-foreground">Type *</label>
+              <select v-model="form.type" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary">
+                <option value="" disabled>Sélectionner un type</option>
+                <option value="Garage">Garage</option>
+                <option value="Dépôt chargement">Dépôt chargement</option>
+                <option value="Dépôt déchargement">Dépôt déchargement</option>
+                <option value="Zone à risque">Zone à risque</option>
+                <option value="Point de contrôle">Point de contrôle</option>
+              </select>
+              <p v-if="errors.type" class="text-red-500 text-[11px]">{{ errors.type }}</p>
+            </div>
+            <div class="col-span-2 flex flex-col gap-1">
+              <label class="text-[12px] font-medium text-muted-foreground">Nom complet *</label>
+              <input v-model="form.nom" type="text" placeholder="ex: Garage principal Antananarivo" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary" />
+              <p v-if="errors.nom" class="text-red-500 text-[11px]">{{ errors.nom }}</p>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-[12px] font-medium text-muted-foreground">Ville *</label>
+              <input v-model="form.ville" type="text" placeholder="ex: Antananarivo" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary" />
+              <p v-if="errors.ville" class="text-red-500 text-[11px]">{{ errors.ville }}</p>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-[12px] font-medium text-muted-foreground">Région</label>
+              <input v-model="form.region" type="text" placeholder="ex: Analamanga" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary" />
+            </div>
+            <div class="col-span-2 flex items-center gap-3 pt-1">
+              <input id="actifModal" v-model="form.actif" type="checkbox" class="w-4 h-4 rounded" />
+              <label for="actifModal" class="text-[13px] font-medium text-foreground cursor-pointer">Site actif</label>
+            </div>
+          </div>
+        </FormSection>
       </div>
-
-      <!-- Nom -->
-      <div>
-        <label class="block text-sm font-medium text-foreground mb-1">Nom complet <span class="text-red-500">*</span></label>
-        <input
-          v-model="form.nom"
-          type="text"
-          required
-          placeholder="ex: Garage principal Antananarivo"
-          class="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-        />
-        <p v-if="errors.nom" class="text-red-500 text-xs mt-1">{{ errors.nom }}</p>
-      </div>
-
-      <!-- Ville & Région -->
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="block text-sm font-medium text-foreground mb-1">Ville <span class="text-red-500">*</span></label>
-          <input
-            v-model="form.ville"
-            type="text"
-            placeholder="ex: Antananarivo"
-            class="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-          <p v-if="errors.ville" class="text-red-500 text-xs mt-1">{{ errors.ville }}</p>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-foreground mb-1">Région</label>
-          <input
-            v-model="form.region"
-            type="text"
-            placeholder="ex: Analamanga"
-            class="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-        </div>
-      </div>
-
-      <!-- Type -->
-      <div>
-        <label class="block text-sm font-medium text-foreground mb-1">Type <span class="text-red-500">*</span></label>
-        <select
-          v-model="form.type"
-          required
-          class="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-        >
-          <option value="" disabled>Sélectionner un type</option>
-          <option value="Garage">Garage</option>
-          <option value="Dépôt chargement">Dépôt chargement</option>
-          <option value="Dépôt déchargement">Dépôt déchargement</option>
-          <option value="Zone à risque">Zone à risque</option>
-          <option value="Point de contrôle">Point de contrôle</option>
-        </select>
-        <p v-if="errors.type" class="text-red-500 text-xs mt-1">{{ errors.type }}</p>
-      </div>
-
-      <!-- Actif -->
-      <div class="flex items-center gap-3">
-        <input id="actifModal" v-model="form.actif" type="checkbox" class="w-4 h-4 rounded" />
-        <label for="actifModal" class="text-sm font-medium text-foreground">Site actif</label>
-      </div>
-
-      <div v-if="submitError" class="bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2 rounded-lg">
-        {{ submitError }}
-      </div>
-
-      <div class="flex justify-end gap-3 pt-2 border-t border-border">
-        <button type="button" class="px-4 py-2 text-sm border border-border rounded-lg text-foreground hover:bg-muted transition-colors" @click="$emit('update:modelValue', false)">
-          Annuler
-        </button>
-        <button type="submit" :disabled="submitting" class="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60">
-          {{ submitting ? 'Enregistrement...' : (editId ? 'Modifier' : 'Créer') }}
-        </button>
-      </div>
-    </form>
-  </ModalShell>
+    </template>
+  </CreateModalShell>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue'
-import ModalShell from '../ui/ModalShell.vue'
+import CreateModalShell from '../shared/CreateModalShell.vue'
+import FormSection from '../ui/form-field/FormSection.vue'
 import { useSitesStore } from '../../stores/sites'
 import type { TypeSite } from '../../types/index'
 

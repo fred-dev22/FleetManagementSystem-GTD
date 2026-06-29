@@ -52,7 +52,7 @@
 
                 <div :class="cls.field">
                   <label :class="cls.fieldLabel">Identifiant légal <span :class="hint">(optionnel)</span></label>
-                  <input v-model="form.legalIdentifier" :class="cls.fieldInput" placeholder="ex: GPL-001" />
+                  <input v-model="form.legalIdentifier" :class="cls.fieldInput" placeholder="ex: GTD-001" />
                 </div>
 
                 <div :class="[cls.field, 'col-span-full']">

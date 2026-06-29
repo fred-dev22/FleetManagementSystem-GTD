@@ -1,90 +1,53 @@
 <template>
-  <ModalShell
-    :open="modelValue"
+  <CreateModalShell
+    v-if="modelValue"
     :title="isEditMode ? 'Modifier l\'employé' : 'Nouvel employé'"
-    max-width="max-w-[600px]"
+    :banner-label="isEditMode ? 'Employés · Modification' : 'Employés · Création'"
+    :create-label="isEditMode ? 'Enregistrer' : 'Créer l\'employé'"
     @close="close"
+    @create="handleSave"
   >
+  <template #form><div class="flex-1 overflow-y-auto px-8 py-6 max-w-3xl mx-auto">
 
-    <!-- ── Section 1 : Identité ── -->
-    <div class="flex flex-col gap-3">
-      <p class="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        <User class="w-3.5 h-3.5" />
-        Identité
-      </p>
-
-      <div class="grid grid-cols-2 gap-3 max-sm:grid-cols-1">
+    <FormSection title="Identité">
+      <div class="grid grid-cols-2 gap-x-6 gap-y-4 max-sm:grid-cols-1">
         <div :class="cls.field">
           <label :class="cls.fieldLabel">Prénom *</label>
-          <input
-            v-model="form.firstName"
-            :class="[cls.fieldInput, errors.firstName ? cls.inputError : '']"
-            placeholder="ex: Aminata"
-          />
+          <input v-model="form.firstName" :class="[cls.fieldInput, errors.firstName ? cls.inputError : '']" placeholder="ex: Aminata" />
           <div v-if="errors.firstName" :class="cls.fieldError">{{ errors.firstName }}</div>
         </div>
-
         <div :class="cls.field">
           <label :class="cls.fieldLabel">Nom *</label>
-          <input
-            v-model="form.lastName"
-            :class="[cls.fieldInput, errors.lastName ? cls.inputError : '']"
-            placeholder="ex: Diallo"
-          />
+          <input v-model="form.lastName" :class="[cls.fieldInput, errors.lastName ? cls.inputError : '']" placeholder="ex: Rakoto" />
           <div v-if="errors.lastName" :class="cls.fieldError">{{ errors.lastName }}</div>
         </div>
-
         <div :class="[cls.field, 'col-span-2 max-sm:col-span-1']">
           <label :class="cls.fieldLabel">Poste / Intitulé du poste *</label>
-          <input
-            v-model="form.jobTitle"
-            :class="[cls.fieldInput, errors.jobTitle ? cls.inputError : '']"
-            placeholder="ex: Assistante RH"
-          />
+          <input v-model="form.jobTitle" :class="[cls.fieldInput, errors.jobTitle ? cls.inputError : '']" placeholder="ex: Responsable Flotte" />
           <div v-if="errors.jobTitle" :class="cls.fieldError">{{ errors.jobTitle }}</div>
         </div>
-
         <div :class="cls.field">
           <label :class="cls.fieldLabel">Email professionnel</label>
-          <input
-            v-model="form.email"
-            type="email"
-            :class="[cls.fieldInput, errors.email ? cls.inputError : '']"
-            placeholder="prenom.nom@gtd.mg"
-          />
+          <input v-model="form.email" type="email" :class="[cls.fieldInput, errors.email ? cls.inputError : '']" placeholder="prenom.nom@gtd.mg" />
           <div v-if="errors.email" :class="cls.fieldError">{{ errors.email }}</div>
         </div>
-
         <div :class="cls.field">
           <label :class="cls.fieldLabel">Téléphone</label>
-          <input v-model="form.phone" type="tel" :class="cls.fieldInput" placeholder="+230 5xx xxxx" />
+          <input v-model="form.phone" type="tel" :class="cls.fieldInput" placeholder="+261 3x xxx xxxx" />
         </div>
       </div>
-    </div>
+    </FormSection>
 
-    <!-- ── Section 2 : Affectation ── -->
-    <div class="flex flex-col gap-3 border-t border-border pt-3.5">
-      <p class="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        <Building class="w-3.5 h-3.5" />
-        Affectation
-      </p>
-
-      <div class="grid grid-cols-2 gap-3 max-sm:grid-cols-1">
+    <FormSection title="Affectation">
+      <div class="grid grid-cols-2 gap-x-6 gap-y-4 max-sm:grid-cols-1">
         <div :class="cls.field">
           <label :class="cls.fieldLabel">Entité *</label>
-          <select
-            v-model="form.entityId"
-            :class="[cls.fieldSelect, errors.entityId ? cls.inputError : '']"
-            @change="onEntityChange"
-          >
+          <select v-model="form.entityId" :class="[cls.fieldSelect, errors.entityId ? cls.inputError : '']" @change="onEntityChange">
             <option value="">-- Choisir une entité --</option>
-            <option v-for="e in selectableEntities" :key="e.id" :value="e.id">
-              {{ e.code }} — {{ e.name }}
-            </option>
+            <option v-for="e in selectableEntities" :key="e.id" :value="e.id">{{ e.code }} — {{ e.name }}</option>
           </select>
           <div v-if="errors.entityId" :class="cls.fieldError">{{ errors.entityId }}</div>
         </div>
-
         <div :class="cls.field">
           <label :class="cls.fieldLabel">Rôle *</label>
           <select v-model="form.role" :class="[cls.fieldSelect, errors.role ? cls.inputError : '']">
@@ -96,24 +59,16 @@
           </select>
           <div v-if="errors.role" :class="cls.fieldError">{{ errors.role }}</div>
         </div>
-
         <div :class="[cls.field, 'col-span-2 max-sm:col-span-1']">
           <label :class="cls.fieldLabel">
             Manager direct
             <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-muted-foreground bg-background border border-border rounded-full px-2 py-0.5 ml-1.5 align-middle">
-              <Lock class="w-2.5 h-2.5" />
-              Auto
+              <Lock class="w-2.5 h-2.5" /> Auto
             </span>
           </label>
-          <div
-            class="flex items-center gap-2 h-[38px] px-2.5 border border-border rounded-md bg-background text-[13px]"
-            :class="directManager ? 'text-foreground' : 'text-muted-foreground italic'"
-          >
+          <div class="flex items-center gap-2 h-[38px] px-2.5 border border-border rounded-md bg-background text-[13px]" :class="directManager ? 'text-foreground' : 'text-muted-foreground italic'">
             <template v-if="directManager">
-              <div
-                class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0"
-                :style="{ background: directManager.avatarColor }"
-              >{{ directManager.initials }}</div>
+              <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0" :style="{ background: directManager.avatarColor }">{{ directManager.initials }}</div>
               <span class="font-medium">{{ directManager.name }}</span>
               <span class="text-muted-foreground text-xs">· Responsable d'entité</span>
             </template>
@@ -125,16 +80,10 @@
           </span>
         </div>
       </div>
-    </div>
+    </FormSection>
 
-    <!-- ── Section 3 : Contrat ── -->
-    <div class="flex flex-col gap-3 border-t border-border pt-3.5">
-      <p class="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        <FileText class="w-3.5 h-3.5" />
-        Contrat
-      </p>
-
-      <div class="grid grid-cols-2 gap-3 max-sm:grid-cols-1">
+    <FormSection title="Contrat">
+      <div class="grid grid-cols-2 gap-x-6 gap-y-4 max-sm:grid-cols-1">
         <div :class="cls.field">
           <label :class="cls.fieldLabel">Type de contrat *</label>
           <select v-model="form.contractType" :class="[cls.fieldSelect, errors.contractType ? cls.inputError : '']">
@@ -146,17 +95,11 @@
           </select>
           <div v-if="errors.contractType" :class="cls.fieldError">{{ errors.contractType }}</div>
         </div>
-
         <div :class="cls.field">
           <label :class="cls.fieldLabel">Date d'embauche *</label>
-          <input
-            v-model="form.hireDate"
-            type="date"
-            :class="[cls.fieldInput, errors.hireDate ? cls.inputError : '']"
-          />
+          <input v-model="form.hireDate" type="date" :class="[cls.fieldInput, errors.hireDate ? cls.inputError : '']" />
           <div v-if="errors.hireDate" :class="cls.fieldError">{{ errors.hireDate }}</div>
         </div>
-
         <div :class="cls.field">
           <label :class="cls.fieldLabel">Statut</label>
           <select v-model="form.status" :class="cls.fieldSelect">
@@ -167,24 +110,17 @@
           </select>
         </div>
       </div>
-    </div>
+    </FormSection>
 
-    <!-- ── Pied ── -->
-    <template #footer>
-      <button :class="cls.btnPrimary" @click="handleSave">
-        <Check class="w-4 h-4" />
-        {{ isEditMode ? 'Enregistrer' : 'Créer l\'employé' }}
-      </button>
-      <button :class="cls.btnOutline" @click="close">Annuler</button>
-    </template>
-
-  </ModalShell>
+  </div></template>
+  </CreateModalShell>
 </template>
 
 <script setup lang="ts">
 import { reactive, computed, watch } from 'vue'
 import { User, Building, FileText, Lock, Info, Check } from 'lucide-vue-next'
-import ModalShell from '../ui/ModalShell.vue'
+import CreateModalShell from '../shared/CreateModalShell.vue'
+import FormSection from '../ui/form-field/FormSection.vue'
 import * as cls from '../../lib/formClasses'
 import { useEmployeeStore } from '../../stores/employees'
 import { useEntityStore }   from '../../stores/entities'

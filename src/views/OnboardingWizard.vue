@@ -169,7 +169,7 @@
 
     <!-- ── Modals (composants existants réutilisés) ── -->
     <EntityFormModal v-model="showEntityModal" :visible-entity-ids="visibleEntityIds" :visible-employee-ids="visibleEmployeeIds" />
-    <EmployeeFormModal v-model="showEmployeeModal" :visible-entity-ids="visibleEntityIds" />
+    <EmployeeFormModal v-model="showEmployeeModal" :visible-entity-ids="visibleEntityIds" @saved="onEmployeeAdded" />
 
   </div>
 </template>
@@ -204,9 +204,9 @@ const infoCard = 'bg-info-bg border-l-[3px] border-info rounded-lg px-4 py-3 fle
 const btnPrimary = 'inline-flex items-center gap-1.5 px-5 py-2.5 rounded-lg text-[13px] font-semibold cursor-pointer border-0 bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap max-[480px]:w-full max-[480px]:justify-center'
 const btnOutline = 'inline-flex items-center gap-1.5 px-5 py-2.5 rounded-lg text-[13px] font-semibold cursor-pointer bg-card text-foreground border border-border transition-colors hover:bg-background whitespace-nowrap max-[480px]:w-full max-[480px]:justify-center'
 
-// Dégradé de fond (vert clair → blanc → rouge clair Galana)
+// Dégradé de fond (bleu clair → blanc → rouge clair)
 const bgStyle = {
-  background: 'linear-gradient(135deg, var(--galana-green-light) 0%, #ffffff 50%, var(--galana-red-light) 100%)',
+  background: 'linear-gradient(135deg, var(--color-primary-light) 0%, #ffffff 50%, var(--color-danger-bg) 100%)',
 }
 
 function stepCircleClass(step: number): string {
@@ -260,6 +260,12 @@ const visibleEmployeeIds = computed(() => obEmployees.value.map(e => e.id))
 
 const showEntityModal   = ref(false)
 const showEmployeeModal = ref(false)
+
+function onEmployeeAdded() {
+  const currentId = empStore.currentUserEmployee?.id
+  const last = [...empStore.employees].reverse().find(e => e.id !== currentId)
+  if (last) wizardCreatedEmployeeIds.value.add(last.id)
+}
 const leaving           = ref(false)
 const showEntityImport   = ref(false)
 const showEmployeeImport = ref(false)

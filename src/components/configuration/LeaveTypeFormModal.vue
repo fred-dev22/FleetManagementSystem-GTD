@@ -1,106 +1,88 @@
 <template>
-  <ModalShell
-    :open="modelValue"
+  <CreateModalShell
+    v-if="modelValue"
     :title="isEdit ? 'Modifier le type' : 'Nouveau type d\'absence'"
-    max-width="max-w-[500px]"
+    :banner-label="isEdit ? 'Types d\'absence · Modification' : 'Types d\'absence · Création'"
+    :create-label="isEdit ? 'Enregistrer' : 'Ajouter le type'"
     @close="close"
+    @create="handleSave"
   >
+  <template #form><div class="flex-1 overflow-y-auto px-8 py-6 max-w-2xl mx-auto">
 
-    <div :class="cls.fieldRow">
-      <div :class="cls.field">
-        <label :class="cls.fieldLabel">Nom *</label>
-        <input v-model="form.name" :class="[cls.fieldInput, errors.name && cls.inputError]" placeholder="ex: Congé sans solde" @input="autoCode" />
-        <div v-if="errors.name" :class="cls.fieldError">{{ errors.name }}</div>
+    <FormSection title="Identification">
+      <div class="grid grid-cols-2 gap-x-6 gap-y-4 max-sm:grid-cols-1">
+        <div :class="cls.field">
+          <label :class="cls.fieldLabel">Nom *</label>
+          <input v-model="form.name" :class="[cls.fieldInput, errors.name && cls.inputError]" placeholder="ex: Congé sans solde" @input="autoCode" />
+          <div v-if="errors.name" :class="cls.fieldError">{{ errors.name }}</div>
+        </div>
+        <div :class="cls.field">
+          <label :class="cls.fieldLabel">Code *</label>
+          <input v-model="form.code" :class="[cls.fieldInput, 'uppercase', errors.code && cls.inputError]" placeholder="ex: UNPAID" />
+          <div v-if="errors.code" :class="cls.fieldError">{{ errors.code }}</div>
+        </div>
       </div>
-      <div :class="cls.field">
-        <label :class="cls.fieldLabel">Code *</label>
-        <input v-model="form.code" :class="[cls.fieldInput, 'uppercase', errors.code && cls.inputError]" placeholder="ex: UNPAID" />
-        <div v-if="errors.code" :class="cls.fieldError">{{ errors.code }}</div>
+    </FormSection>
+
+    <FormSection title="Règles d'acquisition">
+      <div class="grid grid-cols-2 gap-x-6 gap-y-4 max-sm:grid-cols-1">
+        <div :class="cls.field">
+          <label :class="cls.fieldLabel">Jours alloués / an</label>
+          <input type="number" min="0" v-model.number="form.daysPerYear" :class="cls.fieldInput" />
+        </div>
+        <div :class="cls.field">
+          <label :class="cls.fieldLabel">Accumulation mensuelle (j/mois)</label>
+          <input type="number" min="0" step="0.5" v-model.number="form.daysPerMonth" :class="cls.fieldInput" />
+        </div>
+        <div :class="cls.field">
+          <label :class="cls.fieldLabel">Report maximum (jours)</label>
+          <input type="number" min="0" v-model.number="form.maxCarryOver" :class="cls.fieldInput" />
+          <div class="text-[11px] text-muted-foreground mt-1">0 = aucun report autorisé</div>
+        </div>
+        <div :class="cls.field">
+          <label :class="cls.fieldLabel">Préavis minimum (jours)</label>
+          <input type="number" min="0" v-model.number="form.noticeDays" :class="cls.fieldInput" />
+        </div>
+        <div :class="cls.field">
+          <label :class="cls.fieldLabel">Workflow</label>
+          <select v-model="form.workflow" :class="cls.fieldSelect">
+            <option value="standard">Standard (approbation)</option>
+            <option value="medical">Médical (enregistrement)</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-3 pt-4">
+          <span :class="cls.fieldLabel">Justificatif obligatoire</span>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer" v-model="form.requiresDocument" />
+            <span class="w-9 h-5 rounded-full bg-foreground/20 transition-colors peer-checked:bg-primary relative after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:w-3.5 after:h-3.5 after:bg-white after:rounded-full after:shadow after:transition-all peer-checked:after:left-[19px]"></span>
+          </label>
+        </div>
       </div>
-    </div>
+    </FormSection>
 
-    <div :class="cls.fieldRow">
-      <div :class="cls.field">
-        <label :class="cls.fieldLabel">Jours alloués / an</label>
-        <input type="number" min="0" v-model.number="form.daysPerYear" :class="cls.fieldInput" />
+    <FormSection title="Apparence">
+      <div class="space-y-4">
+        <div :class="cls.field">
+          <label :class="cls.fieldLabel">Couleur dans le calendrier</label>
+          <div class="flex flex-wrap gap-2 mt-1">
+            <button v-for="c in COLOR_OPTIONS" :key="c" type="button" class="w-8 h-8 rounded-md border-2 cursor-pointer flex items-center justify-center transition-transform" :class="form.color === c ? 'border-foreground scale-110' : 'border-transparent'" :style="{ background: c }" @click="form.color = c">
+              <Check v-if="form.color === c" class="w-3.5 h-3.5 text-white" />
+            </button>
+          </div>
+        </div>
+        <div :class="cls.field">
+          <label :class="cls.fieldLabel">Icône</label>
+          <div class="flex flex-wrap gap-1.5 mt-1">
+            <button v-for="ic in ICON_OPTIONS" :key="ic" type="button" class="w-9 h-9 rounded-md border cursor-pointer flex items-center justify-center text-base transition-colors" :class="form.icon === ic ? 'bg-primary/10 text-primary border-primary' : 'border-border bg-background text-muted-foreground hover:bg-card hover:text-foreground'" @click="form.icon = ic">
+              <component :is="ICON_LUCIDE_MAP[ic] ?? Calendar" class="w-4 h-4" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
       </div>
-      <div :class="cls.field">
-        <label :class="cls.fieldLabel">Accumulation mensuelle (j/mois)</label>
-        <input type="number" min="0" step="0.5" v-model.number="form.daysPerMonth" :class="cls.fieldInput" />
-      </div>
-    </div>
+    </FormSection>
 
-    <div :class="cls.field">
-      <label :class="cls.fieldLabel">Report maximum (jours)</label>
-      <input type="number" min="0" v-model.number="form.maxCarryOver" :class="cls.fieldInput" />
-      <div class="text-[11px] text-muted-foreground mt-1">Nombre de jours reportables sur l'année suivante. Mettre 0 pour interdire tout report.</div>
-    </div>
-
-    <div :class="cls.fieldRow">
-      <div :class="cls.field">
-        <label :class="cls.fieldLabel">Préavis minimum (jours)</label>
-        <input type="number" min="0" v-model.number="form.noticeDays" :class="cls.fieldInput" />
-      </div>
-      <div :class="cls.field">
-        <label :class="cls.fieldLabel">Workflow</label>
-        <select v-model="form.workflow" :class="cls.fieldSelect">
-          <option value="standard">Standard (approbation)</option>
-          <option value="medical">Médical (enregistrement)</option>
-        </select>
-      </div>
-    </div>
-
-    <div :class="cls.field">
-      <label :class="cls.fieldLabel">Couleur dans le calendrier</label>
-      <div class="flex flex-wrap gap-2 mt-1">
-        <button
-          v-for="c in COLOR_OPTIONS" :key="c"
-          type="button"
-          class="w-8 h-8 rounded-md border-2 cursor-pointer flex items-center justify-center transition-transform"
-          :class="form.color === c ? 'border-foreground scale-110' : 'border-transparent'"
-          :style="{ background: c }"
-          @click="form.color = c"
-        >
-          <Check v-if="form.color === c" class="w-3.5 h-3.5 text-white" />
-        </button>
-      </div>
-    </div>
-
-    <div :class="cls.field">
-      <label :class="cls.fieldLabel">Icône</label>
-      <!-- Identifiants Tabler conservés en data : consommés par le calendrier (migration phase 4) -->
-      <div class="flex flex-wrap gap-1.5 mt-1">
-        <button
-          v-for="ic in ICON_OPTIONS" :key="ic"
-          type="button"
-          class="w-9 h-9 rounded-md border cursor-pointer flex items-center justify-center text-base transition-colors"
-          :class="form.icon === ic
-            ? 'bg-primary/10 text-primary border-primary'
-            : 'border-border bg-background text-muted-foreground hover:bg-card hover:text-foreground'"
-          @click="form.icon = ic"
-        >
-          <component :is="ICON_LUCIDE_MAP[ic] ?? Calendar" class="w-4 h-4" aria-hidden="true" />
-        </button>
-      </div>
-    </div>
-
-    <div class="flex items-center justify-between">
-      <span :class="cls.fieldLabel">Justificatif obligatoire</span>
-      <label class="relative inline-flex items-center cursor-pointer">
-        <input type="checkbox" class="sr-only peer" v-model="form.requiresDocument" />
-        <span class="w-9 h-5 rounded-full bg-foreground/20 transition-colors peer-checked:bg-primary relative after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:w-3.5 after:h-3.5 after:bg-white after:rounded-full after:shadow after:transition-all peer-checked:after:left-[19px]"></span>
-      </label>
-    </div>
-
-    <template #footer>
-      <button :class="cls.btnOutline" @click="close">Annuler</button>
-      <button :class="cls.btnPrimary" @click="handleSave">
-        <Check class="w-4 h-4" />
-        {{ isEdit ? 'Enregistrer' : 'Ajouter' }}
-      </button>
-    </template>
-
-  </ModalShell>
+  </div></template>
+  </CreateModalShell>
 </template>
 
 <script setup lang="ts">
@@ -124,7 +106,8 @@ const ICON_LUCIDE_MAP: Record<string, Component> = {
   'ti-globe':         Globe,
   'ti-sun':           Sun,
 }
-import ModalShell from '../ui/ModalShell.vue'
+import CreateModalShell from '../shared/CreateModalShell.vue'
+import FormSection from '../ui/form-field/FormSection.vue'
 import * as cls from '../../lib/formClasses'
 import { useLeaveTypesStore } from '../../stores/leaveTypes'
 import type { LeaveTypeConfig } from '../../stores/leaveTypes'

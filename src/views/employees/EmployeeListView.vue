@@ -20,12 +20,14 @@
     @open-card="openCard"
   >
     <template #header-actions>
-      <button :class="L.btnOutline" @click="showImport = true">
-        <Upload class="w-4 h-4" /> Importer
-      </button>
-      <button :class="L.btnPrimary" @click="showCreate = true">
-        <UserPlus class="w-4 h-4" /> Nouvel employé
-      </button>
+      <div class="flex gap-2">
+        <button :class="L.btnOutline" @click="showImport = true">
+          <Upload class="w-4 h-4" /> Importer
+        </button>
+        <button :class="L.btnPrimary" @click="showCreate = true">
+          <UserPlus class="w-4 h-4" /> Nouvel employé
+        </button>
+      </div>
     </template>
 
     <!-- KPIs -->
@@ -124,12 +126,10 @@
         </div>
         <div class="min-w-0">
           <div class="font-medium text-[13px] truncate flex items-center gap-1.5">
-            <router-link
-              :to="{ name: 'hr-employee-detail', params: { id: item.id } }"
-              class="hover:text-[#1a3c6e] hover:underline transition-colors"
-            >
-              {{ item.name }}
-            </router-link>
+            <button
+              class="hover:text-[#1a3c6e] hover:underline transition-colors text-left bg-transparent border-0 p-0 cursor-pointer"
+              @click="openCard(item)"
+            >{{ item.name }}</button>
             <Truck
               v-if="item.fonction === 'Chauffeur'"
               class="w-3.5 h-3.5 text-blue-500 shrink-0"
@@ -217,13 +217,9 @@
         <div v-if="item.email" class="text-[12px]">
           <div class="text-muted-foreground text-[11px]">Email</div>{{ item.email }}
         </div>
-        <router-link
-          :to="{ name: 'hr-employee-detail', params: { id: item.id } }"
-          :class="L.btnPrimary"
-          class="w-full justify-center text-center"
-        >
+        <button :class="L.btnPrimary" class="w-full justify-center" @click="openCard(item)">
           Ouvrir la fiche
-        </router-link>
+        </button>
       </div>
     </template>
 
@@ -233,6 +229,13 @@
     </template>
 
     <EmployeeFormModal v-model="showCreate" />
+
+    <EmployeeCard
+      v-if="openCardId !== null"
+      :employees="store.employees"
+      :employee-id="openCardId"
+      @close="openCardId = null"
+    />
   </ListPageLayout>
 </template>
 
@@ -243,8 +246,10 @@ import ImportComingSoon from '../../components/ui/ImportComingSoon.vue'
 import { ListPageLayout } from '../../components'
 import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
 import EmployeeFormModal from '../../components/employees/EmployeeFormModal.vue'
+import EmployeeCard from '../../components/employees/EmployeeCard.vue'
 import * as L from '../../lib/listClasses'
 import { useEmployeeStore } from '../../stores/employees'
+import type { Employee } from '../../types'
 
 const store = useEmployeeStore()
 
@@ -257,9 +262,9 @@ const kpiLbl  = 'text-xs text-muted-foreground mt-0.5'
 // ── Modal flags ───────────────────────────────────────────────────────────────
 const showCreate = ref(false)
 const showImport = ref(false)
+const openCardId = ref<string | null>(null)
 
-// openCard is called by the layout's @open-card event; the details panel handles display
-function openCard(_item: any) {}
+function openCard(item: Employee) { openCardId.value = item.id }
 
 // ── KPI computed counts ───────────────────────────────────────────────────────
 const activeCount    = computed(() => store.employees.filter((e: any) => e.status === 'actif').length)

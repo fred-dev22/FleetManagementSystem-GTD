@@ -1,96 +1,60 @@
 <template>
-  <ModalShell
-    :open="modelValue"
+  <CreateModalShell
+    v-if="modelValue"
     :title="editId ? 'Modifier la remorque' : 'Nouvelle remorque'"
-    max-width="max-w-[600px]"
+    :banner-label="editId ? 'Remorques · Modification' : 'Remorques · Création'"
+    :create-label="editId ? 'Enregistrer' : 'Créer la remorque'"
+    :is-saving="submitting"
+    :save-error="submitError || undefined"
     @close="$emit('update:modelValue', false)"
+    @create="handleSubmit"
   >
-    <form @submit.prevent="handleSubmit" novalidate class="p-6 space-y-4">
-
-      <!-- VIN -->
-      <div>
-        <label class="block text-sm font-medium text-foreground mb-1">VIN <span class="text-red-500">*</span></label>
-        <input
-          v-model.trim="form.vin"
-          type="text"
-          placeholder="ex. 1FUJA6CK57LY12345"
-          maxlength="17"
-          class="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-        />
-        <p v-if="errors.vin" class="text-red-500 text-xs mt-1">{{ errors.vin }}</p>
+    <template #form>
+      <div class="flex-1 overflow-y-auto px-8 py-6 max-w-2xl mx-auto">
+        <FormSection title="Identification de la remorque">
+          <div class="grid grid-cols-2 gap-x-6 gap-y-4 max-sm:grid-cols-1">
+            <div class="flex flex-col gap-1">
+              <label class="text-[12px] font-medium text-muted-foreground">VIN *</label>
+              <input v-model.trim="form.vin" type="text" placeholder="ex. 1FUJA6CK57LY12345" maxlength="17" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary" />
+              <p v-if="errors.vin" class="text-red-500 text-[11px]">{{ errors.vin }}</p>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-[12px] font-medium text-muted-foreground">Plaque *</label>
+              <input v-model.trim="form.plaque" type="text" placeholder="ex. 1234 TAR" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] font-mono text-foreground focus:outline-none focus:border-primary" />
+              <p v-if="errors.plaque" class="text-red-500 text-[11px]">{{ errors.plaque }}</p>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-[12px] font-medium text-muted-foreground">Type *</label>
+              <select v-model="form.type" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary">
+                <option value="" disabled>Sélectionner un type</option>
+                <option value="Citerne">Citerne</option>
+                <option value="Bâchée">Bâchée</option>
+                <option value="Frigorifique">Frigorifique</option>
+                <option value="Plateau">Plateau</option>
+                <option value="Autre">Autre</option>
+              </select>
+              <p v-if="errors.type" class="text-red-500 text-[11px]">{{ errors.type }}</p>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-[12px] font-medium text-muted-foreground">Capacité *</label>
+              <input v-model.trim="form.capacite" type="text" placeholder="ex. 28000L ou 28T" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary" />
+              <p v-if="errors.capacite" class="text-red-500 text-[11px]">{{ errors.capacite }}</p>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-[12px] font-medium text-muted-foreground">Date de mise en circulation</label>
+              <input v-model="form.dateMiseEnCirculation" type="date" :max="todayISO" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary" />
+            </div>
+          </div>
+        </FormSection>
       </div>
-
-      <!-- Plaque -->
-      <div>
-        <label class="block text-sm font-medium text-foreground mb-1">Plaque <span class="text-red-500">*</span></label>
-        <input
-          v-model.trim="form.plaque"
-          type="text"
-          placeholder="ex. 1234 TAR"
-          class="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary font-mono"
-        />
-        <p v-if="errors.plaque" class="text-red-500 text-xs mt-1">{{ errors.plaque }}</p>
-      </div>
-
-      <!-- Type -->
-      <div>
-        <label class="block text-sm font-medium text-foreground mb-1">Type <span class="text-red-500">*</span></label>
-        <select
-          v-model="form.type"
-          class="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-        >
-          <option value="" disabled>Sélectionner un type</option>
-          <option value="Citerne">Citerne</option>
-          <option value="Bâchée">Bâchée</option>
-          <option value="Frigorifique">Frigorifique</option>
-          <option value="Plateau">Plateau</option>
-          <option value="Autre">Autre</option>
-        </select>
-        <p v-if="errors.type" class="text-red-500 text-xs mt-1">{{ errors.type }}</p>
-      </div>
-
-      <!-- Capacité -->
-      <div>
-        <label class="block text-sm font-medium text-foreground mb-1">Capacité <span class="text-red-500">*</span></label>
-        <input
-          v-model.trim="form.capacite"
-          type="text"
-          placeholder="ex. 28000L ou 28T"
-          class="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-        />
-        <p v-if="errors.capacite" class="text-red-500 text-xs mt-1">{{ errors.capacite }}</p>
-      </div>
-
-      <!-- Date mise en circulation -->
-      <div>
-        <label class="block text-sm font-medium text-foreground mb-1">Date de mise en circulation</label>
-        <input
-          v-model="form.dateMiseEnCirculation"
-          type="date"
-          :max="todayISO"
-          class="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-        />
-      </div>
-
-      <div v-if="submitError" class="bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2 rounded-lg">
-        {{ submitError }}
-      </div>
-
-      <div class="flex justify-end gap-3 pt-2 border-t border-border">
-        <button type="button" class="px-4 py-2 text-sm border border-border rounded-lg text-foreground hover:bg-muted transition-colors" @click="$emit('update:modelValue', false)">
-          Annuler
-        </button>
-        <button type="submit" :disabled="submitting" class="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60">
-          {{ submitting ? 'Enregistrement...' : (editId ? 'Modifier' : 'Créer') }}
-        </button>
-      </div>
-    </form>
-  </ModalShell>
+    </template>
+  </CreateModalShell>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue'
-import ModalShell from '../ui/ModalShell.vue'
+import CreateModalShell from '../shared/CreateModalShell.vue'
+import FormSection from '../ui/form-field/FormSection.vue'
 import { useRemorquesStore } from '../../stores/remorques'
 import type { TypeRemorque, StatutAdminVehicule } from '../../types/index'
 

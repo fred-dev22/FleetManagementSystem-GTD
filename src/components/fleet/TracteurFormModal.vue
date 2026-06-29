@@ -1,105 +1,64 @@
 <template>
-  <ModalShell
-    :open="modelValue"
+  <CreateModalShell
+    v-if="modelValue"
     :title="editId ? 'Modifier le tracteur' : 'Nouveau tracteur'"
-    max-width="max-w-[600px]"
+    :banner-label="editId ? 'Tracteurs · Modification' : 'Tracteurs · Création'"
+    :create-label="editId ? 'Enregistrer' : 'Créer le tracteur'"
+    :is-saving="submitting"
+    :save-error="submitError || undefined"
     @close="$emit('update:modelValue', false)"
+    @create="handleSubmit"
   >
-    <form @submit.prevent="handleSubmit" novalidate class="p-6 space-y-4">
-
-      <!-- VIN -->
-      <div>
-        <label class="block text-sm font-medium text-foreground mb-1">VIN <span class="text-red-500">*</span></label>
-        <input
-          v-model.trim="form.vin"
-          type="text"
-          placeholder="ex. YV2RT40A4SB123456"
-          maxlength="17"
-          class="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-        />
-        <p v-if="errors.vin" class="text-red-500 text-xs mt-1">{{ errors.vin }}</p>
+    <template #form>
+      <div class="flex-1 overflow-y-auto px-8 py-6 max-w-2xl mx-auto">
+        <FormSection title="Identification du véhicule">
+          <div class="grid grid-cols-2 gap-x-6 gap-y-4 max-sm:grid-cols-1">
+            <div class="flex flex-col gap-1">
+              <label class="text-[12px] font-medium text-muted-foreground">VIN *</label>
+              <input v-model.trim="form.vin" type="text" placeholder="ex. YV2RT40A4SB123456" maxlength="17" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary" />
+              <p v-if="errors.vin" class="text-red-500 text-[11px]">{{ errors.vin }}</p>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-[12px] font-medium text-muted-foreground">Plaque *</label>
+              <input v-model.trim="form.plaque" type="text" placeholder="ex. 1234 TAN" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] font-mono text-foreground focus:outline-none focus:border-primary" />
+              <p v-if="errors.plaque" class="text-red-500 text-[11px]">{{ errors.plaque }}</p>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-[12px] font-medium text-muted-foreground">Marque *</label>
+              <select v-model="form.marque" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary">
+                <option value="" disabled>Sélectionner une marque</option>
+                <option v-for="m in marques" :key="m" :value="m">{{ m }}</option>
+              </select>
+              <p v-if="errors.marque" class="text-red-500 text-[11px]">{{ errors.marque }}</p>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-[12px] font-medium text-muted-foreground">Modèle *</label>
+              <input v-model.trim="form.modele" type="text" placeholder="ex. FH 460" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary" />
+              <p v-if="errors.modele" class="text-red-500 text-[11px]">{{ errors.modele }}</p>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-[12px] font-medium text-muted-foreground">Date de mise en circulation *</label>
+              <input v-model="form.dateMiseEnCirculation" type="date" :max="todayISO" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary" />
+              <p v-if="errors.dateMiseEnCirculation" class="text-red-500 text-[11px]">{{ errors.dateMiseEnCirculation }}</p>
+            </div>
+            <div v-if="editId" class="flex flex-col gap-1">
+              <label class="text-[12px] font-medium text-muted-foreground">Statut administratif</label>
+              <select v-model="form.statutAdmin" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary">
+                <option value="en_service">En service</option>
+                <option value="hors_service">Hors service</option>
+              </select>
+            </div>
+          </div>
+        </FormSection>
       </div>
-
-      <!-- Plaque -->
-      <div>
-        <label class="block text-sm font-medium text-foreground mb-1">Plaque <span class="text-red-500">*</span></label>
-        <input
-          v-model.trim="form.plaque"
-          type="text"
-          placeholder="ex. 1234 TAN"
-          class="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary font-mono"
-        />
-        <p v-if="errors.plaque" class="text-red-500 text-xs mt-1">{{ errors.plaque }}</p>
-      </div>
-
-      <!-- Marque -->
-      <div>
-        <label class="block text-sm font-medium text-foreground mb-1">Marque <span class="text-red-500">*</span></label>
-        <select
-          v-model="form.marque"
-          class="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-        >
-          <option value="" disabled>Sélectionner une marque</option>
-          <option v-for="m in marques" :key="m" :value="m">{{ m }}</option>
-        </select>
-        <p v-if="errors.marque" class="text-red-500 text-xs mt-1">{{ errors.marque }}</p>
-      </div>
-
-      <!-- Modèle -->
-      <div>
-        <label class="block text-sm font-medium text-foreground mb-1">Modèle <span class="text-red-500">*</span></label>
-        <input
-          v-model.trim="form.modele"
-          type="text"
-          placeholder="ex. FH 460"
-          class="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-        />
-        <p v-if="errors.modele" class="text-red-500 text-xs mt-1">{{ errors.modele }}</p>
-      </div>
-
-      <!-- Date mise en circulation -->
-      <div>
-        <label class="block text-sm font-medium text-foreground mb-1">Date de mise en circulation <span class="text-red-500">*</span></label>
-        <input
-          v-model="form.dateMiseEnCirculation"
-          type="date"
-          :max="todayISO"
-          class="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-        />
-        <p v-if="errors.dateMiseEnCirculation" class="text-red-500 text-xs mt-1">{{ errors.dateMiseEnCirculation }}</p>
-      </div>
-
-      <!-- Statut (edit only) -->
-      <div v-if="editId">
-        <label class="block text-sm font-medium text-foreground mb-1">Statut administratif</label>
-        <select
-          v-model="form.statutAdmin"
-          class="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-        >
-          <option value="en_service">En service</option>
-          <option value="hors_service">Hors service</option>
-        </select>
-      </div>
-
-      <div v-if="submitError" class="bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2 rounded-lg">
-        {{ submitError }}
-      </div>
-
-      <div class="flex justify-end gap-3 pt-2 border-t border-border">
-        <button type="button" class="px-4 py-2 text-sm border border-border rounded-lg text-foreground hover:bg-muted transition-colors" @click="$emit('update:modelValue', false)">
-          Annuler
-        </button>
-        <button type="submit" :disabled="submitting" class="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60">
-          {{ submitting ? 'Enregistrement...' : (editId ? 'Modifier' : 'Créer') }}
-        </button>
-      </div>
-    </form>
-  </ModalShell>
+    </template>
+  </CreateModalShell>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
-import ModalShell from '../ui/ModalShell.vue'
+import CreateModalShell from '../shared/CreateModalShell.vue'
+import FormSection from '../ui/form-field/FormSection.vue'
 import { useTracteurStore } from '../../stores/tracteurs'
 import type { StatutAdminVehicule } from '../../types/index'
 
