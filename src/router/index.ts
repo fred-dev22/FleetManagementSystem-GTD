@@ -48,33 +48,33 @@ const router = createRouter({
     { path: '/hr/config/mission-fees', name: 'hr-config-mission-fees', component: () => import('../views/configuration/MissionConfigView.vue'),         meta: { requiresAuth: true, layout: 'dashboard' } },
     { path: '/hr/config/perdiems',     name: 'hr-config-perdiems',     component: () => import('../views/configuration/PerdiemView.vue'),               meta: { requiresAuth: true, layout: 'dashboard' } },
 
-    // ── MODULE 2 : Véhicules — Tracteurs ─────────────────────────
-    { path: '/fleet/tracteurs',     name: 'fleet-tracteurs',       component: () => import('../views/fleet/TracteurListView.vue'),   meta: { requiresAuth: true, layout: 'dashboard' } },
-    { path: '/fleet/tracteurs/:id', name: 'fleet-tracteur-detail', component: () => import('../views/fleet/TracteurDetailView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
+    // ── MODULE 2 : Véhicules ─────────────────────────────────────
+    { path: '/fleet/vehicules', name: 'fleet-vehicules', component: () => import('../views/fleet/VehiculeListView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
 
-    // ── MODULE 2 : Véhicules — Remorques ─────────────────────────
-    { path: '/fleet/remorques',     name: 'fleet-remorques',       component: () => import('../views/fleet/RemorqueListView.vue'),   meta: { requiresAuth: true, layout: 'dashboard' } },
-    { path: '/fleet/remorques/:id', name: 'fleet-remorque-detail', component: () => import('../views/fleet/RemorqueDetailView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
+    // ── MODULE 2 : Conducteurs ────────────────────────────────────
+    { path: '/fleet/conducteurs', name: 'fleet-conducteurs', component: () => import('../views/fleet/ConducteurListView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
 
-    // ── MODULE 2 : Véhicules — Attelages ─────────────────────────
-    { path: '/fleet/attelages', name: 'fleet-attelages', component: () => import('../views/fleet/AttelageView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
+    // ── MODULE 2 : Attelages & Affectations ──────────────────────
+    { path: '/fleet/attelages',    name: 'fleet-attelages',    component: () => import('../views/fleet/AttelageView.vue'),     meta: { requiresAuth: true, layout: 'dashboard' } },
+    { path: '/fleet/affectations', name: 'fleet-affectations', component: () => import('../views/fleet/AffectationView.vue'),  meta: { requiresAuth: true, layout: 'dashboard' } },
 
-    // ── MODULE 2 : Véhicules — Affectations ──────────────────────
-    { path: '/fleet/affectations', name: 'fleet-affectations', component: () => import('../views/fleet/AffectationView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
-
-    // ── MODULE 2 : Véhicules — Sites ─────────────────────────────
+    // ── MODULE 2 : Sites ─────────────────────────────────────────
     { path: '/fleet/sites', name: 'fleet-sites', component: () => import('../views/fleet/SiteListView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
 
-    // ── MODULE 2 : Véhicules — Suivi GPS ─────────────────────────
-    { path: '/fleet/carte',    name: 'fleet-carte',    component: () => import('../views/fleet/CarteView.vue'),    meta: { requiresAuth: true, layout: 'dashboard' } },
-    { path: '/fleet/trajets',  name: 'fleet-trajets',  component: () => import('../views/fleet/TrajetsView.vue'),  meta: { requiresAuth: true, layout: 'dashboard' } },
+    // ── MODULE 2 : Suivi GPS ─────────────────────────────────────
+    { path: '/fleet/carte',      name: 'fleet-carte',      component: () => import('../views/fleet/CarteView.vue'),      meta: { requiresAuth: true, layout: 'dashboard' } },
+    { path: '/fleet/trajets',    name: 'fleet-trajets',    component: () => import('../views/fleet/TrajetsView.vue'),    meta: { requiresAuth: true, layout: 'dashboard' } },
     { path: '/fleet/telemetrie', name: 'fleet-telemetrie', component: () => import('../views/fleet/TelemetrieView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
 
-    // ── MODULE 2 : Véhicules — Documents ─────────────────────────
+    // ── MODULE 2 : Documents ─────────────────────────────────────
     { path: '/fleet/documents', name: 'fleet-documents', component: () => import('../views/fleet/DocumentsVehiculeView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
 
     // ── MODULE 2 : Dashboard fleet ────────────────────────────────
     { path: '/fleet', name: 'fleet-dashboard', component: () => import('../views/fleet/FleetDashboardView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
+
+    // Redirects anciens URLs tracteurs/remorques
+    { path: '/fleet/tracteurs', redirect: '/fleet/vehicules' },
+    { path: '/fleet/remorques', redirect: '/fleet/vehicules' },
 
 
     // ── Espace Employé ───────────────────────────────────────────

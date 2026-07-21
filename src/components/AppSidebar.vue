@@ -41,23 +41,23 @@
         </SidebarSection>
 
         <SidebarSection label="Parc véhicules">
-          <SidebarItem :icon="Truck"          label="Tracteurs"   :to="{ name: 'fleet-tracteurs' }" />
-          <SidebarItem :icon="Container"      label="Remorques"   :to="{ name: 'fleet-remorques' }" />
-          <SidebarItem :icon="Link2"          label="Attelages"   :to="{ name: 'fleet-attelages' }" />
-          <SidebarItem :icon="UserCheck"      label="Affectations" :to="{ name: 'fleet-affectations' }" />
+          <SidebarItem :icon="Truck"       label="Véhicules"    :to="{ name: 'fleet-vehicules' }" />
+          <SidebarItem :icon="UserCheck2"  label="Conducteurs"  :to="{ name: 'fleet-conducteurs' }" />
+          <SidebarItem :icon="Link2"       label="Attelages"    :to="{ name: 'fleet-attelages' }" />
+          <SidebarItem :icon="UserCheck"   label="Affectations" :to="{ name: 'fleet-affectations' }" />
         </SidebarSection>
 
         <SidebarSection label="Suivi & Télémétrie">
-          <SidebarItem :icon="Route"       label="Trajets"      :to="{ name: 'fleet-trajets' }" />
-          <SidebarItem :icon="Cpu"         label="Télémétrie"   :to="{ name: 'fleet-telemetrie' }" />
+          <SidebarItem :icon="Route" label="Trajets"    :to="{ name: 'fleet-trajets' }" />
+          <SidebarItem :icon="Cpu"   label="Télémétrie" :to="{ name: 'fleet-telemetrie' }" />
         </SidebarSection>
 
         <SidebarSection label="Sites & Géofences">
-          <SidebarItem :icon="MapPinned" label="Sites"      :to="{ name: 'fleet-sites' }" />
+          <SidebarItem :icon="MapPinned" label="Sites" :to="{ name: 'fleet-sites' }" />
         </SidebarSection>
 
         <SidebarSection label="Documents">
-          <SidebarItem :icon="FileText" label="Documents véhicules" :to="{ name: 'fleet-documents' }" />
+          <SidebarItem :icon="FileText" label="Documents" :to="{ name: 'fleet-documents' }" />
         </SidebarSection>
       </template>
 
@@ -96,7 +96,7 @@ import {
   Receipt, Network, CalendarDays, Coins,
   FileText, ClipboardCheck,
   // Fleet icons
-  Truck, Link2, UserCheck, MapPin, MapPinned, Route, Cpu, Container,
+  Truck, Link2, UserCheck, UserCheck2, MapPin, MapPinned, Route, Cpu,
 } from 'lucide-vue-next'
 import { useAuthStore }       from '../stores/auth'
 import { useNavigationStore } from '../stores/navigation'

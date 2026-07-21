@@ -1,211 +1,172 @@
 <template>
   <ListPageLayout
-    title="Documents Véhicules"
-    :subtitle="`${totalCount} document(s) enregistré(s)`"
+    title="Documents"
+    subtitle="Véhicules & conducteurs — suivi réglementaire"
     :columns="columns"
     :items="pageItems"
     :total="totalCount"
     :total-text="`${totalCount} document(s)`"
-    search-placeholder="Rechercher par véhicule ou numéro…"
-    scope-label="Statut :"
-    :scope-options="scopeOptions"
-    v-model:scope="filterStatut"
-    v-model:search-query="searchQuery"
-    v-model:sort-key="sortKey"
-    v-model:sort-dir="sortDir"
+    search-placeholder="Rechercher par entité ou type…"
+    v-model:search-query="search"
     v-model:page="page"
     v-model:page-size="pageSize"
-    @reset-filters="resetFilters"
-    @open-card="(e) => openDetail(e.id)"
+    @open-card="(e) => openDetail(e)"
   >
-    <template #header-actions>
-      <button :class="L.btnPrimary" @click="openModal()">
-        <Plus class="w-4 h-4" /> Ajouter document
-      </button>
-    </template>
-
+    <!-- Alertes -->
     <template #above-table>
-      <!-- Alertes -->
-      <div v-if="store.documentsExpires.length > 0 || store.documentsExpiresSous30Jours.length > 0" class="flex flex-wrap gap-2.5 mb-3.5">
-        <div v-if="store.documentsExpires.length > 0" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-danger-bg border border-danger/20 text-danger text-[13px] font-medium">
-          <XCircle class="w-4 h-4 shrink-0" />
+      <div class="flex flex-wrap gap-2.5 mb-3.5">
+        <div v-if="store.documentsExpires.length" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-danger-bg border border-danger/20 text-danger text-sm font-medium">
+          <AlertTriangle class="w-4 h-4" />
           {{ store.documentsExpires.length }} document(s) expiré(s)
         </div>
-        <div v-if="store.documentsExpiresSous30Jours.length > 0" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-warning-bg border border-warning/20 text-warning text-[13px] font-medium">
-          <AlertTriangle class="w-4 h-4 shrink-0" />
-          {{ store.documentsExpiresSous30Jours.length }} document(s) expire(nt) dans 30 jours
+        <div v-if="store.documentsExpiresSous30Jours.length" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-warning-bg border border-warning/20 text-warning text-sm font-medium">
+          <Clock class="w-4 h-4" />
+          {{ store.documentsExpiresSous30Jours.length }} expiration(s) dans 30 jours
         </div>
       </div>
+
       <!-- KPIs -->
-      <div class="grid grid-cols-4 gap-2.5 mb-3.5 max-md:grid-cols-2">
-        <div :class="kpiItem"><div :class="kpiIcon" class="bg-primary/10"><FileText class="w-[18px] h-[18px] text-primary" /></div><div><div :class="kpiVal">{{ store.documents.length }}</div><div :class="kpiLbl">Total</div></div></div>
-        <div :class="kpiItem"><div :class="kpiIcon" class="bg-success-bg"><CheckCircle2 class="w-[18px] h-[18px] text-success" /></div><div><div :class="kpiVal">{{ store.documents.filter(d => getStatut(d.dateExpiration ?? '') === 'valide').length }}</div><div :class="kpiLbl">Valides</div></div></div>
-        <div :class="kpiItem"><div :class="kpiIcon" class="bg-warning-bg"><AlertTriangle class="w-[18px] h-[18px] text-warning" /></div><div><div :class="kpiVal">{{ store.documentsExpiresSous30Jours.length }}</div><div :class="kpiLbl">Expirent bientôt</div></div></div>
-        <div :class="kpiItem"><div :class="kpiIcon" class="bg-danger-bg"><XCircle class="w-[18px] h-[18px] text-danger" /></div><div><div :class="kpiVal">{{ store.documentsExpires.length }}</div><div :class="kpiLbl">Expirés</div></div></div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+        <div v-for="k in kpis" :key="k.label" class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3">
+          <p class="text-xs text-gray-500 font-medium">{{ k.label }}</p>
+          <p class="text-2xl font-bold mt-0.5" :class="k.color ?? 'text-gray-800'">{{ k.value }}</p>
+        </div>
       </div>
     </template>
 
+    <!-- Filtres -->
     <template #filters>
-      <div :class="L.fpField">
-        <label :class="L.fpFieldLabel">Type véhicule</label>
-        <select v-model="filterVehiculeType" :class="L.fpSelect">
-          <option value="">Tous</option>
-          <option value="tracteur">Tracteur</option>
-          <option value="remorque">Remorque</option>
-        </select>
-      </div>
-      <div :class="L.fpField">
-        <label :class="L.fpFieldLabel">Type doc.</label>
-        <select v-model="filterDocType" :class="L.fpSelect">
-          <option value="">Tous</option>
-          <option v-for="dt in docTypes" :key="dt" :value="dt">{{ dt }}</option>
-        </select>
-      </div>
-      <button class="mt-auto py-[7px] bg-transparent border-0 text-xs text-muted-foreground cursor-pointer text-left hover:text-primary" @click="resetFilters">
-        Réinitialiser
+      <select v-model="filterEntity" :class="L.fpSelect">
+        <option value="">Toutes les entités</option>
+        <option value="vehicule">Véhicules</option>
+        <option value="conducteur">Conducteurs</option>
+      </select>
+      <select v-model="filterType" :class="L.fpSelect">
+        <option value="">Tous les types</option>
+        <option v-for="t in typesDoc" :key="t" :value="t">{{ t }}</option>
+      </select>
+      <select v-model="filterStatut" :class="L.fpSelect">
+        <option value="">Tous les statuts</option>
+        <option value="valide">Valide</option>
+        <option value="archive">Expiré</option>
+        <option value="depose">Déposé</option>
+      </select>
+    </template>
+
+    <!-- Header actions -->
+    <template #header-actions>
+      <button :class="L.btnPrimary" @click="openModal()">
+        <Plus class="w-4 h-4" />
+        Ajouter document
       </button>
     </template>
 
-    <!-- Cellules -->
-    <template #cell-vehiculeType="{ item }">
-      <span :class="['text-[11px] font-bold px-2 py-0.5 rounded-full', item.vehiculeType === 'tracteur' ? 'bg-primary/10 text-primary' : 'bg-purple-100 text-purple-700']">
-        {{ item.vehiculeType === 'tracteur' ? 'Tracteur' : 'Remorque' }}
-      </span>
-    </template>
-    <template #cell-vehiculeId="{ item }">
-      <span class="font-mono font-bold text-[12px] text-foreground">{{ item.vehiculeId }}</span>
-    </template>
-    <template #cell-typeDocument="{ item }">
-      <span class="text-foreground text-[13px]">{{ item.type }}</span>
-    </template>
-    <template #cell-numero="{ item }">
-      <span class="font-mono text-xs text-muted-foreground">—</span>
-    </template>
-    <template #cell-dateEmission="{ item }">
-      <span class="text-muted-foreground text-xs">{{ formatDate(item.dateEmission) }}</span>
-    </template>
-    <template #cell-dateExpiration="{ item }">
-      <span :class="['text-xs font-medium', getStatut(item.dateExpiration ?? '') === 'expire' ? 'text-danger' : getStatut(item.dateExpiration ?? '') === 'expireBientot' ? 'text-warning' : 'text-foreground']">
-        {{ item.dateExpiration ? formatDate(item.dateExpiration) : '—' }}
-      </span>
-    </template>
-    <template #cell-statut="{ item }">
-      <span :class="['text-[11px] font-medium px-2 py-0.5 rounded-full', statutClass(item.dateExpiration ?? '')]">{{ statutLabel(item.dateExpiration ?? '') }}</span>
-    </template>
-    <template #cell-actions="{ item }">
-      <div class="flex items-center gap-1.5">
-        <button class="p-1.5 rounded text-primary hover:bg-primary/10 transition-colors" @click.stop="openModal(item)" title="Modifier"><Pencil class="w-3.5 h-3.5" /></button>
-        <button class="p-1.5 rounded text-danger hover:bg-danger-bg transition-colors" @click.stop="confirmDelete(item.id)" title="Supprimer"><Trash2 class="w-3.5 h-3.5" /></button>
+    <!-- Colonnes -->
+    <template #cell-entityId="{ item }">
+      <div class="flex items-center gap-2">
+        <span :class="item.entityType === 'vehicule' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'"
+          class="px-1.5 py-0.5 rounded text-xs font-medium">
+          {{ item.entityType === 'vehicule' ? 'VÉH' : 'CND' }}
+        </span>
+        <span class="font-mono text-sm font-semibold text-gray-800">{{ item.entityId }}</span>
       </div>
     </template>
 
-    <!-- Panneau latéral -->
-    <template #details-panel="{ item }">
-      <div class="flex flex-col gap-3">
-        <div>
-          <span :class="['text-[11px] font-bold px-2 py-0.5 rounded-full', item.vehiculeType === 'tracteur' ? 'bg-primary/10 text-primary' : 'bg-purple-100 text-purple-700']">
-            {{ item.vehiculeType === 'tracteur' ? 'Tracteur' : 'Remorque' }}
-          </span>
-          <div class="font-mono font-bold text-foreground mt-1.5">{{ item.vehiculeId }}</div>
-          <div class="text-[13px] font-medium text-foreground mt-0.5">{{ item.type }}</div>
-        </div>
-        <span :class="['text-[11px] font-medium px-2 py-0.5 rounded-full self-start', statutClass(item.dateExpiration ?? '')]">{{ statutLabel(item.dateExpiration ?? '') }}</span>
-        <div class="grid grid-cols-2 gap-2 text-[12px]">
-          <div><div class="text-muted-foreground text-[11px]">N° document</div><span class="font-mono text-xs">—</span></div>
-          <div><div class="text-muted-foreground text-[11px]">Émis le</div>{{ formatDate(item.dateEmission) }}</div>
-          <div class="col-span-2"><div class="text-muted-foreground text-[11px]">Expire le</div>
-            <span :class="['font-medium', getStatut(item.dateExpiration ?? '') === 'expire' ? 'text-danger' : getStatut(item.dateExpiration ?? '') === 'expireBientot' ? 'text-warning' : 'text-foreground']">
-              {{ item.dateExpiration ? formatDate(item.dateExpiration) : '—' }}
-            </span>
-          </div>
-        </div>
-        <button :class="L.btnOutline" class="w-full justify-center" @click="openModal(item)">Modifier</button>
-        <button class="w-full justify-center inline-flex items-center gap-1.5 px-3 py-[7px] rounded-md text-[13px] font-medium border border-danger/30 bg-danger-bg text-danger hover:bg-danger hover:text-white transition-colors cursor-pointer" @click="confirmDelete(item.id)">
-          Supprimer
-        </button>
+    <template #cell-type="{ item }">
+      <span class="text-gray-700 text-sm">{{ item.type }}</span>
+    </template>
+
+    <template #cell-dateExpiration="{ item }">
+      <span v-if="item.dateExpiration" :class="statutDateClass(item.dateExpiration)" class="px-2 py-0.5 rounded text-xs font-medium">
+        {{ formatDate(item.dateExpiration) }}
+      </span>
+      <span v-else class="text-gray-300 text-xs">—</span>
+    </template>
+
+    <template #cell-statut="{ item }">
+      <span :class="statutClass(item.statut)" class="px-2 py-0.5 rounded-full text-xs font-medium">
+        {{ statutLabel(item.statut) }}
+      </span>
+    </template>
+
+    <template #cell-actions="{ item }">
+      <div class="flex items-center gap-2">
+        <button class="text-xs text-primary hover:underline" @click.stop="openModal(item)">Modifier</button>
+        <button class="text-xs text-danger hover:underline" @click.stop="confirmDelete(item)">Supprimer</button>
       </div>
     </template>
 
     <template #empty>
-      <FileText class="w-8 h-8" />
-      <p class="text-[13px]">Aucun document trouvé</p>
+      <p class="text-gray-500">Aucun document trouvé.</p>
     </template>
   </ListPageLayout>
 
-  <!-- Modal ajout/édition -->
+  <!-- Modal ajout / modification -->
   <Teleport to="body">
-    <div v-if="showModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-[900]" @click.self="closeModal">
-      <div class="bg-card rounded-xl w-full max-w-lg shadow-2xl border border-border overflow-hidden">
-        <div class="flex items-center justify-between px-5 py-4 border-b border-border bg-primary">
-          <div class="flex items-center gap-2.5">
-            <FileText class="w-4 h-4 text-white/70" />
-            <span class="text-white font-semibold text-[14px]">{{ editDoc ? 'Modifier le document' : 'Ajouter un document' }}</span>
-          </div>
-          <button class="text-white/70 hover:text-white" @click="closeModal"><X class="w-5 h-5" /></button>
+    <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" @click.self="showModal = false">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div class="bg-primary px-6 py-4 flex items-center justify-between">
+          <h2 class="text-white font-semibold">{{ editingDoc ? 'Modifier' : 'Ajouter' }} un document</h2>
+          <button class="text-white/80 hover:text-white" @click="showModal = false"><X class="w-5 h-5" /></button>
         </div>
-        <div class="px-5 py-4">
-          <div v-if="formError" class="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-danger-bg border border-danger/20 text-danger text-[13px] mb-4">
-            <AlertTriangle class="w-4 h-4 shrink-0" />{{ formError }}
+        <div class="p-6 space-y-4">
+          <div>
+            <label :class="L.fpFieldLabel">Entité *</label>
+            <div class="flex gap-2 mb-2">
+              <button v-for="et in ['vehicule','conducteur']" :key="et"
+                @click="form.entityType = et as any"
+                :class="form.entityType === et ? 'border-primary bg-primary/10 text-primary' : 'border-gray-200 text-gray-600'"
+                class="flex-1 py-1.5 rounded-lg border-2 text-sm font-medium capitalize transition-colors">
+                {{ et }}
+              </button>
+            </div>
+            <input v-model="form.entityId" :class="L.fpField" placeholder="ID (ex: TRC-001 ou CP-001)" />
           </div>
-          <div class="grid grid-cols-2 gap-3.5">
-            <div class="flex flex-col gap-1.5">
-              <label class="text-[12px] font-medium text-muted-foreground">Type de véhicule <span class="text-danger">*</span></label>
-              <select v-model="form.vehiculeType" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary">
-                <option value="tracteur">Tracteur</option>
-                <option value="remorque">Remorque</option>
-              </select>
+          <div>
+            <label :class="L.fpFieldLabel">Type de document *</label>
+            <input v-model="form.type" list="types-list" :class="L.fpField" placeholder="Carte grise, Assurance…" />
+            <datalist id="types-list">
+              <option v-for="t in typesDoc" :key="t" :value="t" />
+            </datalist>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label :class="L.fpFieldLabel">Date d'émission *</label>
+              <input v-model="form.dateEmission" type="date" :class="L.fpField" />
             </div>
-            <div class="flex flex-col gap-1.5">
-              <label class="text-[12px] font-medium text-muted-foreground">ID / Plaque <span class="text-danger">*</span></label>
-              <input type="text" v-model="form.vehiculeId" placeholder="ex: TRC-001" list="vehicule-ids" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary" />
-              <datalist id="vehicule-ids">
-                <option v-for="id in vehiculeIds" :key="id" :value="id" />
-              </datalist>
+            <div>
+              <label :class="L.fpFieldLabel">Date d'expiration</label>
+              <input v-model="form.dateExpiration" type="date" :class="L.fpField" />
             </div>
-            <div class="flex flex-col gap-1.5">
-              <label class="text-[12px] font-medium text-muted-foreground">Type de document <span class="text-danger">*</span></label>
-              <select v-model="form.type" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary">
-                <option v-for="dt in docTypes" :key="dt" :value="dt">{{ dt }}</option>
-              </select>
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <label class="text-[12px] font-medium text-muted-foreground">N° document</label>
-              <input type="text" v-model="form.ref" placeholder="Numéro de référence" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary" />
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <label class="text-[12px] font-medium text-muted-foreground">Date d'émission <span class="text-danger">*</span></label>
-              <input type="date" v-model="form.dateEmission" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary" />
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <label class="text-[12px] font-medium text-muted-foreground">Date d'expiration <span class="text-danger">*</span></label>
-              <input type="date" v-model="form.dateExpiration" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary" />
-            </div>
-            <div class="col-span-2 flex flex-col gap-1.5">
-              <label class="text-[12px] font-medium text-muted-foreground">Lien fichier</label>
-              <input type="url" v-model="form.lienFichier" placeholder="https://…" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary" />
-            </div>
+          </div>
+          <div>
+            <label :class="L.fpFieldLabel">Statut</label>
+            <select v-model="form.statut" :class="L.fpSelect">
+              <option value="depose">Déposé</option>
+              <option value="valide">Valide</option>
+              <option value="refuse">Refusé</option>
+              <option value="archive">Archivé</option>
+            </select>
           </div>
         </div>
-        <div class="flex justify-end gap-2 px-5 py-3 border-t border-border bg-muted/30 rounded-b-xl">
-          <button :class="L.btnOutline" @click="closeModal">Annuler</button>
-          <button :class="L.btnPrimary" @click="saveDocument">{{ editDoc ? 'Enregistrer' : 'Ajouter' }}</button>
+        <div class="px-6 py-4 bg-gray-50 border-t flex justify-end gap-3">
+          <button :class="L.btnOutline" @click="showModal = false">Annuler</button>
+          <button :class="L.btnPrimary" :disabled="!canSave" @click="saveDoc">
+            {{ editingDoc ? 'Enregistrer' : 'Ajouter' }}
+          </button>
         </div>
       </div>
     </div>
-  </Teleport>
 
-  <!-- Confirm suppression -->
-  <Teleport to="body">
-    <div v-if="deleteTargetId" class="fixed inset-0 bg-black/40 flex items-center justify-center z-[900]" @click.self="deleteTargetId = null">
-      <div class="bg-card rounded-xl w-full max-w-sm shadow-2xl border border-border">
-        <div class="flex items-center justify-between px-5 py-4 border-b border-border">
-          <span class="font-semibold text-foreground">Confirmer la suppression</span>
-          <button @click="deleteTargetId = null" class="text-muted-foreground hover:text-foreground"><X class="w-4 h-4" /></button>
-        </div>
-        <div class="px-5 py-4 text-[13px] text-muted-foreground">Êtes-vous sûr de vouloir supprimer ce document ? Cette action est irréversible.</div>
-        <div class="flex justify-end gap-2 px-5 py-3 border-t border-border bg-muted/30 rounded-b-xl">
-          <button :class="L.btnOutline" @click="deleteTargetId = null">Annuler</button>
-          <button class="px-4 py-[7px] rounded-md text-[13px] font-medium cursor-pointer inline-flex items-center gap-1.5 bg-danger text-white transition-colors hover:bg-danger/90" @click="executeDelete">Supprimer</button>
+    <!-- Confirm delete -->
+    <div v-if="deleteTarget" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm">
+        <h3 class="font-semibold text-gray-800 mb-2">Supprimer ce document ?</h3>
+        <p class="text-sm text-gray-600 mb-4">{{ deleteTarget.type }} — {{ deleteTarget.entityId }}</p>
+        <div class="flex gap-3 justify-end">
+          <button :class="L.btnOutline" @click="deleteTarget = null">Annuler</button>
+          <button class="px-4 py-2 bg-danger text-white rounded-lg text-sm font-semibold hover:bg-danger/90 transition-colors"
+            @click="doDelete">Supprimer</button>
         </div>
       </div>
     </div>
@@ -213,111 +174,128 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import { Plus, FileText, CheckCircle2, AlertTriangle, XCircle, Pencil, Trash2, X } from 'lucide-vue-next'
+import { ref, computed, reactive, watch } from 'vue'
+import { Plus, AlertTriangle, Clock, X } from 'lucide-vue-next'
 import { ListPageLayout } from '../../components'
-import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
-import * as L from '../../lib/listClasses'
 import { useDocumentsVehiculesStore } from '../../stores/documentsVehicules'
-import type { DocumentVehicule } from '../../types/index'
+import type { DocumentVehicule } from '../../types'
+import * as L from '../../lib/listClasses'
 
 const store = useDocumentsVehiculesStore()
 
-const kpiItem = 'bg-card border border-border rounded-lg px-3.5 py-3 flex items-center gap-3'
-const kpiIcon = 'w-9 h-9 rounded-lg flex items-center justify-center shrink-0'
-const kpiVal  = 'text-[22px] font-bold leading-none'
-const kpiLbl  = 'text-xs text-muted-foreground mt-0.5'
+const search       = ref('')
+const filterEntity = ref('')
+const filterType   = ref('')
+const filterStatut = ref('')
+const showModal    = ref(false)
+const editingDoc   = ref<DocumentVehicule | null>(null)
+const deleteTarget = ref<DocumentVehicule | null>(null)
+const page     = ref(1)
+const pageSize = ref(15)
 
-const TODAY = new Date().toISOString().slice(0, 10)
+const form = reactive<Partial<DocumentVehicule>>({
+  entityType: 'vehicule',
+  statut: 'valide',
+})
 
-const filterVehiculeType = ref('')
-const filterDocType      = ref('')
-const filterStatut       = ref('')
-const searchQuery        = ref('')
-const sortKey            = ref('')
-const sortDir            = ref<'asc' | 'desc'>('asc')
-const page               = ref(1)
-const pageSize           = ref(15)
+const typesDoc = ['Carte grise', 'Assurance', 'Visite technique', 'Vignette', 'Permis C', 'Permis CE', 'Visite médicale', 'ADR', 'Autre']
 
-const docTypes   = ['Carte grise', 'Assurance', 'Visite technique', 'Vignette', 'Permis de transport', 'Autre']
-const vehiculeIds = ['TRC-001', 'TRC-002', 'TRC-003', 'TRC-004', 'TRC-005', 'REM-001', 'REM-002', 'REM-003']
+const filtered = computed(() => {
+  const q = search.value.toLowerCase()
+  return store.documents.filter(d => {
+    if (filterEntity.value && d.entityType !== filterEntity.value) return false
+    if (filterType.value   && d.type !== filterType.value)         return false
+    if (filterStatut.value && d.statut !== filterStatut.value)     return false
+    if (q && !`${d.entityId} ${d.type}`.toLowerCase().includes(q)) return false
+    return true
+  })
+})
 
-const scopeOptions = [
-  { value: '', label: 'Tous' },
-  { value: 'valide', label: 'Valides' },
-  { value: 'expireBientot', label: 'Expire bientôt' },
-  { value: 'expire', label: 'Expirés' },
+const kpis = computed(() => {
+  const all = store.documents
+  const valid = all.filter(d => d.statut === 'valide').length
+  return [
+    { label: 'Total',              value: all.length,                                      color: 'text-gray-800' },
+    { label: 'Valides',            value: valid,                                            color: 'text-success'  },
+    { label: 'Expirés',            value: store.documentsExpires.length,                   color: 'text-danger'   },
+    { label: 'Expirent < 30 j',   value: store.documentsExpiresSous30Jours.length,        color: 'text-warning'  },
+  ]
+})
+
+const columns = [
+  { key: 'entityId',       label: 'Entité' },
+  { key: 'type',           label: 'Type de document' },
+  { key: 'dateEmission',   label: 'Émission' },
+  { key: 'dateExpiration', label: 'Expiration' },
+  { key: 'statut',         label: 'Statut' },
+  { key: 'actions',        label: 'Actions' },
 ]
 
-const columns = computed<ListColumn[]>(() => [
-  { key: 'vehiculeType',    label: 'Véhicule',      sortable: true, width: 110 },
-  { key: 'vehiculeId',      label: 'ID / Plaque',   sortable: true, width: 120 },
-  { key: 'typeDocument',    label: 'Type doc.',      sortable: true, width: 160 },
-  { key: 'numero',          label: 'N° doc.',        width: 110 },
-  { key: 'dateEmission',    label: 'Émission',       sortable: true, width: 110 },
-  { key: 'dateExpiration',  label: 'Expiration',     sortable: true, width: 110 },
-  { key: 'statut',          label: 'Statut',         sortable: true, width: 130 },
-  { key: 'actions',         label: '',               align: 'center', width: 80 },
-])
-
-function getStatut(dateExpiration: string): 'expire' | 'expireBientot' | 'valide' {
-  const exp = new Date(dateExpiration); const today = new Date(TODAY)
-  const in30 = new Date(TODAY); in30.setDate(in30.getDate() + 30)
-  if (exp < today) return 'expire'
-  if (exp <= in30) return 'expireBientot'
-  return 'valide'
-}
-function statutLabel(d: string) { return ({ expire: 'Expiré', expireBientot: 'Expire bientôt', valide: 'Valide' } as any)[getStatut(d)] }
-function statutClass(d: string) { return ({ expire: 'bg-danger-bg text-danger', expireBientot: 'bg-warning-bg text-warning', valide: 'bg-success-bg text-success' } as any)[getStatut(d)] }
-function formatDate(d: string)  { return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) }
-
-watch([filterVehiculeType, filterDocType, filterStatut, searchQuery, pageSize], () => { page.value = 1 })
-function resetFilters() { filterVehiculeType.value = ''; filterDocType.value = ''; filterStatut.value = ''; searchQuery.value = ''; page.value = 1 }
-
-const filtered = computed(() => store.documents.filter(d => {
-  if (filterVehiculeType.value && d.vehiculeType !== filterVehiculeType.value) return false
-  if (filterDocType.value && d.type !== filterDocType.value) return false
-  if (filterStatut.value && getStatut(d.dateExpiration) !== filterStatut.value) return false
-  if (searchQuery.value) {
-    const q = searchQuery.value.toLowerCase()
-    if (!d.vehiculeId.toLowerCase().includes(q) && !d.type.toLowerCase().includes(q)) return false
-  }
-  return true
-}))
-
-const totalCount = computed(() => filtered.value.length)
-const pageItems  = computed(() => { const s = (page.value - 1) * pageSize.value; return filtered.value.slice(s, s + pageSize.value) })
-
-// Modal
-const showModal = ref(false)
-const editDoc   = ref<DocumentVehicule | null>(null)
-const formError = ref('')
-
-interface FormData { vehiculeId: string; vehiculeType: 'tracteur' | 'remorque'; type: string; ref: string; dateEmission: string; dateExpiration: string; lienFichier: string }
-const emptyForm = (): FormData => ({ vehiculeId: '', vehiculeType: 'tracteur', type: 'Carte grise', ref: '', dateEmission: '', dateExpiration: '', lienFichier: '' })
-const form = ref<FormData>(emptyForm())
-
-function openDetail(_id: string) { /* panneau latéral suffit */ }
-
 function openModal(doc?: DocumentVehicule) {
-  editDoc.value = doc ?? null; formError.value = ''
-  form.value = doc ? { vehiculeId: doc.vehiculeId, vehiculeType: doc.vehiculeType as 'tracteur' | 'remorque', type: doc.type, ref: '', dateEmission: doc.dateEmission, dateExpiration: doc.dateExpiration ?? '', lienFichier: '' } : emptyForm()
+  editingDoc.value = doc ?? null
+  if (doc) {
+    Object.assign(form, { ...doc })
+  } else {
+    Object.assign(form, { entityId: '', entityType: 'vehicule', type: '', dateEmission: '', dateExpiration: '', statut: 'valide' })
+  }
   showModal.value = true
 }
-function closeModal() { showModal.value = false; editDoc.value = null; formError.value = '' }
 
-function saveDocument() {
-  formError.value = ''
-  if (!form.value.vehiculeId.trim()) { formError.value = "L'ID du véhicule est requis."; return }
-  if (!form.value.dateEmission) { formError.value = "La date d'émission est requise."; return }
-  if (form.value.dateExpiration && form.value.dateExpiration < form.value.dateEmission) { formError.value = "La date d'expiration doit être après la date d'émission."; return }
-  const payload = { vehiculeId: form.value.vehiculeId.trim(), vehiculeType: form.value.vehiculeType, type: form.value.type, dateEmission: form.value.dateEmission, dateExpiration: form.value.dateExpiration || undefined }
-  if (editDoc.value) store.updateDocument(editDoc.value.id, payload)
-  else store.createDocument(payload)
-  closeModal()
+watch([filterEntity, filterType, filterStatut, search, pageSize], () => { page.value = 1 })
+
+const totalCount = computed(() => filtered.value.length)
+const pageItems  = computed(() => {
+  const start = (page.value - 1) * pageSize.value
+  return filtered.value.slice(start, start + pageSize.value)
+})
+
+function openDetail(row: DocumentVehicule) { openModal(row) }
+
+const canSave = computed(() => !!form.entityId && !!form.type && !!form.dateEmission && !!form.entityType)
+
+function saveDoc() {
+  if (!canSave.value) return
+  const payload = {
+    entityId:       form.entityId!,
+    entityType:     form.entityType!,
+    type:           form.type!,
+    dateEmission:   form.dateEmission!,
+    dateExpiration: form.dateExpiration || undefined,
+    statut:         form.statut ?? 'valide',
+  }
+  if (editingDoc.value) {
+    store.updateDocument(editingDoc.value.id, payload)
+  } else {
+    store.createDocument(payload)
+  }
+  showModal.value = false
 }
 
-const deleteTargetId = ref<string | null>(null)
-function confirmDelete(id: string) { deleteTargetId.value = id }
-function executeDelete() { if (deleteTargetId.value) { store.deleteDocument(deleteTargetId.value); deleteTargetId.value = null } }
+function confirmDelete(doc: DocumentVehicule) { deleteTarget.value = doc }
+function doDelete() {
+  if (deleteTarget.value) { store.deleteDocument(deleteTarget.value.id) }
+  deleteTarget.value = null
+}
+
+function formatDate(d?: string) {
+  return d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
+}
+
+function statutDateClass(date: string) {
+  const exp = new Date(date)
+  const now = new Date()
+  const in30 = new Date(); in30.setDate(now.getDate() + 30)
+  if (exp < now)   return 'bg-danger-bg text-danger'
+  if (exp <= in30) return 'bg-warning-bg text-warning'
+  return 'bg-success-bg text-success'
+}
+
+const STATUT_MAP: Record<string, { label: string; cls: string }> = {
+  valide:  { label: 'Valide',   cls: 'bg-success-bg text-success' },
+  depose:  { label: 'Déposé',   cls: 'bg-primary/10 text-primary' },
+  refuse:  { label: 'Refusé',   cls: 'bg-danger-bg text-danger'   },
+  archive: { label: 'Archivé',  cls: 'bg-gray-100 text-gray-400'  },
+}
+const statutLabel = (s: string) => STATUT_MAP[s]?.label ?? s
+const statutClass = (s: string) => STATUT_MAP[s]?.cls ?? ''
 </script>

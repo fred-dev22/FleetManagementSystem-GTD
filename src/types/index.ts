@@ -386,14 +386,16 @@ export interface DayPlanning {
 // MODULE 2 — VÉHICULES
 // ═══════════════════════════════════════════════════════════════
 
-export type StatutAdminVehicule = 'en_service' | 'hors_service' | 'archive'
-export type StatutOperationnelVehicule = 'en_mouvement' | 'allume_immobile' | 'arrete' | 'signal_perdu'
-
-export type TypeRemorque = 'Citerne' | 'Bâchée' | 'Frigorifique' | 'Plateau' | 'Autre'
-
-export type TypeSite = 'Garage' | 'Dépôt chargement' | 'Dépôt déchargement' | 'Zone à risque' | 'Point de contrôle'
-
+export type TypeVehicule   = 'tracteur' | 'remorque'
+export type TypeRemorque   = 'Citerne' | 'Bâchée' | 'Frigorifique' | 'Plateau' | 'Autre'
+export type TypeCarburant  = 'Diesel' | 'GNL' | 'Essence' | 'Électrique' | 'Hybride'
+export type ModeAcquisition = 'achat' | 'leasing' | 'location'
+export type TypeSite       = 'Garage' | 'Dépôt chargement' | 'Dépôt déchargement' | 'Zone à risque' | 'Point de contrôle'
 export type TypeAlerteGeozone = 'entree' | 'sortie' | 'entree_sortie'
+
+// Statuts UCODIS : actif | affecte | en_reparation | hors_service | vendu | archive
+export type StatutAdminVehicule       = 'actif' | 'affecte' | 'en_reparation' | 'hors_service' | 'vendu' | 'archive'
+export type StatutOperationnelVehicule = 'en_mouvement' | 'allume_immobile' | 'arrete' | 'signal_perdu'
 
 export interface HistoriquePlaque {
   anciennePlaque: string
@@ -402,74 +404,129 @@ export interface HistoriquePlaque {
   parUserId:      string
 }
 
-export interface DocumentVehicule {
-  id:              string
-  vehiculeId:      string
-  vehiculeType:    'tracteur' | 'remorque'
-  type:            string  // 'Carte grise' | 'Assurance' | 'Visite technique' | 'Vignette' | 'Autre'
-  dateEmission:    string
-  dateExpiration?: string
-  fichierUrl?:     string
-  alerteEnvoyee:   boolean
-  createdAt:       string
-}
+// Entité unifiée Tracteur + Remorque
+export interface Vehicule {
+  id:            string
+  typeVehicule:  TypeVehicule
 
-export interface Tracteur {
-  id:               string  // auto-généré
-  vin:              string  // unique
-  plaque:           string
-  marque:           string
-  modele:           string
-  dateMiseEnCirculation: string
-  statutAdmin:      StatutAdminVehicule
-  statutOp?:        StatutOperationnelVehicule
-  chauffeurId?:     string  // affectation active
-  chauffeurNom?:    string
-  remorqueId?:      string  // attelage actif
-  remorquePlaque?:  string
-  historiquePlayque?: HistoriquePlaque[]
-  position?:        GpsPosition
-  kilometrage?:     number
-  niveauCarburant?: number  // %
-  createdAt:        string
-}
-
-export interface Remorque {
-  id:               string
-  vin:              string
-  plaque:           string
-  marque?:          string
-  modele?:          string
-  type:             TypeRemorque
-  capacite:         string  // "28T" ou "30000L"
+  // Identification
+  vin?:          string
+  plaque:        string
+  marque?:       string
+  modele?:       string
+  annee?:        number
   dateMiseEnCirculation?: string
-  statutAdmin:      StatutAdminVehicule
-  tracteurId?:      string  // attelage actif
-  tracteurPlaque?:  string
-  historiquePlayque?: HistoriquePlaque[]
-  createdAt:        string
+  categorie?:    string
+  siteAffectation?: string
+
+  // Tracteur uniquement
+  typeCarburant?: TypeCarburant
+  statutOp?:      StatutOperationnelVehicule
+  position?:      GpsPosition
+  kilometrage?:   number
+  niveauCarburant?: number
+
+  // Remorque uniquement
+  typeRemorque?: TypeRemorque
+  capacite?:     string
+
+  // Admin
+  statutAdmin:   StatutAdminVehicule
+
+  // Financier
+  modeAcquisition?: ModeAcquisition
+  coutAcquisition?: number
+  valeurResiduelle?: number
+
+  // Liaisons dénormalisées
+  chauffeurId?:      string
+  chauffeurNom?:     string
+  vehiculeLieId?:    string
+  vehiculeLiePlaque?: string
+
+  // Meta
+  photos?:             string[]
+  historiquePlayque?:  HistoriquePlaque[]
+  createdAt:           string
 }
+
+// Garde Tracteur/Remorque comme alias pour rétro-compat (CarteView, etc.)
+export type Tracteur = Vehicule & { typeVehicule: 'tracteur' }
+export type Remorque = Vehicule & { typeVehicule: 'remorque' }
 
 export interface Attelage {
-  id:             string
-  tracteurId:     string
-  tracteurPlaque: string
-  remorqueId:     string
-  remorquePlaque: string
-  dateDebut:      string
-  dateFin?:       string  // null = actif
-  createdAt:      string
+  id:                 string
+  tracteurId:         string
+  tracteurPlaque:     string
+  remorqueId:         string
+  remorquePlaque:     string
+  dateDebut:          string
+  dateFin?:           string
+  createdAt:          string
 }
 
 export interface AffectationChauffeur {
-  id:            string
-  chauffeurId:   string
-  chauffeurNom:  string
-  tracteurId:    string
+  id:             string
+  chauffeurId:    string
+  chauffeurNom:   string
+  tracteurId:     string
   tracteurPlaque: string
-  dateDebut:     string
-  dateFin?:      string
-  createdAt:     string
+  dateDebut:      string
+  dateFin?:       string
+  createdAt:      string
+}
+
+// Documents unifiés véhicules + conducteurs
+export interface DocumentVehicule {
+  id:           string
+  entityId:     string                        // ID véhicule ou conducteur
+  entityType:   'vehicule' | 'conducteur'
+  type:         string
+  numero?:      string
+  dateEmission: string
+  dateExpiration?: string
+  fichierUrl?:  string
+  statut:       'depose' | 'valide' | 'refuse' | 'archive'
+  alerteEnvoyee: boolean
+  createdAt:    string
+}
+
+// Profil conducteur (extension de l'employé)
+export interface Formation {
+  id:              string
+  titre:           string
+  date:            string
+  dateExpiration?: string
+}
+
+export interface Infraction {
+  id:          string
+  date:        string
+  type:        string
+  description: string
+  gravite:     'faible' | 'moyen' | 'grave'
+}
+
+export interface ConducteurProfil {
+  id:          string  // = employeId
+  employeId:   string
+
+  // Permis
+  numeroPermis?:           string
+  categoriePermis?:        string
+  dateExpirationPermis?:   string
+
+  // Santé
+  dateVisiteMedicale?:           string
+  dateExpirationVisiteMedicale?: string
+
+  // Formations & score
+  formations?:   Formation[]
+  scoreConduite: number  // 0-100
+  infractions?:  Infraction[]
+
+  disponible: boolean
+  createdAt:  string
 }
 
 export interface Site {
