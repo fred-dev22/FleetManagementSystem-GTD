@@ -11,7 +11,28 @@
         <div class="flex items-center gap-2 mb-2.5">
           <Truck class="w-4 h-4 text-primary shrink-0" />
           <span class="text-[13px] font-semibold text-foreground">Flotte GTD</span>
-          <span class="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">{{ tracteurs.length }}</span>
+          <span class="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
+            {{ recherche ? `${tracteursFiltres.length}/${tracteurs.length}` : tracteurs.length }}
+          </span>
+        </div>
+
+        <!-- ═══ Zone de recherche ═══ -->
+        <div class="relative mb-2.5">
+          <Search class="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            v-model="recherche"
+            type="text"
+            placeholder="Plaque, chauffeur, marque…"
+            class="w-full h-[30px] pl-8 pr-7 rounded-lg border border-border bg-background text-[12px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+          />
+          <button
+            v-if="recherche"
+            class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground bg-transparent border-0 cursor-pointer p-0"
+            title="Effacer"
+            @click="recherche = ''"
+          >
+            <X class="w-3 h-3" />
+          </button>
         </div>
 
         <!-- Bouton simulation -->
@@ -37,7 +58,7 @@
       <!-- Liste scrollable -->
       <div class="flex-1 overflow-y-auto py-1">
         <button
-          v-for="t in tracteurs"
+          v-for="t in tracteursFiltres"
           :key="t.id"
           @click="selectTruck(t.id)"
           :class="[
@@ -254,7 +275,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
-  Truck, User, PlayCircle, PauseCircle, X,
+  Truck, User, PlayCircle, PauseCircle, X, Search,
   // ═══ AJOUT : icônes des greffes ═══
   Bell, AlertTriangle, Octagon, Fuel, Route,
 } from 'lucide-vue-next'
@@ -298,6 +319,25 @@ const tracteurs = computed(() =>
     t => t.typeVehicule === 'tracteur' && t.statutAdmin !== 'archive' && t.position,
   )
 )
+
+/* ═══ Zone de recherche du panneau gauche ═══
+   Filtre sur la plaque, l'identifiant, le chauffeur, la marque et le modèle.
+   Les marqueurs de la carte suivent le filtre : chercher une plaque isole
+   le camion correspondant. */
+const recherche = ref('')
+
+const tracteursFiltres = computed(() => {
+  const q = recherche.value.trim().toLowerCase()
+  if (!q) return tracteurs.value
+  return tracteurs.value.filter(t =>
+    `${t.plaque} ${t.id} ${t.chauffeurNom ?? ''} ${t.marque ?? ''} ${t.modele ?? ''}`
+      .toLowerCase()
+      .includes(q),
+  )
+})
+
+/** Identifiants retenus par la recherche — sert à masquer les marqueurs écartés. */
+const idsFiltres = computed(() => new Set(tracteursFiltres.value.map(t => t.id)))
 
 // ── Sélection ──────────────────────────────────────────────────────
 const selectedId = ref<string | null>(null)
@@ -553,6 +593,24 @@ function placeAllMarkers() {
   })
 }
 
+/** Masque sur la carte les camions écartés par la recherche, sans les détruire. */
+function appliquerFiltreCarte() {
+  if (!mapInstance) return
+  tracteurs.value.forEach(t => {
+    const m = markers[t.id]
+    if (!m) return
+    const visible = idsFiltres.value.has(t.id)
+    const el = m.getElement?.()
+    if (el) {
+      el.style.display = visible ? '' : 'none'
+    } else if (visible) {
+      m.addTo(mapInstance)
+    }
+  })
+}
+
+watch(idsFiltres, () => appliquerFiltreCarte())
+
 function updateMarkers() {
   if (!mapInstance) return
   tracteurs.value.forEach(t => {
@@ -560,6 +618,9 @@ function updateMarkers() {
     if (!pos || !markers[t.id]) return
     markers[t.id].setLatLng([pos.lat, pos.lng])
     markers[t.id].setIcon(truckIcon(t))
+    // Le remplacement d'icône recrée l'élément : on réapplique le masquage
+    const el = markers[t.id].getElement?.()
+    if (el) el.style.display = idsFiltres.value.has(t.id) ? '' : 'none'
     if (markers[t.id].isPopupOpen()) {
       markers[t.id].setPopupContent(popupHtml(t))
     }

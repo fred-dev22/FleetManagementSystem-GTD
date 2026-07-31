@@ -1,7 +1,7 @@
 <template>
   <ListPageLayout
     title="Véhicules"
-    :subtitle="`${store.vehicules.length} véhicule(s) — tracteurs & remorques`"
+    :subtitle="`${store.vehicules.length} véhicule(s) ↔ tracteurs & remorques`"
     :columns="columns"
     :items="pageItems"
     :total="totalCount"

@@ -1,7 +1,7 @@
 <template>
   <ListPageLayout
     title="Voyages"
-    :subtitle="`${store.voyages.length} voyage(s) — objet pivot du suivi d'exploitation`"
+    :subtitle="`${store.voyages.length} voyage(s) ↔ objet pivot du suivi d'exploitation`"
     :columns="columns"
     :items="pageItems"
     :total="totalCount"
@@ -16,7 +16,7 @@
     v-model:page="page"
     v-model:page-size="pageSize"
     @reset-filters="resetFilters"
-    @open-card="(v) => ouvrir(v.id)"
+    @open-card="(v) => ouvrirFiche(v.id)"
   >
     <template #header-actions>
       <button :class="L.btnPrimary" @click="creationOuverte = true">
@@ -73,7 +73,7 @@
     <template #cell-reference="{ item }">
       <button
         class="font-mono font-semibold text-foreground hover:text-primary hover:underline bg-transparent border-0 p-0 cursor-pointer"
-        @click="ouvrir(item.id)">
+        @click="ouvrirFiche(item.id)">
         {{ item.reference }}
       </button>
       <div v-if="item.numeroOT" class="text-[11px] text-muted-foreground">OT {{ item.numeroOT }}</div>
@@ -180,7 +180,7 @@
           <div><div class="text-muted-foreground text-[11px]">Km référence</div>{{ item.kmReference }} km</div>
           <div><div class="text-muted-foreground text-[11px]">Départ</div>{{ fmtDate(item.datePlanifiee) }}</div>
         </div>
-        <button :class="L.btnPrimary" class="w-full justify-center" @click="ouvrir(item.id)">
+        <button :class="L.btnPrimary" class="w-full justify-center" @click="ouvrirFiche(item.id)">
           Ouvrir le dossier de voyage
         </button>
       </div>
@@ -194,7 +194,15 @@
     <VoyageFormModal
       v-if="creationOuverte"
       @close="creationOuverte = false"
-      @created="id => ouvrir(id)"
+      @created="id => ouvrirFiche(id)"
+    />
+
+    <!-- Fiche voyage : même coquille que la fiche véhicule -->
+    <VoyageCard
+      v-if="ficheId"
+      :voyage="store.getById(ficheId)!"
+      @close="ficheId = null"
+      @navigate="id => (ficheId = id)"
     />
   </ListPageLayout>
 </template>
@@ -208,6 +216,7 @@ import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
 import { useVoyagesStore } from '../../stores/voyages'
 import { useTrajetsStore } from '../../stores/trajets'
 import VoyageFormModal from '../../components/fleet/VoyageFormModal.vue'
+import VoyageCard from '../../components/fleet/VoyageCard.vue'
 import type { Voyage, StatutVoyage } from '../../types/fms'
 import type { VerdictCoulage } from '../../lib/fmsUtils'
 import { calculerCoulageMultiSites, fmtDate, fmtL } from '../../lib/fmsUtils'
@@ -221,6 +230,7 @@ const searchQuery    = ref('')
 const activeScope    = ref('')
 const filterTrajet   = ref('')
 const creationOuverte = ref(false)
+const ficheId = ref<string | null>(null)
 const filterClient   = ref('')
 const filterDossier  = ref('')
 const sortKey        = ref('')
@@ -346,7 +356,8 @@ const pageItems  = computed(() => {
   return filtered.value.slice(start, start + pageSize.value)
 })
 
-function ouvrir(id: string) {
-  router.push({ name: 'fleet-voyage-detail', params: { id } })
+/** Ouvre la fiche en superposition, comme la liste des véhicules. */
+function ouvrirFiche(id: string) {
+  ficheId.value = id
 }
 </script>
