@@ -14,6 +14,7 @@ export const content = 'flex-1 overflow-y-auto px-7 py-6 bg-background'
 export const pageHeader = 'flex items-center justify-between mb-3.5'
 export const pageTitle = 'text-lg font-semibold'
 export const pageSub = 'text-[13px] text-muted-foreground mt-px'
+export const pagePadding = 'px-7 py-6'
 
 /* Boutons */
 export const btnPrimary = 'px-4 py-[7px] rounded-md text-[13px] font-medium cursor-pointer inline-flex items-center gap-1.5 bg-primary text-primary-foreground transition-colors hover:bg-primary/90'

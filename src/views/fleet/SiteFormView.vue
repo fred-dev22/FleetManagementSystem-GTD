@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 max-w-2xl mx-auto space-y-6">
+  <div class="px-7 py-6 max-w-2xl mx-auto space-y-6">
     <!-- Header -->
     <div class="flex items-center gap-3">
       <MapPinned class="w-7 h-7 text-blue-700" />
@@ -163,6 +163,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { MapPinned, Save } from 'lucide-vue-next'
+import type { Site } from '../../types'
 import { useSitesStore } from '../../stores/sites'
 
 const router = useRouter()
@@ -194,6 +195,24 @@ onMounted(() => {
   }
 })
 
+/** Normalise le formulaire vers la forme attendue par le store. */
+function payloadSite(): Omit<Site, 'id'> {
+  const f = form.value
+  return {
+    code: f.code,
+    nom: f.nom,
+    ville: f.ville,
+    region: f.region || undefined,
+    type: f.type as Site['type'],
+    latitude: f.latitude ?? undefined,
+    longitude: f.longitude ?? undefined,
+    rayon: f.rayon,
+    alerteType: (f.typeAlerte || undefined) as Site['alerteType'],
+    actif: f.actif,
+    createdAt: new Date().toISOString(),
+  }
+}
+
 function handleSubmit() {
   codeError.value = ''
 
@@ -207,9 +226,9 @@ function handleSubmit() {
   }
 
   if (isEdit.value) {
-    siteStore.updateSite(route.params.id as string, { ...form.value })
+    siteStore.updateSite(route.params.id as string, payloadSite())
   } else {
-    siteStore.addSite({ ...form.value })
+    siteStore.createSite(payloadSite())
   }
 
   router.push('/fleet/sites')

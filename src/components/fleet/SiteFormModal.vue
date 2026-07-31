@@ -132,7 +132,7 @@ async function handleSubmit() {
     if (props.editId) {
       siteStore.updateSite(props.editId, { ...form, type: form.type as TypeSite })
     } else {
-      siteStore.addSite({ ...form, type: form.type as TypeSite })
+      siteStore.createSite({ createdAt: new Date().toISOString(), rayon: 500, ...{ ...form, type: form.type as TypeSite } })
     }
     emit('saved')
     emit('update:modelValue', false)

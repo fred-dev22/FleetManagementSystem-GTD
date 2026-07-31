@@ -1,5 +1,7 @@
 <template>
-  <div class="flex h-[calc(100vh-56px)] overflow-hidden">
+  <!-- ═══ MODIF 1 : marge de page canonique, carte présentée en carte ═══ -->
+  <div class="px-7 py-6 h-[calc(100vh-56px)]">
+    <div class="flex h-full overflow-hidden rounded-xl border border-border bg-card shadow-sm">
 
     <!-- ── Panneau gauche : liste des camions ── -->
     <div class="w-[280px] shrink-0 flex flex-col border-r border-border bg-card overflow-hidden">
@@ -51,6 +53,8 @@
             <div class="flex items-center gap-1.5">
               <span class="text-[12px] font-bold text-foreground">{{ t.id }}</span>
               <span class="text-[10px] font-mono text-muted-foreground">{{ t.plaque }}</span>
+              <!-- ═══ AJOUT 2 : alerte visible sans avoir à cliquer ═══ -->
+              <AlertTriangle v-if="alertesDuVehicule(t.id).length" class="w-3 h-3 text-danger shrink-0" />
             </div>
             <div class="text-[11px] text-muted-foreground mt-0.5 truncate">
               {{ t.marque }} {{ t.modele }}
@@ -132,17 +136,143 @@
 
       <!-- Conteneur carte Leaflet -->
       <div ref="mapContainer" class="w-full h-full"></div>
+
+      <!-- ═══════════════════════════════════════════════════════════
+           AJOUT 3 — Panneau « voyage en cours » au clic sur un véhicule
+           ═══════════════════════════════════════════════════════════ -->
+      <Transition name="slide-left">
+        <div
+          v-if="voyageSelectionne"
+          class="absolute top-3 left-3 z-[600] w-[300px] max-h-[calc(100%-24px)] overflow-y-auto bg-card border border-border rounded-xl shadow-lg"
+        >
+          <div class="px-3.5 py-2.5 border-b border-border">
+            <div class="flex items-center gap-1.5">
+              <Route class="w-3.5 h-3.5 text-primary shrink-0" />
+              <span class="font-mono text-[12px] font-semibold text-foreground">{{ voyageSelectionne.reference }}</span>
+            </div>
+            <p class="text-[11px] text-muted-foreground truncate mt-0.5">
+              {{ voyageSelectionne.trajetLibelle ?? 'Trajet ponctuel' }}
+            </p>
+          </div>
+
+          <div class="px-3.5 py-3 flex flex-col gap-3">
+            <dl class="grid grid-cols-2 gap-x-3 gap-y-2 text-[11px]">
+              <div><dt class="text-muted-foreground text-[10px]">Client</dt><dd class="text-foreground">{{ voyageSelectionne.clientNom }}</dd></div>
+              <div><dt class="text-muted-foreground text-[10px]">Produit</dt><dd class="text-foreground">{{ voyageSelectionne.volumes.produit }}</dd></div>
+              <div><dt class="text-muted-foreground text-[10px]">Km référence</dt><dd class="text-foreground">{{ voyageSelectionne.kmReference }} km</dd></div>
+              <div><dt class="text-muted-foreground text-[10px]">Citerne</dt><dd class="font-mono text-foreground">{{ voyageSelectionne.citernePlaque ?? '—' }}</dd></div>
+            </dl>
+
+            <!-- Points de passage : franchis en vert -->
+            <div v-if="voyageSelectionne.etapes.length">
+              <p class="text-[11px] font-semibold text-foreground mb-1.5">
+                Points de passage
+                <span class="font-normal text-muted-foreground">({{ nbFranchis }}/{{ voyageSelectionne.etapes.length }})</span>
+              </p>
+              <ol class="relative pl-4 border-l-2 border-border flex flex-col gap-2">
+                <li v-for="e in voyageSelectionne.etapes" :key="e.id" class="relative">
+                  <span
+                    class="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full border-2 border-card"
+                    :class="e.franchi ? 'bg-green-600' : 'bg-gray-300'"
+                  ></span>
+                  <p class="text-[11px] font-medium text-foreground leading-tight">{{ e.siteNom }}</p>
+                  <p class="text-[10px] text-muted-foreground">
+                    {{ LIB_ROLE_ETAPE[e.role] }}<span v-if="e.intervalleMin"> · +{{ e.intervalleMin }} min</span>
+                  </p>
+                </li>
+              </ol>
+            </div>
+
+            <button
+              class="w-full py-1.5 rounded-lg text-[12px] font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+              @click="router.push({ name: 'fleet-voyage-detail', params: { id: voyageSelectionne.id } })"
+            >
+              Ouvrir le dossier de voyage
+            </button>
+          </div>
+        </div>
+      </Transition>
+
+      <!-- ═══════════════════════════════════════════════════════════
+           AJOUT 4 — Bouton flottant d'alertes (esprit WhatsApp)
+           ═══════════════════════════════════════════════════════════ -->
+      <div class="absolute bottom-5 right-5 z-[700] flex flex-col items-end gap-2">
+        <Transition name="fab">
+          <div
+            v-if="alertesOuvertes"
+            class="w-[320px] max-h-[380px] overflow-y-auto bg-card border border-border rounded-xl shadow-xl"
+          >
+            <div class="flex items-center justify-between px-3.5 py-2.5 border-b border-border sticky top-0 bg-card">
+              <span class="text-[12px] font-semibold text-foreground">Alertes en cours</span>
+              <span class="text-[11px] text-muted-foreground">{{ alertes.length }}</span>
+            </div>
+
+            <div v-if="!alertes.length" class="px-3.5 py-6 text-center text-[11px] text-muted-foreground">
+              Aucune alerte active.
+            </div>
+
+            <button
+              v-for="a in alertes" :key="a.id"
+              class="w-full text-left px-3.5 py-2.5 border-b border-border bg-transparent hover:bg-muted/50 cursor-pointer transition-colors"
+              @click="a.action()"
+            >
+              <div class="flex items-start gap-2">
+                <component
+                  :is="a.icone" class="w-3.5 h-3.5 shrink-0 mt-0.5"
+                  :class="a.gravite === 'critique' ? 'text-danger' : 'text-warning'"
+                />
+                <div class="min-w-0 flex-1">
+                  <p class="text-[12px] font-medium text-foreground">{{ a.titre }}</p>
+                  <p class="text-[11px] text-muted-foreground leading-snug">{{ a.detail }}</p>
+                  <p class="text-[11px] text-primary font-medium mt-0.5">{{ a.aFaire }}</p>
+                </div>
+              </div>
+            </button>
+          </div>
+        </Transition>
+
+        <button
+          class="w-14 h-14 rounded-full border-0 cursor-pointer shadow-lg flex items-center justify-center relative transition-transform hover:scale-105"
+          :class="alertes.length ? 'bg-danger' : 'bg-primary'"
+          :title="`${alertes.length} alerte(s) en cours`"
+          @click="alertesOuvertes = !alertesOuvertes"
+        >
+          <X v-if="alertesOuvertes" class="w-6 h-6 text-white" />
+          <Bell v-else class="w-6 h-6 text-white" />
+          <span
+            v-if="alertes.length && !alertesOuvertes"
+            class="absolute -top-1 -right-1 min-w-[22px] h-[22px] px-1 rounded-full bg-white text-danger text-[11px] font-bold flex items-center justify-center border-2 border-danger"
+          >{{ alertes.length }}</span>
+        </button>
+      </div>
+    </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { Truck, User, PlayCircle, PauseCircle, X } from 'lucide-vue-next'
-import { useTracteurStore } from '../../stores/tracteurs'
-import type { Tracteur } from '../../types'
+import { useRouter } from 'vue-router'
+import {
+  Truck, User, PlayCircle, PauseCircle, X,
+  // ═══ AJOUT : icônes des greffes ═══
+  Bell, AlertTriangle, Octagon, Fuel, Route,
+} from 'lucide-vue-next'
+// ═══ MODIF 2 : le store « tracteurs » a été supprimé — on lit « vehicules » ═══
+import { useVehiculesStore } from '../../stores/vehicules'
+import type { Vehicule } from '../../types'
+// ═══ AJOUT : stores nécessaires aux greffes ═══
+import { useVoyagesStore } from '../../stores/voyages'
+import { useEcartsStore, LIB_TYPE_ECART } from '../../stores/ecarts'
+import { useCarburantStore } from '../../stores/carburant'
+import { LIB_ROLE_ETAPE } from '../../types/fms'
+import { fmtDuree } from '../../lib/fmsUtils'
 
-const tracteurStore = useTracteurStore()
+const router         = useRouter()
+const vehiculesStore = useVehiculesStore()
+const voyagesStore   = useVoyagesStore()
+const ecartsStore    = useEcartsStore()
+const carburantStore = useCarburantStore()
 const mapContainer  = ref<HTMLDivElement | null>(null)
 let   L: any        = null
 let   mapInstance: any = null
@@ -164,7 +294,9 @@ function statusLabel(s?: string) {
 
 // ── Données tracteurs ──────────────────────────────────────────────
 const tracteurs = computed(() =>
-  tracteurStore.tracteurs.filter(t => t.statutAdmin !== 'archive' && t.position)
+  vehiculesStore.vehicules.filter(
+    t => t.typeVehicule === 'tracteur' && t.statutAdmin !== 'archive' && t.position,
+  )
 )
 
 // ── Sélection ──────────────────────────────────────────────────────
@@ -181,6 +313,78 @@ function selectTruck(id: string) {
     markers[id]?.openPopup()
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   AJOUT 3 — Voyage en cours du véhicule sélectionné
+   ═══════════════════════════════════════════════════════════════════ */
+const voyagesEnCours = computed(() =>
+  voyagesStore.voyages.filter(v => v.statut === 'en_cours' || v.statut === 'litige'),
+)
+
+const voyageDe = (vehiculeId: string) =>
+  voyagesEnCours.value.find(v => v.vehiculeId === vehiculeId)
+
+const voyageSelectionne = computed(() =>
+  selectedId.value ? voyageDe(selectedId.value) : undefined,
+)
+
+const nbFranchis = computed(() =>
+  voyageSelectionne.value?.etapes.filter(e => e.franchi).length ?? 0,
+)
+
+/* ═══════════════════════════════════════════════════════════════════
+   AJOUT 4 — Alertes et bouton flottant
+   Les alertes ne dépendent PAS du clic : elles restent toujours
+   accessibles, et un triangle les signale dans la liste.
+   ═══════════════════════════════════════════════════════════════════ */
+const alertesOuvertes = ref(false)
+
+interface AlerteCarte {
+  id: string
+  vehiculeId?: string
+  titre: string
+  detail: string
+  aFaire: string
+  gravite: 'critique' | 'majeur'
+  icone: unknown
+  action: () => void
+}
+
+const alertes = computed<AlerteCarte[]>(() => {
+  const out: AlerteCarte[] = []
+
+  ecartsStore.aQualifier.forEach(e => {
+    const veh = tracteurs.value.find(v => v.plaque === e.vehiculePlaque)
+    out.push({
+      id: e.id,
+      vehiculeId: veh?.id,
+      titre: `${LIB_TYPE_ECART[e.type]} — ${e.vehiculePlaque}`,
+      detail: `${e.voyageRef} · ${e.lieu ?? ''} · ${fmtDuree(e.dureeMin)}`,
+      aFaire: 'Qualifier l\u2019écart →',
+      gravite: e.gravite === 'critique' ? 'critique' : 'majeur',
+      icone: e.type === 'arret_non_planifie' ? Octagon : AlertTriangle,
+      action: () => { void router.push({ name: 'fleet-ecart-detail', params: { id: e.id } }) },
+    })
+  })
+
+  carburantStore.anomalies.forEach(r => {
+    out.push({
+      id: r.id,
+      vehiculeId: r.vehiculeId,
+      titre: `Recharge en anomalie — ${r.vehiculePlaque}`,
+      detail: `${r.lieu} · ${r.controles.filter(c => !c.ok).length} contrôle(s) en échec`,
+      aFaire: 'Ouvrir le dossier carburant →',
+      gravite: 'majeur',
+      icone: Fuel,
+      action: () => { void router.push({ name: 'fleet-carburant', query: { recharge: r.id } }) },
+    })
+  })
+
+  return out
+})
+
+const alertesDuVehicule = (vehiculeId: string) =>
+  alertes.value.filter(a => a.vehiculeId === vehiculeId)
 
 // ── Simulation ────────────────────────────────────────────────────
 // Routes Madagascar : chaque camion "en_mouvement" suit des waypoints
@@ -280,7 +484,7 @@ function stopSimulation() {
 }
 
 // ── Leaflet ────────────────────────────────────────────────────────
-function truckIcon(t: Tracteur) {
+function truckIcon(t: Vehicule) {
   const color   = statusColor(t.statutOp)
   const isMoving = t.statutOp === 'en_mouvement'
   const pulse   = isMoving ? `<div style="position:absolute;top:-4px;left:-4px;width:30px;height:30px;border-radius:50%;background:${color};opacity:0.2;animation:ping 1.5s cubic-bezier(0,0,0.2,1) infinite"></div>` : ''
@@ -302,7 +506,7 @@ function truckIcon(t: Tracteur) {
   })
 }
 
-function popupHtml(t: Tracteur) {
+function popupHtml(t: Vehicule) {
   const pos = simPositions.value[t.id]
   const vitesse = pos?.vitesse ?? t.position?.vitesse ?? 0
   return `
@@ -382,4 +586,15 @@ onUnmounted(() => {
 .slide-down-leave-active { transition: opacity 0.2s, transform 0.2s; }
 .slide-down-enter-from,
 .slide-down-leave-to    { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+
+/* ═══ AJOUT : transitions du panneau voyage et du bouton flottant ═══ */
+.slide-left-enter-active,
+.slide-left-leave-active { transition: opacity .2s, transform .2s; }
+.slide-left-enter-from,
+.slide-left-leave-to     { opacity: 0; transform: translateX(-12px); }
+
+.fab-enter-active,
+.fab-leave-active { transition: opacity .18s ease, transform .18s ease; }
+.fab-enter-from,
+.fab-leave-to     { opacity: 0; transform: translateY(8px) scale(.97); }
 </style>

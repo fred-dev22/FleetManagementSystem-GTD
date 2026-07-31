@@ -63,12 +63,20 @@ const router = createRouter({
 
     // ── MODULE 2 : Suivi GPS ─────────────────────────────────────
     { path: '/fleet/carte',      name: 'fleet-carte',      component: () => import('../views/fleet/CarteView.vue'),      meta: { requiresAuth: true, layout: 'dashboard' } },
-    { path: '/fleet/trajets',    name: 'fleet-trajets',    component: () => import('../views/fleet/TrajetsView.vue'),    meta: { requiresAuth: true, layout: 'dashboard' } },
     { path: '/fleet/telemetrie', name: 'fleet-telemetrie', component: () => import('../views/fleet/TelemetrieView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
 
     // ── MODULE 2 : Documents ─────────────────────────────────────
     { path: '/fleet/documents', name: 'fleet-documents', component: () => import('../views/fleet/DocumentsVehiculeView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
 
+    // ── MODULE 3 : FMS — voyages, conformité, carburant, documents ──
+    { path: '/fleet/voyages',        name: 'fleet-voyages',        component: () => import('../views/fleet/VoyageListView.vue'),      meta: { requiresAuth: true, layout: 'dashboard' } },
+    { path: '/fleet/voyages/:id',    name: 'fleet-voyage-detail',  component: () => import('../views/fleet/VoyageDetailView.vue'),    meta: { requiresAuth: true, layout: 'dashboard' } },
+    { path: '/fleet/ecarts',         name: 'fleet-ecarts',         component: () => import('../views/fleet/EcartListView.vue'),       meta: { requiresAuth: true, layout: 'dashboard' } },
+    { path: '/fleet/ecarts/:id',     name: 'fleet-ecart-detail',   component: () => import('../views/fleet/EcartDetailView.vue'),     meta: { requiresAuth: true, layout: 'dashboard' } },
+    { path: '/fleet/configuration', name: 'fleet-configuration', component: () => import('../views/fleet/ConfigurationView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
+    { path: '/fleet/carburant',      name: 'fleet-carburant',      component: () => import('../views/fleet/CarburantView.vue'),       meta: { requiresAuth: true, layout: 'dashboard' } },
+    { path: '/fleet/conducteurs/:id',name: 'fleet-conducteur-detail', component: () => import('../views/fleet/ConducteurDetailView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
+    
     // ── MODULE 2 : Dashboard fleet ────────────────────────────────
     { path: '/fleet', name: 'fleet-dashboard', component: () => import('../views/fleet/FleetDashboardView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
 

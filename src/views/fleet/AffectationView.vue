@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 space-y-6">
+  <div class="px-7 py-6 space-y-6">
     <!-- Header -->
     <div :class="L.pageHeader">
       <div>
@@ -92,7 +92,7 @@
             <label :class="L.fpFieldLabel">Chauffeur *</label>
             <select v-model="newAff.chauffeurId" :class="L.fpSelect" @change="onChauffeurChange">
               <option value="">Sélectionner un chauffeur</option>
-              <option v-for="c in conducteursDisponibles" :key="c.id" :value="c.id">{{ c.nom }} {{ c.prenom }}</option>
+              <option v-for="c in conducteursDisponibles" :key="c.id" :value="c.id">{{ c.lastName }} {{ c.firstName }}</option>
             </select>
           </div>
           <div>
@@ -215,7 +215,7 @@ const tracteursLibres = computed(() => vehStore.getTracteurLibre())
 
 function onChauffeurChange() {
   const emp = (empStore.employees ?? []).find((e: any) => e.id === newAff.chauffeurId)
-  if (emp) newAff.chauffeurNom = `${emp.nom} ${emp.prenom}`
+  if (emp) newAff.chauffeurNom = `${emp.lastName} ${emp.firstName}`
   checkBlockage()
 }
 

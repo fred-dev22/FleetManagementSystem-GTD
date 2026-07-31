@@ -1,5 +1,5 @@
 <template>
-  <div :class="L.shell">
+  <div :class="[L.shell, L.pagePadding]">
     <AppTopNav :user="auth.user" />
     <div :class="L.mainLayout">
       <AppSidebar />

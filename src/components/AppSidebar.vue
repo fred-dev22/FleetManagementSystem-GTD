@@ -34,32 +34,43 @@
       </template>
 
       <!-- MODULE : Véhicules (Fleet) -->
-      <template v-else-if="navStore.activeModule === 'fleet'">
-        <SidebarSection label="Tableau de bord">
-          <SidebarItem :icon="LayoutDashboard" label="Vue d'ensemble"  :to="{ name: 'fleet-dashboard' }" />
-          <SidebarItem :icon="MapPin"          label="Carte temps réel" :to="{ name: 'fleet-carte' }" />
-        </SidebarSection>
+<template v-else-if="navStore.activeModule === 'fleet'">
+  <SidebarSection label="Tableau de bord">
+    <SidebarItem :icon="LayoutDashboard" label="Vue d'ensemble"   :to="{ name: 'fleet-dashboard' }" />
+    <SidebarItem :icon="MapPin"          label="Carte temps réel" :to="{ name: 'fleet-carte' }" />
+  </SidebarSection>
 
-        <SidebarSection label="Parc véhicules">
-          <SidebarItem :icon="Truck"       label="Véhicules"    :to="{ name: 'fleet-vehicules' }" />
-          <SidebarItem :icon="UserCheck2"  label="Conducteurs"  :to="{ name: 'fleet-conducteurs' }" />
-          <SidebarItem :icon="Link2"       label="Attelages"    :to="{ name: 'fleet-attelages' }" />
-          <SidebarItem :icon="UserCheck"   label="Affectations" :to="{ name: 'fleet-affectations' }" />
-        </SidebarSection>
+  <!-- ── NOUVEAU : l'exploitation ── -->
+  <SidebarSection label="Exploitation">
+    <SidebarItem :icon="Package"     label="Voyages"    :to="{ name: 'fleet-voyages' }" />
+    <SidebarItem :icon="ShieldAlert" label="Conformité" :to="{ name: 'fleet-ecarts' }" />
+    <SidebarItem :icon="Fuel"        label="Carburant"  :to="{ name: 'fleet-carburant' }" />
+  </SidebarSection>
 
-        <SidebarSection label="Suivi & Télémétrie">
-          <SidebarItem :icon="Route" label="Trajets"    :to="{ name: 'fleet-trajets' }" />
-          <SidebarItem :icon="Cpu"   label="Télémétrie" :to="{ name: 'fleet-telemetrie' }" />
-        </SidebarSection>
+  <SidebarSection label="Parc véhicules">
+    <SidebarItem :icon="Truck"      label="Véhicules"    :to="{ name: 'fleet-vehicules' }" />
+    <SidebarItem :icon="UserCheck2" label="Conducteurs"  :to="{ name: 'fleet-conducteurs' }" />
+    <SidebarItem :icon="Link2"      label="Attelages"    :to="{ name: 'fleet-attelages' }" />
+    <SidebarItem :icon="UserCheck"  label="Affectations" :to="{ name: 'fleet-affectations' }" />
+  </SidebarSection>
 
-        <SidebarSection label="Sites & Géofences">
-          <SidebarItem :icon="MapPinned" label="Sites" :to="{ name: 'fleet-sites' }" />
-        </SidebarSection>
+  <SidebarSection label="Suivi & Télémétrie">
+    <SidebarItem :icon="Cpu"   label="Télémétrie" :to="{ name: 'fleet-telemetrie' }" />
+  </SidebarSection>
 
-        <SidebarSection label="Documents">
-          <SidebarItem :icon="FileText" label="Documents" :to="{ name: 'fleet-documents' }" />
-        </SidebarSection>
-      </template>
+  <SidebarSection label="Sites & Géofences">
+    <SidebarItem :icon="MapPinned" label="Sites" :to="{ name: 'fleet-sites' }" />
+  </SidebarSection>
+
+  <SidebarSection label="Documents">
+    <SidebarItem :icon="FileText" label="Documents" :to="{ name: 'fleet-documents' }" />
+  </SidebarSection>
+
+  <!-- Toutes les données de référence en un seul endroit -->
+  <SidebarSection label="Paramétrage">
+    <SidebarItem :icon="Settings" label="Configuration" :to="{ name: 'fleet-configuration' }" />
+  </SidebarSection>
+</template>
 
     </template>
 
@@ -92,11 +103,7 @@
 import { computed, defineComponent, h, type Component, type PropType } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import {
-  LayoutDashboard, CalendarRange, CalendarOff, PieChart, Users, Building, Plane,
-  Receipt, Network, CalendarDays, Coins,
-  FileText, ClipboardCheck,
-  // Fleet icons
-  Truck, Link2, UserCheck, UserCheck2, MapPin, MapPinned, Route, Cpu,
+  Building, CalendarDays, CalendarOff, CalendarRange, ClipboardCheck, Coins, Cpu, FileText, Fuel, LayoutDashboard, Link2, MapPin, MapPinned, Network, Package, PieChart, Plane, Receipt, Settings, ShieldAlert, Truck, UserCheck, UserCheck2, Users,
 } from 'lucide-vue-next'
 import { useAuthStore }       from '../stores/auth'
 import { useNavigationStore } from '../stores/navigation'

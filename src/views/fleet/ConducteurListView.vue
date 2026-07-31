@@ -113,7 +113,7 @@
           </div>
           <div>
             <div class="text-muted-foreground text-[11px]">Score conduite</div>
-            <span :class="item.score >= 80 ? 'text-success' : item.score >= 60 ? 'text-warning' : 'text-danger'" class="font-semibold">
+            <span :class="(item.score ?? 0) >= 80 ? 'text-success' : (item.score ?? 0) >= 60 ? 'text-warning' : 'text-danger'" class="font-semibold">
               {{ item.score ?? '—' }} / 100
             </span>
           </div>
@@ -151,6 +151,13 @@ import ConducteurCard from '../../components/fleet/ConducteurCard.vue'
 import { useEmployeeStore } from '../../stores/employees'
 import { useConduceteursProfilesStore } from '../../stores/conducteursProfiles'
 import * as L from '../../lib/listClasses'
+import { useRouter } from 'vue-router'
+
+
+const router = useRouter()
+function ouvrirFiche(employeId: string) {
+  router.push({ name: 'fleet-conducteur-detail', params: { id: employeId } })
+}
 
 const empStore  = useEmployeeStore()
 const profStore = useConduceteursProfilesStore()

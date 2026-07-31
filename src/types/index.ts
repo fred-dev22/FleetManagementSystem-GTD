@@ -1,3 +1,5 @@
+export * from './fms'
+
 // ── Auth & Roles ──────────────────────────────────────────────
 export type UserRole =
   | 'admin'
@@ -5,6 +7,7 @@ export type UserRole =
   | 'operations'
   | 'maintenance'
   | 'chauffeur'
+  | 'employee'
 
 export interface AuthUser {
   id:              string
@@ -548,19 +551,23 @@ export interface EvenementGeozone {
   id:          string
   vehiculeId:  string
   siteId:      string
-  siteCode:    string
-  siteNom:     string
+  /* Dénormalisation d'affichage — dérivable du siteId, donc optionnelle */
+  siteCode?:   string
+  siteNom?:    string
   chauffeurId?: string
   type:        'entree' | 'sortie'
   horodatage:  string
+  latitude?:   number
+  longitude?:  number
 }
 
 export interface GpsPosition {
   lat:       number
   lng:       number
-  vitesse:   number  // km/h
-  cap:       number  // degrés
-  horodatage: string
+  /* Optionnels : toutes les plateformes télématiques ne les fournissent pas */
+  vitesse?:   number  // km/h
+  cap?:       number  // degrés
+  horodatage?: string
 }
 
 export interface TrajetPoint {
