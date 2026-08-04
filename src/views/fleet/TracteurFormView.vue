@@ -7,7 +7,7 @@
           {{ isEdit ? 'Modifier le tracteur' : 'Nouveau tracteur' }}
         </h1>
         <p class="form-card__subtitle" v-if="isEdit && tracteur">
-          {{ tracteur.plaque }} — {{ tracteur.marque }} {{ tracteur.modele }}
+          {{ tracteur.plaque }} - {{ tracteur.marque }} {{ tracteur.modele }}
         </p>
       </div>
 
@@ -199,7 +199,7 @@ function validateVin() {
     errors.vin = 'Le VIN est obligatoire.'
     return false
   }
-  // Check uniqueness — skip current tracteur in edit mode
+  // Check uniqueness - skip current tracteur in edit mode
   const duplicate = store.tracteurs.find(
     t => t.vin === val && t.id !== tracteurId.value
   )

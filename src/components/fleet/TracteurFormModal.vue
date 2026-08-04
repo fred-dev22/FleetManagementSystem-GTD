@@ -96,11 +96,11 @@ watch(() => props.modelValue, (open) => {
     if (props.editId) {
       const t = store.getTracteurById(props.editId)
       if (t) {
-        form.vin = t.vin
+        form.vin = t.vin ?? ''
         form.plaque = t.plaque
-        form.marque = t.marque
-        form.modele = t.modele
-        form.dateMiseEnCirculation = t.dateMiseEnCirculation
+        form.marque = t.marque ?? ''
+        form.modele = t.modele ?? ''
+        form.dateMiseEnCirculation = t.dateMiseEnCirculation ?? ''
         form.statutAdmin = t.statutAdmin
       }
     } else {

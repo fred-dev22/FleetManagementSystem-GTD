@@ -28,9 +28,17 @@ export const useDocumentsVehiculesStore = defineStore('documentsVehicules', {
       { id: 'doc-011', entityId: 'REM-002', entityType: 'vehicule', type: 'Vignette',          dateEmission: '2026-01-01', dateExpiration: '2026-12-31', statut: 'valide',  alerteEnvoyee: false, createdAt: '2024-01-01T00:00:00Z' },
       { id: 'doc-014', entityId: 'REM-003', entityType: 'vehicule', type: 'Assurance',         dateEmission: '2026-05-01', dateExpiration: '2026-07-15', statut: 'valide',  alerteEnvoyee: false, createdAt: '2024-01-01T00:00:00Z' },
       // ── Conducteurs ────────────────────────────────────────────
-      { id: 'doc-016', entityId: 'CP-001', entityType: 'conducteur', type: 'Permis CE',        dateEmission: '2018-08-15', dateExpiration: '2026-08-15', statut: 'valide',  alerteEnvoyee: false, createdAt: '2021-03-15T08:00:00Z' },
-      { id: 'doc-017', entityId: 'CP-001', entityType: 'conducteur', type: 'Visite médicale',  dateEmission: '2024-09-10', dateExpiration: '2025-09-10', statut: 'archive', alerteEnvoyee: true,  createdAt: '2021-03-15T08:00:00Z' },
-      { id: 'doc-018', entityId: 'CP-001', entityType: 'conducteur', type: 'ADR',              dateEmission: '2022-11-05', dateExpiration: '2026-11-05', statut: 'valide',  alerteEnvoyee: false, createdAt: '2021-03-15T08:00:00Z' },
+      /* Dossier complet d'un chauffeur de camion-citerne. Les échéances sont
+         réparties pour couvrir les trois états de la colonne « Échéance » :
+         valide au-delà de 30 jours, à renouveler en deçà, expiré. */
+      { id: 'doc-016', entityId: 'CP-001', entityType: 'conducteur', type: 'Permis de conduire CE',           numero: 'PC-2018-44172',   dateEmission: '2018-08-15', dateExpiration: '2026-08-15', statut: 'valide',  alerteEnvoyee: true,  createdAt: '2021-03-15T08:00:00Z' },
+      { id: 'doc-017', entityId: 'CP-001', entityType: 'conducteur', type: 'Visite médicale',                 numero: 'VM-2024-0912',    dateEmission: '2024-09-10', dateExpiration: '2025-09-10', statut: 'archive', alerteEnvoyee: true,  createdAt: '2021-03-15T08:00:00Z' },
+      { id: 'doc-018', entityId: 'CP-001', entityType: 'conducteur', type: 'Habilitation ADR / TMD',          numero: 'ADR-2022-3318',   dateEmission: '2022-11-05', dateExpiration: '2026-11-05', statut: 'valide',  alerteEnvoyee: false, createdAt: '2021-03-15T08:00:00Z' },
+      { id: 'doc-024', entityId: 'CP-001', entityType: 'conducteur', type: 'Carte APTH',                      numero: 'APTH-2023-0771',  dateEmission: '2023-04-18', dateExpiration: '2026-08-24', statut: 'valide',  alerteEnvoyee: false, createdAt: '2023-04-18T08:00:00Z' },
+      { id: 'doc-025', entityId: 'CP-001', entityType: 'conducteur', type: 'Carte d’identité nationale',      numero: '501031012345',    dateEmission: '2015-02-11',                               statut: 'valide',  alerteEnvoyee: false, createdAt: '2021-03-15T08:00:00Z' },
+      { id: 'doc-026', entityId: 'CP-001', entityType: 'conducteur', type: 'Test psychotechnique',            numero: 'PSY-2025-0142',   dateEmission: '2025-06-02', dateExpiration: '2027-06-02', statut: 'valide',  alerteEnvoyee: false, createdAt: '2025-06-02T08:00:00Z' },
+      { id: 'doc-027', entityId: 'CP-001', entityType: 'conducteur', type: 'Attestation conduite défensive',  numero: 'CD-2024-0088',    dateEmission: '2024-05-20', dateExpiration: '2026-05-20', statut: 'archive', alerteEnvoyee: true,  createdAt: '2024-05-20T08:00:00Z' },
+      { id: 'doc-028', entityId: 'CP-001', entityType: 'conducteur', type: 'Contrat de travail',              numero: 'CT-2021-0031',    dateEmission: '2021-03-15',                               statut: 'valide',  alerteEnvoyee: false, createdAt: '2021-03-15T08:00:00Z' },
       { id: 'doc-019', entityId: 'CP-002', entityType: 'conducteur', type: 'Permis CE',        dateEmission: '2019-03-22', dateExpiration: '2027-03-22', statut: 'valide',  alerteEnvoyee: false, createdAt: '2022-01-10T08:00:00Z' },
       { id: 'doc-020', entityId: 'CP-002', entityType: 'conducteur', type: 'Visite médicale',  dateEmission: '2025-01-20', dateExpiration: '2026-01-20', statut: 'archive', alerteEnvoyee: false, createdAt: '2022-01-10T08:00:00Z' },
       { id: 'doc-021', entityId: 'CP-003', entityType: 'conducteur', type: 'Permis C',         dateEmission: '2020-07-01', dateExpiration: '2025-06-30', statut: 'archive', alerteEnvoyee: true,  createdAt: '2022-09-01T08:00:00Z' },
@@ -91,7 +99,7 @@ export const useDocumentsVehiculesStore = defineStore('documentsVehicules', {
     updateDocument(id: string, payload: Partial<Omit<DocumentVehicule, 'id'>>): boolean {
       const idx = this.documents.findIndex(d => d.id === id)
       if (idx === -1) return false
-      this.documents[idx] = { ...this.documents[idx], ...payload }
+      this.documents[idx] = { ...this.documents[idx]!, ...payload }
       return true
     },
 

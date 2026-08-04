@@ -223,7 +223,7 @@
                 <td class="plaque-inline old">{{ h.anciennePlaque }}</td>
                 <td class="plaque-inline">{{ h.nouvellePlaque }}</td>
                 <td>{{ formatDateTime(h.dateChangement) }}</td>
-                <td class="dim">{{ h.parUserId ?? '—' }}</td>
+                <td class="dim">{{ h.parUserId ?? '-' }}</td>
               </tr>
             </tbody>
           </table>
@@ -263,7 +263,7 @@ const attelageActif = computed(() =>
 )
 
 const documents = computed(() =>
-  documentsStore.getDocsByVehicule(id.value, 'remorque')
+  documentsStore.getDocsByVehicule(id.value)
 )
 
 const historiquePlaques = computed(() =>
@@ -277,7 +277,7 @@ const statutAdminLabel = computed(() => {
     hors_service: 'Hors service',
     archive: 'Archivé',
   }
-  return map[remorque.value?.statutAdmin ?? ''] ?? remorque.value?.statutAdmin ?? '—'
+  return map[remorque.value?.statutAdmin ?? ''] ?? remorque.value?.statutAdmin ?? '-'
 })
 
 const statutAdminClass = computed(() => {
@@ -293,7 +293,9 @@ const statutAdminClass = computed(() => {
 const TODAY = new Date('2026-06-29')
 
 function docStatus(doc: DocumentVehicule): 'expired' | 'soon' | 'ok' {
+  if (!doc.dateExpiration) return 'ok'
   const exp = new Date(doc.dateExpiration)
+  if (Number.isNaN(exp.getTime())) return 'ok'
   if (exp < TODAY) return 'expired'
   const diff = (exp.getTime() - TODAY.getTime()) / (1000 * 60 * 60 * 24)
   if (diff <= 30) return 'soon'
@@ -338,12 +340,12 @@ function handleArchiver() {
 
 // ── Format helpers ───────────────────────────────────────────────
 function formatDate(d?: string): string {
-  if (!d) return '—'
+  if (!d) return '-'
   return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 function formatDateTime(d?: string): string {
-  if (!d) return '—'
+  if (!d) return '-'
   return new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 </script>

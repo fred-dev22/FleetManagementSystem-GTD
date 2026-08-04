@@ -99,7 +99,7 @@
             <label :class="L.fpFieldLabel">Tracteur *</label>
             <select v-model="newAff.tracteurId" :class="L.fpSelect" @change="onTracteurChange">
               <option value="">Sélectionner un tracteur</option>
-              <option v-for="t in tracteursLibres" :key="t.id" :value="t.id">{{ t.plaque }} — {{ t.marque }} {{ t.modele }}</option>
+              <option v-for="t in tracteursLibres" :key="t.id" :value="t.id">{{ t.plaque }} - {{ t.marque }} {{ t.modele }}</option>
             </select>
           </div>
           <div>
@@ -282,11 +282,11 @@ function getAlertePermis(chauffeurId: string) {
 }
 
 function formatDate(d?: string) {
-  return d ? new Date(d).toLocaleDateString('fr-FR') : '—'
+  return d ? new Date(d).toLocaleDateString('fr-FR') : '-'
 }
 
 function duree(debut: string, fin?: string) {
-  if (!fin) return '—'
+  if (!fin) return '-'
   const d = Math.ceil((new Date(fin).getTime() - new Date(debut).getTime()) / 86400000)
   return `${d} j`
 }

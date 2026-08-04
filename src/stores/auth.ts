@@ -48,6 +48,22 @@ export const useAuthStore = defineStore('auth', () => {
         id: 'emp-010', name: 'Thierry Randriamanga', initials: 'TR', role: 'chauffeur', email,
         entityId: 'e10', entityName: 'Service Opérations',
       },
+      employee: {
+        id: 'emp-017', name: 'Amélie Ravel', initials: 'AR', role: 'employee', email,
+        entityId: 'e3', entityName: 'Personnel',
+      },
+      hr_admin: {
+        id: 'emp-003', name: 'HR Admin', initials: 'HA', role: 'hr_admin', email,
+        entityId: 'e2', entityName: 'Direction RH',
+      },
+      hr_director: {
+        id: 'emp-004', name: 'HR Director', initials: 'HD', role: 'hr_director', email,
+        entityId: 'e2', entityName: 'Direction RH',
+      },
+      validator: {
+        id: 'emp-005', name: 'Validator', initials: 'VA', role: 'validator', email,
+        entityId: 'e2', entityName: 'Direction RH',
+      },
     }
     user.value      = users[selectedRole]
     isLoggedIn.value = true

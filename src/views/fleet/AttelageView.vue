@@ -76,7 +76,7 @@
             <select v-model="newAtt.tracteurId" :class="L.fpSelect" @change="onTracteurChange">
               <option value="">Sélectionner un tracteur</option>
               <option v-for="t in tracteursLibres" :key="t.id" :value="t.id">
-                {{ t.plaque }} — {{ t.marque }} {{ t.modele }}
+                {{ t.plaque }} - {{ t.marque }} {{ t.modele }}
               </option>
             </select>
           </div>
@@ -85,7 +85,7 @@
             <select v-model="newAtt.remorqueId" :class="L.fpSelect" @change="onRemorqueChange">
               <option value="">Sélectionner une remorque</option>
               <option v-for="r in remorquesLibres" :key="r.id" :value="r.id">
-                {{ r.plaque }} — {{ r.typeRemorque }} {{ r.capacite }}
+                {{ r.plaque }} - {{ r.typeRemorque }} {{ r.capacite }}
               </option>
             </select>
           </div>
@@ -192,7 +192,7 @@ const tracteursLibres = computed(() => vehStore.getTracteurLibre())
 const remorquesLibres = computed(() => vehStore.getRemorqueLibre())
 
 function getRemorqueType(remorqueId: string) {
-  return vehStore.getById(remorqueId)?.typeRemorque ?? '—'
+  return vehStore.getById(remorqueId)?.typeRemorque ?? '-'
 }
 
 function onTracteurChange() {
@@ -234,11 +234,11 @@ function confirmDeteler() {
 }
 
 function formatDate(d?: string) {
-  return d ? new Date(d).toLocaleDateString('fr-FR') : '—'
+  return d ? new Date(d).toLocaleDateString('fr-FR') : '-'
 }
 
 function duree(debut: string, fin?: string) {
-  if (!fin) return '—'
+  if (!fin) return '-'
   const d = Math.ceil((new Date(fin).getTime() - new Date(debut).getTime()) / 86400000)
   return `${d} j`
 }

@@ -27,7 +27,7 @@
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">VIN</label>
               <input v-if="isEditMode" v-model="form.vin" :class="cls.fieldInput" />
-              <span v-else class="text-[13px] font-mono text-foreground">{{ current.vin ?? '—' }}</span>
+              <span v-else class="text-[13px] font-mono text-foreground">{{ current.vin ?? '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Plaque</label>
@@ -43,11 +43,11 @@
                 <option value="Frigorifique">Frigorifique</option>
                 <option value="Autre">Autre</option>
               </select>
-              <span v-else class="text-[13px] text-foreground">{{ current.type ?? '—' }}</span>
+              <span v-else class="text-[13px] text-foreground">{{ current.type ?? '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Capacité</label>
-              <span class="text-[13px] text-foreground">{{ current.capacite ? `${current.capacite} ${current.uniteCapacite ?? ''}` : '—' }}</span>
+              <span class="text-[13px] text-foreground">{{ current.capacite ? `${current.capacite} ${current.uniteCapacite ?? ''}` : '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Date mise en circulation</label>
@@ -72,7 +72,7 @@
             </div>
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Tracteur attelé</label>
-              <span class="text-[13px] font-mono text-foreground">{{ current.tracteurPlaque ?? '—' }}</span>
+              <span class="text-[13px] font-mono text-foreground">{{ current.tracteurPlaque ?? '-' }}</span>
             </div>
           </div>
         </FormSection>
@@ -130,7 +130,7 @@ async function handleSave() {
   isEditMode.value = false
 }
 
-function fmtDate(d?: string) { return d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : '—' }
-function statutLabel(s?: string) { return ({ en_service: 'En service', hors_service: 'Hors service', archive: 'Archivée' } as any)[s ?? ''] ?? s ?? '—' }
+function fmtDate(d?: string) { return d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : '-' }
+function statutLabel(s?: string) { return ({ en_service: 'En service', hors_service: 'Hors service', archive: 'Archivée' } as any)[s ?? ''] ?? s ?? '-' }
 function statutClass(s?: string) { return ({ en_service: 'bg-success-bg text-success', hors_service: 'bg-warning-bg text-warning', archive: 'bg-background text-muted-foreground' } as any)[s ?? ''] ?? '' }
 </script>

@@ -59,13 +59,13 @@
       </button>
     </template>
     <template #cell-type="{ item }">
-      <span :class="['text-[11px] font-medium px-2 py-0.5 rounded-full', typeClass(item.type)]">{{ item.type ?? '—' }}</span>
+      <span :class="['text-[11px] font-medium px-2 py-0.5 rounded-full', typeClass(item.type)]">{{ item.type ?? '-' }}</span>
     </template>
     <template #cell-capacite="{ item }">
-      <span class="text-foreground font-medium">{{ item.capacite ? `${item.capacite} ${item.uniteCapacite ?? ''}` : '—' }}</span>
+      <span class="text-foreground font-medium">{{ item.capacite ? `${item.capacite} ${item.uniteCapacite ?? ''}` : '-' }}</span>
     </template>
     <template #cell-tracteur="{ item }">
-      <span class="font-mono text-xs text-muted-foreground">{{ item.tracteurPlaque ?? '—' }}</span>
+      <span class="font-mono text-xs text-muted-foreground">{{ item.tracteurPlaque ?? '-' }}</span>
     </template>
     <template #cell-statut="{ item }">
       <span :class="['text-[11px] font-medium px-2 py-0.5 rounded-full', statutClass(item.statutAdmin)]">{{ statutLabel(item.statutAdmin) }}</span>
@@ -79,8 +79,8 @@
           <span :class="['text-[11px] font-medium px-2 py-0.5 rounded-full mt-1 inline-block', typeClass(item.type)]">{{ item.type }}</span>
         </div>
         <div class="grid grid-cols-2 gap-2 text-[12px]">
-          <div><div class="text-muted-foreground text-[11px]">Capacité</div>{{ item.capacite ? `${item.capacite} ${item.uniteCapacite ?? ''}` : '—' }}</div>
-          <div><div class="text-muted-foreground text-[11px]">Tracteur attelé</div><span class="font-mono">{{ item.tracteurPlaque ?? '—' }}</span></div>
+          <div><div class="text-muted-foreground text-[11px]">Capacité</div>{{ item.capacite ? `${item.capacite} ${item.uniteCapacite ?? ''}` : '-' }}</div>
+          <div><div class="text-muted-foreground text-[11px]">Tracteur attelé</div><span class="font-mono">{{ item.tracteurPlaque ?? '-' }}</span></div>
           <div class="col-span-2"><div class="text-muted-foreground text-[11px]">Statut</div>
             <span :class="['text-[11px] font-medium px-2 py-0.5 rounded-full', statutClass(item.statutAdmin)]">{{ statutLabel(item.statutAdmin) }}</span>
           </div>
@@ -170,7 +170,7 @@ const pageItems  = computed(() => {
   return filtered.value.slice(start, start + pageSize.value)
 })
 
-function statutLabel(s?: string) { return ({ en_service: 'En service', hors_service: 'Hors service', archive: 'Archivée' } as any)[s ?? ''] ?? s ?? '—' }
+function statutLabel(s?: string) { return ({ en_service: 'En service', hors_service: 'Hors service', archive: 'Archivée' } as any)[s ?? ''] ?? s ?? '-' }
 function statutClass(s?: string) { return ({ en_service: 'bg-success-bg text-success', hors_service: 'bg-warning-bg text-warning', archive: 'bg-background text-muted-foreground border border-border' } as any)[s ?? ''] ?? '' }
 function typeClass(type?: string) {
   return ({ Citerne: 'bg-primary/10 text-primary', Bâchée: 'bg-success-bg text-success', Plateau: 'bg-warning-bg text-warning', Frigorifique: 'bg-danger-bg text-danger', Autre: 'bg-background text-muted-foreground' } as any)[type ?? ''] ?? 'bg-background text-muted-foreground'

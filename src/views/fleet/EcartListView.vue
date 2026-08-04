@@ -62,7 +62,7 @@
 
     <template #cell-type="{ item }">
       <span class="text-xs text-foreground">{{ LIB_TYPE_ECART[item.type] }}</span>
-      <div class="text-[11px] text-muted-foreground">{{ item.lieu ?? '—' }}</div>
+      <div class="text-[11px] text-muted-foreground">{{ item.lieu ?? '-' }}</div>
     </template>
 
     <template #cell-gravite="{ item }">
@@ -104,7 +104,7 @@
 
     <template #empty>
       <ShieldCheck class="w-8 h-8" />
-      <p class="text-sm">Aucun écart — tous les voyages sont conformes</p>
+      <p class="text-sm">Aucun écart - tous les voyages sont conformes</p>
     </template>
   </ListPageLayout>
 </template>

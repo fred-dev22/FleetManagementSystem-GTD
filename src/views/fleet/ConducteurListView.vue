@@ -56,7 +56,7 @@
 
     <template #cell-permis="{ item }">
       <div class="flex items-center gap-1.5">
-        <span class="text-xs font-mono text-gray-700">{{ item.categoriePermis ?? '—' }}</span>
+        <span class="text-xs font-mono text-gray-700">{{ item.categoriePermis ?? '-' }}</span>
         <span v-if="item.dateExpirationPermis" :class="dateStatutClass(item.dateExpirationPermis)"
           class="px-1.5 py-0.5 rounded text-xs font-medium">
           {{ formatDate(item.dateExpirationPermis) }}
@@ -70,7 +70,7 @@
         class="px-1.5 py-0.5 rounded text-xs font-medium">
         {{ formatDate(item.dateExpirationVisiteMedicale) }}
       </span>
-      <span v-else class="text-gray-300 text-xs">—</span>
+      <span v-else class="text-gray-300 text-xs">-</span>
     </template>
 
     <template #cell-score="{ item }">
@@ -85,7 +85,7 @@
           {{ item.score }}
         </span>
       </div>
-      <span v-else class="text-gray-300 text-xs">—</span>
+      <span v-else class="text-gray-300 text-xs">-</span>
     </template>
 
     <template #cell-statut="{ item }">
@@ -109,12 +109,12 @@
         <div class="grid grid-cols-2 gap-2 text-xs">
           <div>
             <div class="text-muted-foreground text-[11px]">Permis</div>
-            {{ item.categoriePermis ?? '—' }}
+            {{ item.categoriePermis ?? '-' }}
           </div>
           <div>
             <div class="text-muted-foreground text-[11px]">Score conduite</div>
             <span :class="(item.score ?? 0) >= 80 ? 'text-success' : (item.score ?? 0) >= 60 ? 'text-warning' : 'text-danger'" class="font-semibold">
-              {{ item.score ?? '—' }} / 100
+              {{ item.score ?? '-' }} / 100
             </span>
           </div>
           <div>
@@ -250,7 +250,7 @@ function estExpire(date?: string) {
 }
 
 function formatDate(d?: string) {
-  return d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
+  return d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'
 }
 
 function dateStatutClass(date?: string) {

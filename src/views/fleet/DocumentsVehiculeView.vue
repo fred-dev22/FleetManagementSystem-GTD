@@ -1,7 +1,7 @@
 <template>
   <ListPageLayout
     title="Documents"
-    subtitle="Véhicules & conducteurs — suivi réglementaire"
+    subtitle="Véhicules & conducteurs - suivi réglementaire"
     :columns="columns"
     :items="pageItems"
     :total="totalCount"
@@ -80,7 +80,7 @@
       <span v-if="item.dateExpiration" :class="statutDateClass(item.dateExpiration)" class="px-2 py-0.5 rounded text-xs font-medium">
         {{ formatDate(item.dateExpiration) }}
       </span>
-      <span v-else class="text-gray-300 text-xs">—</span>
+      <span v-else class="text-gray-300 text-xs">-</span>
     </template>
 
     <template #cell-statut="{ item }">
@@ -162,7 +162,7 @@
     <div v-if="deleteTarget" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm">
         <h3 class="font-semibold text-gray-800 mb-2">Supprimer ce document ?</h3>
-        <p class="text-sm text-gray-600 mb-4">{{ deleteTarget.type }} — {{ deleteTarget.entityId }}</p>
+        <p class="text-sm text-gray-600 mb-4">{{ deleteTarget.type }} - {{ deleteTarget.entityId }}</p>
         <div class="flex gap-3 justify-end">
           <button :class="L.btnOutline" @click="deleteTarget = null">Annuler</button>
           <button class="px-4 py-2 bg-danger text-white rounded-lg text-sm font-semibold hover:bg-danger/90 transition-colors"
@@ -278,7 +278,7 @@ function doDelete() {
 }
 
 function formatDate(d?: string) {
-  return d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
+  return d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'
 }
 
 function statutDateClass(date: string) {

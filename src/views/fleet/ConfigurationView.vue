@@ -11,7 +11,7 @@
     <div class="flex items-start gap-2.5 bg-info-bg text-info rounded-lg px-3.5 py-2.5 mb-3.5">
       <Info class="w-4 h-4 shrink-0 mt-px" />
       <p class="text-xs leading-relaxed">
-        La page <strong>Conformité</strong> contient les écarts <strong>relevés</strong> — des faits.
+        La page <strong>Conformité</strong> contient les écarts <strong>relevés</strong> - des faits.
         Cette page contient les <strong>règles</strong> : les types d’écart, leurs gravités et leurs seuils.
         Sans cette séparation, l’application afficherait des gravités que personne ne peut expliquer.
       </p>
@@ -80,8 +80,8 @@
               <td :class="L.td"><span class="font-mono text-xs">{{ e.ordre }}</span></td>
               <td :class="L.td"><span class="text-xs font-medium">{{ e.siteNom }}</span></td>
               <td :class="L.td"><span class="text-xs text-muted-foreground">{{ LIB_ROLE_ETAPE[e.role] }}</span></td>
-              <td :class="L.td"><span class="text-xs">{{ e.intervalleMin ? e.intervalleMin + ' min' : '—' }}</span></td>
-              <td :class="L.td"><span class="text-xs">{{ e.pausePrevueMin ? e.pausePrevueMin + ' min' : '—' }}</span></td>
+              <td :class="L.td"><span class="text-xs">{{ e.intervalleMin ? e.intervalleMin + ' min' : '-' }}</span></td>
+              <td :class="L.td"><span class="text-xs">{{ e.pausePrevueMin ? e.pausePrevueMin + ' min' : '-' }}</span></td>
             </tr>
           </tbody>
         </table>
@@ -122,7 +122,7 @@
               </td>
               <td :class="L.td">
                 <span v-if="t.seuilValeur != null" class="text-xs">{{ t.seuilValeur }} {{ t.seuilUnite }}</span>
-                <span v-else class="text-gray-300">—</span>
+                <span v-else class="text-gray-300">-</span>
               </td>
               <td :class="L.td">
                 <button
@@ -201,7 +201,7 @@
 
 <script setup lang="ts">
 /**
- * Configuration — page unique regroupant les données de référence.
+ * Configuration - page unique regroupant les données de référence.
  * Décision de séance : un seul bouton « Configuration » plutôt que des
  * réglages dispersés dans chaque écran.
  */

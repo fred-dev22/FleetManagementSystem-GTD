@@ -37,7 +37,7 @@
           :class="e.expire ? 'bg-danger-bg text-danger' : 'bg-warning-bg text-warning'">
           <AlertTriangle class="w-4 h-4 shrink-0" />
           <p class="text-xs flex-1">
-            <strong>{{ e.type }}</strong> — {{ e.expire ? 'expiré' : 'expire' }} le {{ fmtDate(e.date) }}.
+            <strong>{{ e.type }}</strong> - {{ e.expire ? 'expiré' : 'expire' }} le {{ fmtDate(e.date) }}.
           </p>
           <span class="text-[11px] font-medium">
             {{ e.expire ? 'Affectation bloquée' : 'Régularisation requise' }}
@@ -51,113 +51,12 @@
           class="px-3.5 py-2 text-[13px] font-medium border-b-2 -mb-px transition-colors whitespace-nowrap cursor-pointer bg-transparent"
           :class="tab === t.key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'">
           {{ t.label }}
+          <span v-if="t.badge" class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-danger-bg text-danger">{{ t.badge }}</span>
         </button>
       </div>
 
       <!-- ══ SYNTHÈSE ═══════════════════════════════════════════ -->
-      <div v-if="tab === 'synthese'" class="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-3.5 items-start">
-        <div class="flex flex-col gap-3.5">
-
-          <!-- Décomposition du score : la transparence rend le score acceptable -->
-          <div :class="L.card">
-            <div :class="L.cardHeader">
-              <h2 :class="L.cardTitle"><Gauge class="w-4 h-4 text-primary" /> Décomposition du score</h2>
-              <span class="text-[11px] text-muted-foreground">Pondérations paramétrables</span>
-            </div>
-
-            <div class="flex flex-col gap-3">
-              <div v-for="f in score.familles" :key="f.famille">
-                <div class="flex items-center justify-between mb-1">
-                  <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: PONDERATIONS[f.famille].couleur }" />
-                    <span class="text-xs font-medium text-foreground">{{ f.libelle }}</span>
-                    <span class="text-[11px] text-muted-foreground">coef. {{ f.poids }} %</span>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <span v-if="f.evenements" class="text-[11px] text-muted-foreground">
-                      {{ f.evenements }} évènement(s)
-                    </span>
-                    <span class="text-xs font-semibold" :class="couleurScore(f.note)">{{ f.note }}</span>
-                  </div>
-                </div>
-                <div class="h-2 rounded-full bg-gray-100 overflow-hidden">
-                  <div class="h-full rounded-full transition-all"
-                    :style="{ width: f.note + '%', backgroundColor: PONDERATIONS[f.famille].couleur }" />
-                </div>
-              </div>
-            </div>
-
-            <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
-              Score calculé sur une fenêtre glissante de 12 mois, avec atténuation : une infraction ancienne
-              pèse moins qu’une infraction récente. Un conducteur qui corrige son comportement voit son score remonter.
-            </p>
-          </div>
-
-          <!-- Historique 12 mois -->
-          <div :class="L.card">
-            <div :class="L.cardHeader"><h2 :class="L.cardTitle"><TrendingUp class="w-4 h-4 text-primary" /> Évolution sur 12 mois</h2></div>
-            <svg :viewBox="`0 0 ${sparkW} ${sparkH}`" class="w-full h-24">
-              <line x1="0" :y1="yFor(80)" :x2="sparkW" :y2="yFor(80)" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="4 4" />
-              <polyline :points="sparkPoints" fill="none" stroke="#0072C5" stroke-width="2"
-                stroke-linejoin="round" stroke-linecap="round" />
-              <circle v-for="(v, i) in score.historique12m" :key="i"
-                :cx="xFor(i)" :cy="yFor(v)" r="2.5" fill="#0072C5" />
-            </svg>
-            <div class="flex justify-between text-[10px] text-muted-foreground">
-              <span>il y a 12 mois</span><span>seuil de prime 80</span><span>aujourd’hui</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex flex-col gap-3.5">
-          <!-- Prime -->
-          <div :class="L.card">
-            <div :class="L.cardHeader"><h2 :class="L.cardTitle"><Award class="w-4 h-4 text-primary" /> Prime de la période</h2></div>
-            <p class="text-2xl font-bold leading-none" :class="score.primeEligible ? 'text-success' : 'text-muted-foreground'">
-              {{ fmtAr(score.primeMontant) }}
-            </p>
-            <p class="text-[11px] text-muted-foreground mt-1">{{ palier.libelle }}</p>
-
-            <div v-if="!score.primeEligible" class="mt-2.5 bg-danger-bg text-danger rounded-md px-2.5 py-2 text-[11px] leading-snug">
-              Non éligible — {{ score.motifNonEligibilite }}
-            </div>
-
-            <div class="mt-3 pt-3 border-t border-border">
-              <p class="text-[11px] font-semibold text-foreground mb-1.5">Grille en vigueur</p>
-              <ul class="flex flex-col gap-1">
-                <li v-for="g in GRILLE_PRIME.filter(x => x.montant > 0)" :key="g.min"
-                  class="flex justify-between text-[11px]"
-                  :class="score.score >= g.min ? 'text-foreground font-medium' : 'text-muted-foreground'">
-                  <span>{{ g.libelle }} — score ≥ {{ g.min }}</span>
-                  <span>{{ fmtAr(g.montant) }}</span>
-                </li>
-              </ul>
-              <p class="text-[10px] text-muted-foreground mt-2 leading-snug">
-                Calcul automatique, validation hiérarchique par le circuit RH existant.
-                Grille à valider par la direction et les ressources humaines.
-              </p>
-            </div>
-          </div>
-
-          <!-- Positionnement -->
-          <div :class="L.card">
-            <div :class="L.cardHeader"><h2 :class="L.cardTitle">Positionnement</h2></div>
-            <p class="text-xs text-muted-foreground mb-1.5">
-              Rang {{ rang }} sur {{ scoresStore.scores.length }} — {{ percentile }}<sup>e</sup> centile
-            </p>
-            <div class="h-2 rounded-full bg-gray-100 overflow-hidden">
-              <div class="h-full bg-primary rounded-full" :style="{ width: percentile + '%' }" />
-            </div>
-            <p class="text-[10px] text-muted-foreground mt-2 leading-snug">
-              Le classement nominatif reste réservé à la direction et à l’encadrement ;
-              le conducteur accède à son score et à son positionnement relatif anonymisé.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- ══ ITINÉRAIRES ════════════════════════════════════════ -->
-      <div v-else-if="tab === 'itineraires'" class="flex flex-col gap-3.5">
+      <div v-if="tab === 'itineraires'" class="flex flex-col gap-3.5">
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
           <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3">
             <p class="text-xl font-bold leading-none">{{ score.tauxConformiteItineraire }} %</p>
@@ -250,6 +149,252 @@
       </div>
 
       <!-- ══ RH ═════════════════════════════════════════════════ -->
+      <!-- ═══════════════════════════════════════════════════════
+           DOCUMENTS - pièces du dossier conducteur
+           Exigé par le CDC : « gestion des documents : permis,
+           assurances, formations, certificats avec alertes et
+           archivage » et « relances à J-30, escalade si non validés ».
+           ═══════════════════════════════════════════════════════ -->
+      <div v-else-if="tab === 'documents'" class="flex flex-col gap-3.5">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div v-for="k in kpisDocs" :key="k.label"
+            class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3">
+            <p class="text-xl font-bold leading-none" :class="k.cls">{{ k.value }}</p>
+            <p class="text-[11px] text-gray-500 mt-1">{{ k.label }}</p>
+          </div>
+        </div>
+
+        <div :class="L.card">
+          <div :class="L.cardHeader">
+            <h2 :class="L.cardTitle"><FileText class="w-4 h-4 text-primary" /> Pièces du dossier</h2>
+            <span class="text-[11px] text-muted-foreground">Alerte automatique 30 jours avant échéance</span>
+          </div>
+
+          <div v-if="!documents.length" class="text-xs text-muted-foreground py-3">
+            Aucune pièce enregistrée pour ce conducteur.
+          </div>
+
+          <table v-else :class="L.table">
+            <thead><tr>
+              <th :class="L.th" class="cursor-default">Pièce</th>
+              <th :class="L.th" class="cursor-default">N°</th>
+              <th :class="L.th" class="cursor-default">Émission</th>
+              <th :class="L.th" class="cursor-default">Expiration</th>
+              <th :class="L.th" class="cursor-default">Échéance</th>
+              <th :class="L.th" class="cursor-default">Statut</th>
+            </tr></thead>
+            <tbody>
+              <tr v-for="d in documents" :key="d.id" :class="L.rowHover">
+                <td :class="L.td"><span class="text-xs font-medium">{{ d.type }}</span></td>
+                <td :class="L.td"><span class="font-mono text-[11px]">{{ d.numero ?? '-' }}</span></td>
+                <td :class="L.td"><span class="text-xs">{{ fmtDate(d.dateEmission) }}</span></td>
+                <td :class="L.td"><span class="text-xs">{{ d.dateExpiration ? fmtDate(d.dateExpiration) : '-' }}</span></td>
+                <td :class="L.td">
+                  <span class="text-xs font-medium" :class="clsEcheance(d.dateExpiration)">
+                    {{ libelleEcheance(d.dateExpiration) }}
+                  </span>
+                </td>
+                <td :class="L.td">
+                  <span class="text-[11px] font-medium px-2 py-0.5 rounded-full" :class="CLS_STATUT_DOC[d.statut]">
+                    {{ LIB_STATUT_DOC[d.statut] }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
+            Une pièce expirée bloque l’affectation du conducteur à un voyage. Le permis et la
+            visite médicale sont les deux pièces obligatoires exigées par le cahier des charges.
+          </p>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           FORMATIONS - habilitations et leur validité
+           Exigé par le CDC GTD : « formation continue chauffeurs
+           ≥ 95 % » et « formation sécurité chauffeurs ≥ 95 % ».
+           ═══════════════════════════════════════════════════════ -->
+      <div v-else-if="tab === 'formations'" class="flex flex-col gap-3.5">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div v-for="k in kpisFormations" :key="k.label"
+            class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3">
+            <p class="text-xl font-bold leading-none" :class="k.cls">{{ k.value }}</p>
+            <p class="text-[11px] text-gray-500 mt-1">{{ k.label }}</p>
+          </div>
+        </div>
+
+        <div :class="L.card">
+          <div :class="L.cardHeader">
+            <h2 :class="L.cardTitle"><GraduationCap class="w-4 h-4 text-primary" /> Formations suivies</h2>
+          </div>
+
+          <div v-if="!formations.length" class="text-xs text-muted-foreground py-3">
+            Aucune formation enregistrée.
+          </div>
+
+          <table v-else :class="L.table">
+            <thead><tr>
+              <th :class="L.th" class="cursor-default">Formation</th>
+              <th :class="L.th" class="cursor-default">Suivie le</th>
+              <th :class="L.th" class="cursor-default">Valide jusqu’au</th>
+              <th :class="L.th" class="cursor-default">État</th>
+            </tr></thead>
+            <tbody>
+              <tr v-for="f in formations" :key="f.id" :class="L.rowHover">
+                <td :class="L.td"><span class="text-xs font-medium">{{ f.titre }}</span></td>
+                <td :class="L.td"><span class="text-xs">{{ fmtDate(f.date) }}</span></td>
+                <td :class="L.td">
+                  <span class="text-xs">{{ f.dateExpiration ? fmtDate(f.dateExpiration) : 'sans échéance' }}</span>
+                </td>
+                <td :class="L.td">
+                  <span class="text-[11px] font-medium px-2 py-0.5 rounded-full" :class="clsFormation(f.dateExpiration).cls">
+                    {{ clsFormation(f.dateExpiration).label }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Habilitations obligatoires : ce qui manque saute aux yeux -->
+        <div :class="L.card">
+          <div :class="L.cardHeader">
+            <h2 :class="L.cardTitle"><ShieldCheck class="w-4 h-4 text-primary" /> Habilitations obligatoires</h2>
+            <span class="text-[11px]" :class="habilitationsOk ? 'text-success' : 'text-danger'">
+              {{ habilitations.filter(h => h.acquise).length }}/{{ habilitations.length }} acquises
+            </span>
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <div v-for="h in habilitations" :key="h.code"
+              class="flex items-start gap-2.5 rounded-md px-3 py-2"
+              :class="h.acquise ? 'bg-background' : 'bg-danger-bg'">
+              <component :is="h.acquise ? CheckCircle2 : XCircle" class="w-4 h-4 shrink-0 mt-px"
+                :class="h.acquise ? 'text-success' : 'text-danger'" />
+              <div class="min-w-0">
+                <p class="text-xs font-medium" :class="h.acquise ? 'text-foreground' : 'text-danger'">{{ h.libelle }}</p>
+                <p class="text-[11px] text-muted-foreground">{{ h.detail }}</p>
+              </div>
+            </div>
+          </div>
+          <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
+            Un chauffeur sans habilitation APTH ou ADR valide ne peut pas conduire un camion-citerne.
+            L’affectation est bloquée tant que l’habilitation n’est pas régularisée.
+          </p>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           PLANNING - ce que le conducteur a fait et va faire
+           Exigé par le CDC : « affectation & planning : association
+           conducteurs/véhicules, planning dynamique prenant en compte
+           les disponibilités et compétences ».
+           ═══════════════════════════════════════════════════════ -->
+      <div v-else-if="tab === 'planning'" class="flex flex-col gap-3.5">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div v-for="k in kpisPlanning" :key="k.label"
+            class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3">
+            <p class="text-xl font-bold leading-none" :class="k.cls">{{ k.value }}</p>
+            <p class="text-[11px] text-gray-500 mt-1">{{ k.label }}</p>
+          </div>
+        </div>
+
+        <!-- Disponibilité immédiate : la réponse à « peut-il partir demain ? » -->
+        <div :class="L.card">
+          <div :class="L.cardHeader">
+            <h2 :class="L.cardTitle"><CalendarCheck class="w-4 h-4 text-primary" /> Disponibilité</h2>
+          </div>
+          <div class="flex items-start gap-2.5 rounded-lg px-3.5 py-2.5"
+            :class="disponibilite.ok ? 'bg-success-bg text-success' : 'bg-danger-bg text-danger'">
+            <component :is="disponibilite.ok ? CheckCircle2 : AlertTriangle" class="w-4 h-4 shrink-0 mt-px" />
+            <div>
+              <p class="text-xs font-medium">{{ disponibilite.titre }}</p>
+              <p v-if="disponibilite.motifs.length" class="text-[11px] leading-snug mt-0.5">
+                {{ disponibilite.motifs.join(' · ') }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Voyages : passés et à venir -->
+        <div :class="L.card">
+          <div :class="L.cardHeader">
+            <h2 :class="L.cardTitle"><Package class="w-4 h-4 text-primary" /> Voyages</h2>
+            <span class="text-[11px] text-muted-foreground">{{ voyagesConducteur.length }} sur la période</span>
+          </div>
+
+          <div v-if="!voyagesConducteur.length" class="text-xs text-muted-foreground py-3">
+            Aucun voyage affecté à ce conducteur.
+          </div>
+
+          <table v-else :class="L.table">
+            <thead><tr>
+              <th :class="L.th" class="cursor-default">Voyage</th>
+              <th :class="L.th" class="cursor-default">Trajet</th>
+              <th :class="L.th" class="cursor-default">Véhicule</th>
+              <th :class="L.th" class="cursor-default">Date</th>
+              <th :class="L.th" class="cursor-default">Statut</th>
+              <th :class="L.th" class="cursor-default"></th>
+            </tr></thead>
+            <tbody>
+              <tr v-for="v in voyagesConducteur" :key="v.id" :class="L.rowHover">
+                <td :class="L.td"><span class="font-mono text-xs font-semibold">{{ v.reference }}</span></td>
+                <td :class="L.td">
+                  <span class="text-xs">{{ v.origine }} → {{ v.destination }}</span>
+                  <div class="text-[11px] text-muted-foreground">{{ v.etapes.length }} site(s)</div>
+                </td>
+                <td :class="L.td"><span class="font-mono text-xs">{{ v.vehiculePlaque ?? '-' }}</span></td>
+                <td :class="L.td"><span class="text-xs">{{ fmtDate(v.datePlanifiee) }}</span></td>
+                <td :class="L.td">
+                  <span class="text-[11px] font-medium px-2 py-0.5 rounded-full" :class="CLS_STATUT_VOYAGE[v.statut]">
+                    {{ LIB_STATUT_VOYAGE[v.statut] }}
+                  </span>
+                </td>
+                <td :class="L.td">
+                  <button :class="L.actView" @click="router.push({ name: 'fleet-voyage-detail', params: { id: v.id } })">
+                    Ouvrir
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Absences : elles rendent le chauffeur indisponible -->
+        <div :class="L.card">
+          <div :class="L.cardHeader">
+            <h2 :class="L.cardTitle"><CalendarOff class="w-4 h-4 text-primary" /> Absences et congés</h2>
+            <span class="text-[11px] text-muted-foreground">source : module Administration</span>
+          </div>
+
+          <div v-if="!absencesConducteur.length" class="text-xs text-muted-foreground py-3">
+            Aucune absence enregistrée sur la période.
+          </div>
+
+          <table v-else :class="L.table">
+            <thead><tr>
+              <th :class="L.th" class="cursor-default">Type</th>
+              <th :class="L.th" class="cursor-default">Du</th>
+              <th :class="L.th" class="cursor-default">Au</th>
+              <th :class="L.th" class="cursor-default">Statut</th>
+            </tr></thead>
+            <tbody>
+              <tr v-for="a in absencesConducteur" :key="a.id" :class="L.rowHover">
+                <td :class="L.td"><span class="text-xs font-medium">{{ a.type }}</span></td>
+                <td :class="L.td"><span class="text-xs">{{ fmtDate(a.startDate) }}</span></td>
+                <td :class="L.td"><span class="text-xs">{{ fmtDate(a.endDate) }}</span></td>
+                <td :class="L.td"><span class="text-[11px] text-muted-foreground">{{ a.status }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
+            Une absence en cours rend le conducteur indisponible : le code CON pour un congé,
+            TRH pour un repos, MED pour une visite médicale, selon la nomenclature de GTD.
+          </p>
+        </div>
+      </div>
+
       <div v-else-if="tab === 'rh'" :class="L.card">
         <div :class="L.cardHeader">
           <h2 :class="L.cardTitle"><IdCard class="w-4 h-4 text-primary" /> Données administratives</h2>
@@ -280,19 +425,26 @@
 
 <script setup lang="ts">
 /**
- * Fiche conducteur unifiée — point de jonction entre le module RH et le module Flotte.
+ * Fiche conducteur unifiée - point de jonction entre le module RH et le module Flotte.
  * Le score est présenté décomposé : un score opaque est un score contesté.
  */
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  ArrowLeft, UserX, Gauge, TrendingUp, Award, AlertTriangle, Fuel, IdCard,
+  ArrowLeft, UserX, Gauge, TrendingUp, Award, AlertTriangle, Fuel, IdCard, Users,
+  FileText, GraduationCap, ShieldCheck, CheckCircle2, XCircle, CalendarCheck, CalendarOff, Package,
+  ClipboardCheck, AlertCircle, FileQuestion,
 } from 'lucide-vue-next'
 import {
-  useScoresConducteursStore, PONDERATIONS, GRILLE_PRIME, primePour,
+  useScoresConducteursStore,
 } from '../../stores/scoresConducteurs'
+import type { LeaveRequest } from '../../types'
 import { useEcartsStore, LIB_TYPE_ECART, LIB_NATURE } from '../../stores/ecarts'
 import { useCarburantStore } from '../../stores/carburant'
+import { useDocumentsVehiculesStore } from '../../stores/documentsVehicules'
+import { useConduceteursProfilesStore } from '../../stores/conducteursProfiles'
+import { useVoyagesStore } from '../../stores/voyages'
+import { useAbsenceStore } from '../../stores/absences'
 import { fmtAr, fmtL, fmtDate, fmtDateTime } from '../../lib/fmsUtils'
 import * as L from '../../lib/listClasses'
 
@@ -301,23 +453,225 @@ const router = useRouter()
 const scoresStore    = useScoresConducteursStore()
 const ecartsStore    = useEcartsStore()
 const carburantStore = useCarburantStore()
+const docsStore      = useDocumentsVehiculesStore()
+const profilsStore   = useConduceteursProfilesStore()
+const voyagesStore   = useVoyagesStore()
+const absencesStore  = useAbsenceStore()
 
 const chauffeurId = computed(() => String(route.params.id))
 const score = computed(() => scoresStore.getById(chauffeurId.value))
 
-const tab = ref<'synthese' | 'itineraires' | 'carburant' | 'rh'>('synthese')
-const tabs = [
-  { key: 'synthese' as const,    label: 'Synthèse' },
-  { key: 'itineraires' as const, label: 'Itinéraires' },
-  { key: 'carburant' as const,   label: 'Carburant' },
-  { key: 'rh' as const,          label: 'Ressources humaines' },
-]
+type OngletFiche = 'itineraires' | 'carburant' | 'documents' | 'formations' | 'planning' | 'rh'
 
-const delta = computed(() => score.value ? score.value.score - score.value.scoreMoisPrecedent : 0)
-const palier = computed(() => score.value ? primePour(score.value.score, score.value.primeEligible) : { libelle: '' })
-const percentile = computed(() => scoresStore.percentile(chauffeurId.value))
-const rang = computed(() =>
-  scoresStore.classement.findIndex(s => s.chauffeurId === chauffeurId.value) + 1)
+const tab = ref<OngletFiche>('itineraires')
+
+/* Les six onglets exigés par le cahier des charges FMS Trucks :
+   « Fiche conducteur : profil, documents, infractions, score, formations, planning ». */
+const tabs = computed(() => [
+  { key: 'itineraires' as const, label: 'Itinéraires', badge: 0 },
+  { key: 'carburant' as const,   label: 'Carburant',   badge: 0 },
+  { key: 'documents' as const,   label: 'Documents',   badge: docsAlerte.value },
+  { key: 'formations' as const,  label: 'Formations',  badge: formationsAlerte.value },
+  { key: 'planning' as const,    label: 'Planning',    badge: 0 },
+  { key: 'rh' as const,          label: 'Ressources humaines', badge: 0 },
+])
+
+const delta = computed(() => (score.value?.score ?? 0) - (score.value?.scoreMoisPrecedent ?? 0))
+
+/* ═══════════════════════════════════════════════════════════════
+   ONGLET DOCUMENTS
+   Le store de documents est unifié véhicule + conducteur : on filtre
+   sur l'entité conducteur. Règle du cahier des charges : alerte à J-30.
+   ═══════════════════════════════════════════════════════════════ */
+const PREAVIS_JOURS = 30
+
+/* Le référentiel documentaire indexe les pièces par identifiant de PROFIL
+   conducteur (CP-00x), pas par identifiant d'employé (emp-0xx). On passe
+   donc par le profil pour retrouver les pièces du bon conducteur. */
+const profil = computed(() => profilsStore.getByEmployeId(chauffeurId.value))
+
+const documents = computed(() =>
+  profil.value ? docsStore.getDocsByConducteur(profil.value.id) : [])
+
+/** Jours restants avant expiration - négatif si déjà expiré. */
+function joursRestants(iso?: string): number | null {
+  if (!iso) return null
+  return Math.ceil((+new Date(iso) - Date.now()) / 86_400_000)
+}
+
+function libelleEcheance(iso?: string): string {
+  const j = joursRestants(iso)
+  if (j === null) return 'sans échéance'
+  if (j < 0) return `expiré depuis ${Math.abs(j)} j`
+  if (j <= PREAVIS_JOURS) return `dans ${j} j`
+  return `dans ${j} j`
+}
+
+function clsEcheance(iso?: string): string {
+  const j = joursRestants(iso)
+  if (j === null) return 'text-muted-foreground'
+  if (j < 0) return 'text-danger'
+  if (j <= PREAVIS_JOURS) return 'text-warning'
+  return 'text-success'
+}
+
+const LIB_STATUT_DOC: Record<string, string> = {
+  depose: 'Déposé', valide: 'Validé', refuse: 'Refusé', archive: 'Archivé',
+}
+const CLS_STATUT_DOC: Record<string, string> = {
+  depose:  'bg-info-bg text-info',
+  valide:  'bg-success-bg text-success',
+  refuse:  'bg-danger-bg text-danger',
+  archive: 'bg-gray-100 text-gray-500',
+}
+
+const docsExpires = computed(() =>
+  documents.value.filter(d => (joursRestants(d.dateExpiration) ?? 1) < 0).length)
+
+const docsProches = computed(() =>
+  documents.value.filter(d => {
+    const j = joursRestants(d.dateExpiration)
+    return j !== null && j >= 0 && j <= PREAVIS_JOURS
+  }).length)
+
+/** Pastille rouge sur l'onglet : expirés + proches de l'échéance. */
+const docsAlerte = computed(() => docsExpires.value + docsProches.value)
+
+const kpisDocs = computed(() => [
+  { label: 'Pièces au dossier', value: String(documents.value.length), cls: 'text-foreground' },
+  { label: 'Validées',          value: String(documents.value.filter(d => d.statut === 'valide').length), cls: 'text-success' },
+  { label: 'À renouveler',      value: String(docsProches.value), cls: docsProches.value ? 'text-warning' : 'text-foreground' },
+  { label: 'Expirées',          value: String(docsExpires.value), cls: docsExpires.value ? 'text-danger' : 'text-foreground' },
+])
+
+/* ═══════════════════════════════════════════════════════════════
+   ONGLET FORMATIONS
+   Les formations vivent dans le profil conducteur. On y ajoute le
+   contrôle des habilitations obligatoires au transport d'hydrocarbures.
+   ═══════════════════════════════════════════════════════════════ */
+const formations = computed(() => profil.value?.formations ?? [])
+
+function clsFormation(iso?: string): { label: string; cls: string } {
+  const j = joursRestants(iso)
+  if (j === null) return { label: 'Acquise',  cls: 'bg-success-bg text-success' }
+  if (j < 0)      return { label: 'Expirée',  cls: 'bg-danger-bg text-danger'   }
+  if (j <= PREAVIS_JOURS) return { label: 'À renouveler', cls: 'bg-warning-bg text-warning' }
+  return { label: 'Valide', cls: 'bg-success-bg text-success' }
+}
+
+const formationsExpirees = computed(() =>
+  formations.value.filter(f => (joursRestants(f.dateExpiration) ?? 1) < 0).length)
+
+const formationsProches = computed(() =>
+  formations.value.filter(f => {
+    const j = joursRestants(f.dateExpiration)
+    return j !== null && j >= 0 && j <= PREAVIS_JOURS
+  }).length)
+
+const formationsAlerte = computed(() => formationsExpirees.value + formationsProches.value)
+
+/**
+ * Habilitations obligatoires pour conduire un camion-citerne.
+ * APTH et ADR sont exigées par la réglementation malgache du transport
+ * d'hydrocarbures ; les deux autres relèvent des cibles du cahier des charges.
+ */
+const habilitations = computed(() => {
+  const a = (motsCles: string[]) =>
+    formations.value.find(f => motsCles.some(m => f.titre.toLowerCase().includes(m)))
+
+  const construire = (code: string, libelle: string, motsCles: string[]) => {
+    const f = a(motsCles)
+    const j = f ? joursRestants(f.dateExpiration) : null
+    const perimee = f != null && j !== null && j < 0
+    return {
+      code, libelle,
+      acquise: f != null && !perimee,
+      detail: !f ? 'Non suivie - affectation bloquée'
+        : perimee ? `Expirée le ${fmtDate(f.dateExpiration)}`
+        : f.dateExpiration ? `Valide jusqu’au ${fmtDate(f.dateExpiration)}`
+        : `Suivie le ${fmtDate(f.date)}`,
+    }
+  }
+
+  return [
+    construire('ADR',  'Transport de matières dangereuses (ADR/TMD)', ['adr', 'dangereuse', 'tmd']),
+    construire('APTH', 'Habilitation APTH - transport d’hydrocarbures', ['apth', 'hydrocarbure']),
+    construire('DEF',  'Conduite défensive', ['défensive', 'defensive']),
+    construire('ECO',  'Conduite économique', ['économique', 'economique']),
+  ]
+})
+
+const habilitationsOk = computed(() => habilitations.value.every(h => h.acquise))
+
+const kpisFormations = computed(() => [
+  { label: 'Formations suivies', value: String(formations.value.length), cls: 'text-foreground' },
+  { label: 'Habilitations acquises', value: `${habilitations.value.filter(h => h.acquise).length}/${habilitations.value.length}`,
+    cls: habilitationsOk.value ? 'text-success' : 'text-danger' },
+  { label: 'À renouveler', value: String(formationsProches.value), cls: formationsProches.value ? 'text-warning' : 'text-foreground' },
+  { label: 'Expirées',     value: String(formationsExpirees.value), cls: formationsExpirees.value ? 'text-danger' : 'text-foreground' },
+])
+
+/* ═══════════════════════════════════════════════════════════════
+   ONGLET PLANNING
+   Croise trois sources : les voyages affectés, les absences du module
+   Administration, et les échéances documentaires.
+   ═══════════════════════════════════════════════════════════════ */
+const voyagesConducteur = computed(() =>
+  [...voyagesStore.voyages]
+    .filter(v => v.chauffeurId === chauffeurId.value)
+    .sort((a, b) => +new Date(b.datePlanifiee) - +new Date(a.datePlanifiee)))
+
+const LIB_STATUT_VOYAGE: Record<string, string> = {
+  planifie: 'Planifié', affecte: 'Affecté', en_cours: 'En cours', livre: 'Livré',
+  cloture: 'Clôturé', litige: 'En litige', annule: 'Annulé',
+}
+const CLS_STATUT_VOYAGE: Record<string, string> = {
+  planifie: 'bg-gray-100 text-gray-600',  affecte: 'bg-primary/10 text-primary',
+  en_cours: 'bg-info-bg text-info',       livre: 'bg-success-bg text-success',
+  cloture:  'bg-gray-100 text-gray-500',  litige: 'bg-danger-bg text-danger',
+  annule:   'bg-gray-100 text-gray-400',
+}
+
+/** Absences du conducteur, rapprochées par le nom de l'employé. */
+const absencesConducteur = computed<LeaveRequest[]>(() => {
+  const nom = score.value?.chauffeurNom ?? ''
+  return absencesStore.allLeaves.filter((l: LeaveRequest) => l.employeeName === nom)
+})
+
+const voyagesAVenir = computed(() =>
+  voyagesConducteur.value.filter(v => v.statut === 'planifie' || v.statut === 'affecte').length)
+
+/**
+ * Peut-il partir demain ? Trois conditions cumulatives :
+ * documents à jour, habilitations acquises, aucune absence en cours.
+ */
+const disponibilite = computed(() => {
+  const motifs: string[] = []
+  if (docsExpires.value) motifs.push(`${docsExpires.value} document(s) expiré(s)`)
+  if (!habilitationsOk.value) {
+    const manquantes = habilitations.value.filter(h => !h.acquise).map(h => h.code)
+    motifs.push(`habilitation(s) manquante(s) : ${manquantes.join(', ')}`)
+  }
+  const aujourdhui = new Date().toISOString().slice(0, 10)
+  const enCours = absencesConducteur.value.find((a: LeaveRequest) => a.startDate <= aujourdhui && a.endDate >= aujourdhui)
+  if (enCours) motifs.push(`absence en cours jusqu’au ${fmtDate(enCours.endDate)}`)
+
+  return {
+    ok: motifs.length === 0,
+    titre: motifs.length === 0
+      ? 'Disponible - le conducteur peut être affecté à un voyage'
+      : 'Indisponible - affectation bloquée',
+    motifs,
+  }
+})
+
+const kpisPlanning = computed(() => [
+  { label: 'Voyages effectués', value: String(voyagesConducteur.value.filter(v => v.statut === 'cloture' || v.statut === 'livre').length), cls: 'text-foreground' },
+  { label: 'À venir',           value: String(voyagesAVenir.value), cls: 'text-primary' },
+  { label: 'Absences',          value: String(absencesConducteur.value.length), cls: 'text-foreground' },
+  { label: 'Disponibilité',     value: disponibilite.value.ok ? 'Oui' : 'Non',
+    cls: disponibilite.value.ok ? 'text-success' : 'text-danger' },
+])
 
 const ecarts    = computed(() => ecartsStore.ecartsDuChauffeur(chauffeurId.value))
 const recharges = computed(() => carburantStore.rechargesDuChauffeur(chauffeurId.value))
@@ -346,11 +700,4 @@ const echeances = computed(() => {
   return out
 })
 
-/* ── Courbe d'évolution (SVG, sans dépendance externe) ────── */
-const sparkW = 320
-const sparkH = 80
-const xFor = (i: number) => (i / 11) * (sparkW - 8) + 4
-const yFor = (v: number) => sparkH - 6 - ((v - 60) / 40) * (sparkH - 14)
-const sparkPoints = computed(() =>
-  score.value ? score.value.historique12m.map((v, i) => `${xFor(i)},${yFor(v)}`).join(' ') : '')
 </script>

@@ -112,15 +112,15 @@
       <template v-if="coulageDe(item).chargeL">
         <span class="text-xs">{{ fmtL(coulageDe(item).chargeL!) }}</span>
         <div class="text-[11px] text-muted-foreground">
-          livré {{ coulageDe(item).livreL ? fmtL(coulageDe(item).livreL!) : '—' }}
+          livré {{ coulageDe(item).livreL ? fmtL(coulageDe(item).livreL!) : '-' }}
         </div>
       </template>
-      <span v-else class="text-gray-300">—</span>
+      <span v-else class="text-gray-300">-</span>
     </template>
 
     <template #cell-vehicule="{ item }">
       <span v-if="item.vehiculePlaque" class="font-mono text-xs">{{ item.vehiculePlaque }}</span>
-      <span v-else class="text-gray-300">—</span>
+      <span v-else class="text-gray-300">-</span>
       <div v-if="item.chauffeurNom" class="text-[11px] text-muted-foreground">{{ item.chauffeurNom }}</div>
     </template>
 
@@ -131,7 +131,7 @@
         </span>
         <div class="text-[11px] text-muted-foreground">seuil {{ item.toleranceCoulagePourMille }} ‰</div>
       </template>
-      <span v-else class="text-gray-300">—</span>
+      <span v-else class="text-gray-300">-</span>
     </template>
 
     <template #cell-conformite="{ item }">
@@ -175,8 +175,8 @@
           <div><div class="text-muted-foreground text-[11px]">Client</div>{{ item.clientNom }}</div>
           <div><div class="text-muted-foreground text-[11px]">Produit</div>{{ item.volumes.produit }}</div>
           <div><div class="text-muted-foreground text-[11px]">Véhicule</div>
-            <span class="font-mono">{{ item.vehiculePlaque ?? '—' }}</span></div>
-          <div><div class="text-muted-foreground text-[11px]">Chauffeur</div>{{ item.chauffeurNom ?? '—' }}</div>
+            <span class="font-mono">{{ item.vehiculePlaque ?? '-' }}</span></div>
+          <div><div class="text-muted-foreground text-[11px]">Chauffeur</div>{{ item.chauffeurNom ?? '-' }}</div>
           <div><div class="text-muted-foreground text-[11px]">Km référence</div>{{ item.kmReference }} km</div>
           <div><div class="text-muted-foreground text-[11px]">Départ</div>{{ fmtDate(item.datePlanifiee) }}</div>
         </div>
@@ -279,7 +279,7 @@ const horsTolerance = computed(() =>
 const sitesRestants = computed(() =>
   store.enCours.reduce((n, v) => n + v.etapes.filter(e => !e.franchi).length, 0))
 
-/** Sites affectés mais non desservis sur les voyages terminés — incident réel. */
+/** Sites affectés mais non desservis sur les voyages terminés - incident réel. */
 const sitesManques = computed(() =>
   store.voyages
     .filter(v => v.statut === 'livre' || v.statut === 'cloture' || v.statut === 'litige')

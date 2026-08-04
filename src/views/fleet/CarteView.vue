@@ -159,7 +159,7 @@
       <div ref="mapContainer" class="w-full h-full"></div>
 
       <!-- ═══════════════════════════════════════════════════════════
-           AJOUT 3 — Panneau « voyage en cours » au clic sur un véhicule
+           AJOUT 3 - Panneau « voyage en cours » au clic sur un véhicule
            ═══════════════════════════════════════════════════════════ -->
       <Transition name="slide-left">
         <div
@@ -181,7 +181,7 @@
               <div><dt class="text-muted-foreground text-[10px]">Client</dt><dd class="text-foreground">{{ voyageSelectionne.clientNom }}</dd></div>
               <div><dt class="text-muted-foreground text-[10px]">Produit</dt><dd class="text-foreground">{{ voyageSelectionne.volumes.produit }}</dd></div>
               <div><dt class="text-muted-foreground text-[10px]">Km référence</dt><dd class="text-foreground">{{ voyageSelectionne.kmReference }} km</dd></div>
-              <div><dt class="text-muted-foreground text-[10px]">Citerne</dt><dd class="font-mono text-foreground">{{ voyageSelectionne.citernePlaque ?? '—' }}</dd></div>
+              <div><dt class="text-muted-foreground text-[10px]">Citerne</dt><dd class="font-mono text-foreground">{{ voyageSelectionne.citernePlaque ?? '-' }}</dd></div>
             </dl>
 
             <!-- Points de passage : franchis en vert -->
@@ -215,7 +215,7 @@
       </Transition>
 
       <!-- ═══════════════════════════════════════════════════════════
-           AJOUT 4 — Bouton flottant d'alertes (esprit WhatsApp)
+           AJOUT 4 - Bouton flottant d'alertes (esprit WhatsApp)
            ═══════════════════════════════════════════════════════════ -->
       <div class="absolute bottom-5 right-5 z-[700] flex flex-col items-end gap-2">
         <Transition name="fab">
@@ -279,7 +279,7 @@ import {
   // ═══ AJOUT : icônes des greffes ═══
   Bell, AlertTriangle, Octagon, Fuel, Route,
 } from 'lucide-vue-next'
-// ═══ MODIF 2 : le store « tracteurs » a été supprimé — on lit « vehicules » ═══
+// ═══ MODIF 2 : le store « tracteurs » a été supprimé - on lit « vehicules » ═══
 import { useVehiculesStore } from '../../stores/vehicules'
 import type { Vehicule } from '../../types'
 // ═══ AJOUT : stores nécessaires aux greffes ═══
@@ -310,7 +310,7 @@ function statusColor(s?: string) {
   return STATUTS.find(x => x.key === s)?.color ?? '#6b7280'
 }
 function statusLabel(s?: string) {
-  return STATUTS.find(x => x.key === s)?.label ?? s ?? '—'
+  return STATUTS.find(x => x.key === s)?.label ?? s ?? '-'
 }
 
 // ── Données tracteurs ──────────────────────────────────────────────
@@ -336,7 +336,7 @@ const tracteursFiltres = computed(() => {
   )
 })
 
-/** Identifiants retenus par la recherche — sert à masquer les marqueurs écartés. */
+/** Identifiants retenus par la recherche - sert à masquer les marqueurs écartés. */
 const idsFiltres = computed(() => new Set(tracteursFiltres.value.map(t => t.id)))
 
 // ── Sélection ──────────────────────────────────────────────────────
@@ -355,7 +355,7 @@ function selectTruck(id: string) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   AJOUT 3 — Voyage en cours du véhicule sélectionné
+   AJOUT 3 - Voyage en cours du véhicule sélectionné
    ═══════════════════════════════════════════════════════════════════ */
 const voyagesEnCours = computed(() =>
   voyagesStore.voyages.filter(v => v.statut === 'en_cours' || v.statut === 'litige'),
@@ -373,7 +373,7 @@ const nbFranchis = computed(() =>
 )
 
 /* ═══════════════════════════════════════════════════════════════════
-   AJOUT 4 — Alertes et bouton flottant
+   AJOUT 4 - Alertes et bouton flottant
    Les alertes ne dépendent PAS du clic : elles restent toujours
    accessibles, et un triangle les signale dans la liste.
    ═══════════════════════════════════════════════════════════════════ */
@@ -398,7 +398,7 @@ const alertes = computed<AlerteCarte[]>(() => {
     out.push({
       id: e.id,
       vehiculeId: veh?.id,
-      titre: `${LIB_TYPE_ECART[e.type]} — ${e.vehiculePlaque}`,
+      titre: `${LIB_TYPE_ECART[e.type]} - ${e.vehiculePlaque}`,
       detail: `${e.voyageRef} · ${e.lieu ?? ''} · ${fmtDuree(e.dureeMin)}`,
       aFaire: 'Qualifier l\u2019écart →',
       gravite: e.gravite === 'critique' ? 'critique' : 'majeur',
@@ -411,7 +411,7 @@ const alertes = computed<AlerteCarte[]>(() => {
     out.push({
       id: r.id,
       vehiculeId: r.vehiculeId,
-      titre: `Recharge en anomalie — ${r.vehiculePlaque}`,
+      titre: `Recharge en anomalie - ${r.vehiculePlaque}`,
       detail: `${r.lieu} · ${r.controles.filter(c => !c.ok).length} contrôle(s) en échec`,
       aFaire: 'Ouvrir le dossier carburant →',
       gravite: 'majeur',

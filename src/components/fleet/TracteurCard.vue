@@ -27,7 +27,7 @@
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">VIN</label>
               <input v-if="isEditMode" v-model="form.vin" :class="cls.fieldInput" />
-              <span v-else class="text-[13px] font-mono text-foreground">{{ current.vin ?? '—' }}</span>
+              <span v-else class="text-[13px] font-mono text-foreground">{{ current.vin ?? '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Plaque</label>
@@ -87,15 +87,15 @@
           </div>
         </FormSection>
 
-        <FormSection title="Affectation" :recaps="[current.chauffeurNom ?? '—', current.remorquePlaque ?? 'Sans remorque']">
+        <FormSection title="Affectation" :recaps="[current.chauffeurNom ?? '-', current.remorquePlaque ?? 'Sans remorque']">
           <div class="grid grid-cols-2 gap-x-6 gap-y-4 max-sm:grid-cols-1">
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Chauffeur affecté</label>
-              <span class="text-[13px] text-foreground">{{ current.chauffeurNom ?? '—' }}</span>
+              <span class="text-[13px] text-foreground">{{ current.chauffeurNom ?? '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Remorque attelée</label>
-              <span class="text-[13px] font-mono text-foreground">{{ current.remorquePlaque ?? '—' }}</span>
+              <span class="text-[13px] font-mono text-foreground">{{ current.remorquePlaque ?? '-' }}</span>
             </div>
           </div>
         </FormSection>
@@ -162,16 +162,16 @@ async function handleSave() {
 }
 
 // ── Helpers ────────────────────────────────────────────────────────
-function fmtDate(d?: string) { return d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : '—' }
+function fmtDate(d?: string) { return d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : '-' }
 
 function statutAdminLabel(s?: string) {
-  return ({ en_service: 'En service', hors_service: 'Hors service', archive: 'Archivé' } as any)[s ?? ''] ?? s ?? '—'
+  return ({ en_service: 'En service', hors_service: 'Hors service', archive: 'Archivé' } as any)[s ?? ''] ?? s ?? '-'
 }
 function statutAdminClass(s?: string) {
   return ({ en_service: 'bg-success-bg text-success', hors_service: 'bg-warning-bg text-warning', archive: 'bg-background text-muted-foreground' } as any)[s ?? ''] ?? ''
 }
 function statutOpLabel(s?: string) {
-  return ({ en_mouvement: 'En mouvement', arrete: 'Arrêté', allume_immobile: 'Allumé / immobile', signal_perdu: 'Signal perdu' } as any)[s ?? ''] ?? s ?? '—'
+  return ({ en_mouvement: 'En mouvement', arrete: 'Arrêté', allume_immobile: 'Allumé / immobile', signal_perdu: 'Signal perdu' } as any)[s ?? ''] ?? s ?? '-'
 }
 function statutOpClass(s?: string) {
   return ({ en_mouvement: 'bg-success-bg text-success', arrete: 'bg-primary/10 text-primary', allume_immobile: 'bg-warning-bg text-warning', signal_perdu: 'bg-danger-bg text-danger' } as any)[s ?? ''] ?? ''

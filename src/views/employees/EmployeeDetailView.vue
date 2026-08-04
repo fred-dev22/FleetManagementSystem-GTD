@@ -102,7 +102,7 @@
               <InfoRow label="Nom complet" :value="employee.name" />
               <InfoRow label="Date de naissance" :value="fmtDate(employee.dateNaissance)" />
               <InfoRow label="Email" :value="employee.email" />
-              <InfoRow label="Téléphone" :value="employee.telephone ?? '—'" />
+              <InfoRow label="Téléphone" :value="(employee as any).telephone ?? '-'" />
             </dl>
           </div>
 
@@ -132,7 +132,7 @@
                 <InfoRow label="Département" :value="employee.departement" />
               </dl>
               <dl class="space-y-2.5">
-                <InfoRow label="Manager" :value="employee.managerNom ?? '—'" />
+                <InfoRow label="Manager" :value="(employee as any).managerNom ?? '-'" />
               </dl>
             </div>
           </div>
@@ -205,7 +205,7 @@
                   <AlertTriangle class="w-4 h-4 shrink-0" />
                   <span>
                     <strong>{{ permisJoursRestants }} jour(s)</strong> avant expiration du permis
-                    <span v-if="permisJoursRestants < 30" class="font-semibold"> — Renouvellement urgent</span>
+                    <span v-if="permisJoursRestants < 30" class="font-semibold"> - Renouvellement urgent</span>
                   </span>
                 </div>
               </div>
@@ -247,7 +247,7 @@
                   <AlertTriangle class="w-4 h-4 shrink-0" />
                   <span>
                     <strong>{{ visiteJoursRestants }} jour(s)</strong> avant expiration de la visite médicale
-                    <span v-if="visiteJoursRestants < 30" class="font-semibold"> — Planifier rapidement</span>
+                    <span v-if="visiteJoursRestants < 30" class="font-semibold"> - Planifier rapidement</span>
                   </span>
                 </div>
               </div>

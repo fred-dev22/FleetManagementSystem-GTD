@@ -79,7 +79,7 @@
     </template>
 
     <template #cell-marque="{ item }">
-      <span class="font-medium text-foreground">{{ item.marque ?? '—' }}</span>
+      <span class="font-medium text-foreground">{{ item.marque ?? '-' }}</span>
       <span v-if="item.modele" class="text-muted-foreground text-xs"> / {{ item.modele }}</span>
     </template>
 
@@ -92,11 +92,11 @@
     <template #cell-lien="{ item }">
       <span v-if="item.vehiculeLiePlaque" class="font-mono text-xs text-primary">{{ item.vehiculeLiePlaque }}</span>
       <span v-else-if="item.chauffeurNom" class="text-xs text-gray-600">{{ item.chauffeurNom }}</span>
-      <span v-else class="text-gray-300">—</span>
+      <span v-else class="text-gray-300">-</span>
     </template>
 
     <template #cell-site="{ item }">
-      <span class="text-xs text-gray-600">{{ item.siteAffectation ?? '—' }}</span>
+      <span class="text-xs text-gray-600">{{ item.siteAffectation ?? '-' }}</span>
     </template>
 
     <template #details-panel="{ item }">
@@ -112,14 +112,14 @@
         </div>
         <div class="grid grid-cols-2 gap-2 text-xs">
           <div v-if="item.typeVehicule === 'tracteur'">
-            <div class="text-muted-foreground text-[11px]">Chauffeur</div>{{ item.chauffeurNom ?? '—' }}
+            <div class="text-muted-foreground text-[11px]">Chauffeur</div>{{ item.chauffeurNom ?? '-' }}
           </div>
           <div>
             <div class="text-muted-foreground text-[11px]">{{ item.typeVehicule === 'tracteur' ? 'Remorque' : 'Tracteur' }}</div>
-            <span class="font-mono">{{ item.vehiculeLiePlaque ?? '—' }}</span>
+            <span class="font-mono">{{ item.vehiculeLiePlaque ?? '-' }}</span>
           </div>
           <div>
-            <div class="text-muted-foreground text-[11px]">Site</div>{{ item.siteAffectation ?? '—' }}
+            <div class="text-muted-foreground text-[11px]">Site</div>{{ item.siteAffectation ?? '-' }}
           </div>
           <div v-if="item.typeVehicule === 'tracteur' && item.kilometrage != null">
             <div class="text-muted-foreground text-[11px]">Kilométrage</div>{{ item.kilometrage.toLocaleString('fr-FR') }} km

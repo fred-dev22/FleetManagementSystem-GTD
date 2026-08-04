@@ -28,11 +28,11 @@
       <div class="flex-1 overflow-y-auto px-8 py-6 max-w-3xl mx-auto">
 
         <!-- ═══════════════════════════════════════════════════
-             1. LA RECHARGE — ce qui a été déclaré
+             1. LA RECHARGE - ce qui a été déclaré
              ═══════════════════════════════════════════════════ -->
         <FormSection
           title="La recharge"
-          :recaps="[item.vehiculePlaque, `${item.nombreBons ?? '—'} bon(s)`, fmtL(item.litres)]"
+          :recaps="[item.vehiculePlaque, `${item.nombreBons ?? '-'} bon(s)`, fmtL(item.litres)]"
         >
           <div class="grid grid-cols-2 gap-x-6 gap-y-4 max-sm:grid-cols-1">
             <div class="flex flex-col gap-1">
@@ -49,7 +49,7 @@
             </div>
             <div class="flex flex-col gap-1">
               <label :class="F.fieldLabel">Chauffeur affecté</label>
-              <span class="text-sm text-foreground">{{ item.chauffeurNom ?? '—' }}</span>
+              <span class="text-sm text-foreground">{{ item.chauffeurNom ?? '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
               <label :class="F.fieldLabel">Lieu déclaré</label>
@@ -57,7 +57,7 @@
             </div>
             <div class="flex flex-col gap-1">
               <label :class="F.fieldLabel">Voyage rattaché</label>
-              <span class="text-sm font-mono text-foreground">{{ item.voyageRef ?? '—' }}</span>
+              <span class="text-sm font-mono text-foreground">{{ item.voyageRef ?? '-' }}</span>
             </div>
           </div>
         </FormSection>
@@ -73,11 +73,11 @@
           <div class="grid grid-cols-3 gap-x-6 gap-y-4 max-sm:grid-cols-2">
             <div class="flex flex-col gap-1">
               <label :class="F.fieldLabel">Bons délivrés</label>
-              <span class="text-lg font-bold text-primary">{{ item.nombreBons ?? '—' }}</span>
+              <span class="text-lg font-bold text-primary">{{ item.nombreBons ?? '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
               <label :class="F.fieldLabel">Litres par bon</label>
-              <span class="text-sm text-foreground">{{ item.litresParBon ? fmtL(item.litresParBon) : '—' }}</span>
+              <span class="text-sm text-foreground">{{ item.litresParBon ? fmtL(item.litresParBon) : '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
               <label :class="F.fieldLabel">Litres délivrés</label>
@@ -138,7 +138,7 @@
         </FormSection>
 
         <!-- ═══════════════════════════════════════════════════
-             4. POSITION — la carte du croisement
+             4. POSITION - la carte du croisement
              Ne s'affiche que si l'écart est significatif.
              ═══════════════════════════════════════════════════ -->
         <FormSection
@@ -174,7 +174,7 @@
         </FormSection>
 
         <!-- ═══════════════════════════════════════════════════
-             5. QUALIFICATION — le circuit de refacturation
+             5. QUALIFICATION - le circuit de refacturation
              ═══════════════════════════════════════════════════ -->
         <FormSection
           title="Qualification de l’écart"
@@ -194,7 +194,7 @@
             </div>
             <div class="flex flex-col gap-1 mt-4">
               <label :class="F.fieldLabel">Éléments recueillis</label>
-              <p class="text-sm text-foreground leading-relaxed">{{ item.commentaire || '—' }}</p>
+              <p class="text-sm text-foreground leading-relaxed">{{ item.commentaire || '-' }}</p>
             </div>
           </template>
 
@@ -221,7 +221,77 @@
           </template>
 
           <p v-else class="text-xs text-muted-foreground py-2">
-            Recharge conforme — aucune qualification nécessaire.
+            Recharge conforme - aucune qualification nécessaire.
+          </p>
+        </FormSection>
+
+        <!-- ═══════════════════════════════════════════════════
+             REFACTURATION - deux validations hiérarchiques
+             Une retenue sur rémunération n'est exécutable qu'après
+             validation de niveau 1 puis de niveau 2.
+             ═══════════════════════════════════════════════════ -->
+        <FormSection
+          v-if="circuitOuvert"
+          title="Refacturation interne"
+          :recaps="[LIB_STATUT_RECHARGE[item.statut], item.montantRefacture ? fmtAr(item.montantRefacture) : '-']"
+          :default-open="true"
+        >
+          <div class="flex items-start gap-2.5 bg-warning-bg text-warning rounded-lg px-3.5 py-2.5 mb-3">
+            <ShieldAlert class="w-4 h-4 shrink-0 mt-px" />
+            <p class="text-xs leading-relaxed">
+              L’écart est qualifié « {{ LIB_QUALIF[item.qualification!] }} », cause imputable au conducteur.
+              Aucune retenue n’est exécutable sur une seule signature : deux validations hiérarchiques
+              successives sont requises, et la grille doit rester conforme au droit du travail applicable.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-3 gap-x-6 gap-y-3 mb-4 max-sm:grid-cols-2">
+            <div class="flex flex-col gap-1">
+              <label :class="F.fieldLabel">Montant proposé</label>
+              <span class="text-sm font-semibold text-foreground">{{ item.montantRefacture ? fmtAr(item.montantRefacture) : '-' }}</span>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label :class="F.fieldLabel">Niveau attendu</label>
+              <span class="text-sm text-foreground">
+                {{ niveauAttendu ? `Validation N${niveauAttendu}` : 'Circuit terminé' }}
+              </span>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label :class="F.fieldLabel">Statut</label>
+              <span class="text-sm font-medium" :class="CLS_STATUT_REFACT[item.statut]">
+                {{ LIB_STATUT_RECHARGE[item.statut] }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Le même composant de frise que les congés et les notes de frais -->
+          <ValidationTimeline :history="friseRefact" />
+
+          <template v-if="niveauAttendu">
+            <div :class="F.field" class="mt-4 mb-2.5">
+              <label :class="F.fieldLabel">Commentaire du valideur</label>
+              <textarea v-model="commentaireValidation" rows="2" :class="F.fieldTextarea"
+                placeholder="Motivation de la décision…" />
+            </div>
+            <div class="flex items-center gap-2">
+              <button :class="Lc.btnPrimary" @click="deciderValidation('approuve')">
+                Approuver - niveau {{ niveauAttendu }}
+              </button>
+              <button :class="Lc.btnOutline" @click="deciderValidation('rejete')">
+                Rejeter
+              </button>
+            </div>
+          </template>
+
+          <p v-else-if="item.statut === 'refacture'"
+            class="text-[11px] text-success mt-4 flex items-start gap-1.5">
+            <CheckCircle2 class="w-3.5 h-3.5 shrink-0 mt-px" />
+            Les deux validations sont acquises. La retenue peut être transmise au circuit de paie
+            du module Ressources humaines.
+          </p>
+          <p v-else-if="item.statut === 'classe'"
+            class="text-[11px] text-muted-foreground mt-4">
+            Dossier classé sans suite - aucune retenue appliquée.
           </p>
         </FormSection>
 
@@ -236,27 +306,37 @@
  * Même coquille et même langage visuel que la fiche véhicule.
  */
 import { ref, computed } from 'vue'
-import { CheckCircle2, XCircle } from 'lucide-vue-next'
+import { CheckCircle2, XCircle, ShieldAlert } from 'lucide-vue-next'
 import CardModalShell from '../shared/CardModalShell.vue'
 import FormSection    from '../ui/form-field/FormSection.vue'
 import FleetMap       from './FleetMap.vue'
-import { useCarburantStore, LIB_CANAL, LIB_QUALIF } from '../../stores/carburant.ts'
-import type { RechargeCarburant, StatutRecharge, QualifEcartCarburant, MapMarker } from '../../types/fms.ts'
-import { fmtDateTime, fmtL, fmtAr } from '../../lib/fmsUtils.ts'
-import * as F  from '../../lib/formClasses.ts'
-import * as Lc from '../../lib/listClasses.ts'
+import ValidationTimeline from '../ui/ValidationTimeline.vue'
+import { useCarburantStore, LIB_CANAL, LIB_QUALIF } from '../../stores/carburant'
+import { useAuthStore } from '../../stores/auth'
+import type {
+  RechargeCarburant, StatutRecharge, QualifEcartCarburant, MapMarker,
+} from '../../types/fms'
+import type { ValidationStep } from '../../types'
+import { fmtDateTime, fmtL, fmtAr } from '../../lib/fmsUtils'
+import * as F  from '../../lib/formClasses'
+import * as Lc from '../../lib/listClasses'
 
 const props = defineProps<{ recharge: RechargeCarburant }>()
 const emit  = defineEmits<{ close: []; navigate: [id: string] }>()
 
 const store = useCarburantStore()
+const auth  = useAuthStore()
 const item  = computed(() => store.getById(props.recharge.id) ?? props.recharge)
 
 const STATUT: Record<StatutRecharge, { label: string; cls: string }> = {
-  valide:           { label: 'Conforme',         cls: 'bg-success-bg text-success' },
-  anomalie:         { label: 'En anomalie',      cls: 'bg-danger-bg text-danger'   },
-  en_qualification: { label: 'En qualification', cls: 'bg-warning-bg text-warning' },
-  qualifie:         { label: 'Qualifiée',        cls: 'bg-gray-100 text-gray-600'  },
+  valide:           { label: 'Conforme',          cls: 'bg-success-bg text-success' },
+  anomalie:         { label: 'En anomalie',       cls: 'bg-danger-bg text-danger'   },
+  en_qualification: { label: 'En qualification',  cls: 'bg-warning-bg text-warning' },
+  qualifie:         { label: 'Qualifiée',         cls: 'bg-gray-100 text-gray-600'  },
+  validation_1:     { label: 'Validation 1/2',    cls: 'bg-warning-bg text-warning' },
+  validation_2:     { label: 'Validation 2/2',    cls: 'bg-warning-bg text-warning' },
+  refacture:        { label: 'Refacturée',        cls: 'bg-danger-bg text-danger'   },
+  classe:           { label: 'Classée sans suite',cls: 'bg-gray-100 text-gray-600'  },
 }
 
 const nbEchecs = computed(() => item.value.controles.filter(c => !c.ok).length)
@@ -273,13 +353,99 @@ const marqueurs = computed<MapMarker[]>(() => {
   ]
 })
 
+/* ── Refacturation : circuit à deux validations ────────────── */
+const LIB_STATUT_RECHARGE: Record<StatutRecharge, string> = {
+  valide:           'Conforme',
+  anomalie:         'En anomalie',
+  en_qualification: 'En qualification',
+  qualifie:         'Qualifiée',
+  validation_1:     'En attente de validation N1',
+  validation_2:     'En attente de validation N2',
+  refacture:        'Refacturée - retenue exécutable',
+  classe:           'Classée sans suite',
+}
+
+const CLS_STATUT_REFACT: Record<StatutRecharge, string> = {
+  valide:           'text-success',
+  anomalie:         'text-danger',
+  en_qualification: 'text-warning',
+  qualifie:         'text-muted-foreground',
+  validation_1:     'text-warning',
+  validation_2:     'text-info',
+  refacture:        'text-success',
+  classe:           'text-muted-foreground',
+}
+
+/** Le circuit ne s'ouvre que sur une cause imputable au conducteur. */
+const circuitOuvert = computed(() =>
+  ['validation_1', 'validation_2', 'refacture', 'classe'].includes(item.value.statut)
+  && (item.value.qualification === 'conduite' || item.value.qualification === 'prelevement'))
+
+const niveauAttendu = computed(() => store.niveauAttendu(item.value.id))
+const commentaireValidation = ref('')
+
+const acteur = computed(() => auth.user?.name ?? 'Exploitation')
+const roleActeur = computed(() =>
+  store.niveauAttendu(item.value.id) === 1 ? 'Chef de département' : 'Direction')
+
+const initiales = (n: string) =>
+  n.split(' ').map(x => x[0] ?? '').join('').slice(0, 2).toUpperCase()
+
+function deciderValidation(decision: 'approuve' | 'rejete') {
+  const niveau = niveauAttendu.value
+  if (!niveau) return
+  store.valider(item.value.id, niveau, acteur.value, roleActeur.value, decision,
+    commentaireValidation.value || undefined)
+  commentaireValidation.value = ''
+}
+
+/** Frise alimentant le composant partagé, comme pour les congés et les frais. */
+const friseRefact = computed<ValidationStep[]>(() => {
+  const r = item.value
+  const out: ValidationStep[] = [{
+    level: 'employee',
+    actorName: 'Exploitation',
+    actorInitials: 'EX',
+    action: 'submitted',
+    date: r.date,
+    comment: r.commentaire || `Écart qualifié « ${LIB_QUALIF[r.qualification!] ?? '-'} »`,
+  }]
+
+  const faites = r.validations ?? []
+  ;([1, 2] as const).forEach(niv => {
+    const v = faites.find(x => x.niveau === niv)
+    if (v) {
+      out.push({
+        level: niv === 1 ? 'n1' : 'n2',
+        actorName: v.valideur,
+        actorInitials: initiales(v.valideur),
+        action: v.decision === 'approuve' ? 'approved' : 'rejected',
+        date: v.date,
+        comment: v.commentaire,
+      })
+    } else if (r.statut !== 'classe') {
+      out.push({
+        level: niv === 1 ? 'n1' : 'n2',
+        actorName: niv === 1 ? 'Chef de département' : 'Direction',
+        actorInitials: `N${niv}`,
+        action: 'pending',
+        date: '',
+      })
+    }
+  })
+
+  return out
+})
+
 /* ── Qualification ────────────────────────────────────────── */
 const qualif      = ref<QualifEcartCarburant | ''>('')
 const commentaire = ref('')
 
+const montantPropose = ref<number | undefined>(undefined)
+
 function qualifier() {
   if (!qualif.value) return
-  store.qualifier(item.value.id, qualif.value, commentaire.value)
+  store.qualifier(item.value.id, qualif.value, commentaire.value, montantPropose.value)
   qualif.value = ''
   commentaire.value = ''
 }

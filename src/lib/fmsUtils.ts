@@ -253,6 +253,148 @@ export interface AnalyseConformite {
  * @param rayonKm rayon de validation du passage — 5 km par défaut,
  *                cohérent avec la précision d'un relevé télématique en zone rurale.
  */
+export interface SiphonnageSignal {
+  voyageId: string
+  voyageRef: string
+  vehiculePlaque?: string
+  chauffeurNom?: string
+  arretsNonJustifies: number
+  dureeArretMaxMin?: number
+  ecartConsoPct: number | null
+  ecartPourMille: number | null
+  toleranceCoulage: number
+}
+
+export interface TempsConduiteAnalyse {
+  tccMaxMin: number
+  pauseApresTccMin: number
+  tcjMaxMin: number
+  ttjMaxMin: number
+}
+
+export interface DepassementTemps {
+  libelle: string
+  valeurMin: number
+  seuilMin: number
+  depassementMin: number
+  gravite: 'critique' | 'warning'
+  siteNom?: string
+}
+
+export interface AnalyseTempsConduiteResult {
+  conduiteTotaleMin: number
+  conduiteContinueMaxMin: number
+  pausesTotalesMin: number
+  travailTotalMin: number
+  conforme: boolean
+  depassements: DepassementTemps[]
+}
+
+export function detecterSiphonnage(input: SiphonnageSignal) {
+  const score = [
+    input.arretsNonJustifies > 0 ? 1 : 0,
+    input.ecartPourMille != null && input.ecartPourMille > input.toleranceCoulage ? 1 : 0,
+    input.ecartConsoPct != null && Math.abs(input.ecartConsoPct) > 8 ? 1 : 0,
+  ].reduce((s, n) => s + n, 0)
+
+  const prioritaire = score >= 2
+  const signaux = [
+    {
+      code: 'arrets_non_justifies',
+      libelle: 'Arrêts hors site non justifiés',
+      detail: `${input.arretsNonJustifies} arrêt(s) hors site sans justification`,
+      present: input.arretsNonJustifies > 0,
+    },
+    {
+      code: 'ecart_coulage',
+      libelle: 'Écart de coulage',
+      detail: `Écart de ${input.ecartPourMille ?? 0}‰ > tolérance ${input.toleranceCoulage}‰`,
+      present: input.ecartPourMille != null && input.ecartPourMille > input.toleranceCoulage,
+    },
+    {
+      code: 'ecart_conso',
+      libelle: 'Écart de consommation',
+      detail: `Écart de ${(input.ecartConsoPct ?? 0).toFixed(1)}%`,
+      present: input.ecartConsoPct != null && Math.abs(input.ecartConsoPct) > 8,
+    },
+  ]
+
+  return {
+    risque: score >= 2 ? 'elevé' : score === 1 ? 'modere' : 'faible',
+    score,
+    prioritaire,
+    nbSignaux: score,
+    signaux,
+    arretsNonJustifies: input.arretsNonJustifies,
+    dureeArretMaxMin: input.dureeArretMaxMin,
+    ecartConsoPct: input.ecartConsoPct,
+    ecartPourMille: input.ecartPourMille,
+  }
+}
+
+export function analyserTempsConduite(
+  etapes: Array<{ role: string; heureArrivee?: string; heureDepart?: string; pausePrevueMin?: number; siteNom?: string }>,
+  params: TempsConduiteAnalyse,
+): AnalyseTempsConduiteResult {
+  const segments = etapes
+    .filter(e => e.role === 'livraison' || e.role === 'chargement')
+    .map(e => {
+      const arrivee = e.heureArrivee ? new Date(e.heureArrivee).getTime() : null
+      const depart = e.heureDepart ? new Date(e.heureDepart).getTime() : null
+      if (arrivee == null || depart == null) return null
+      return {
+        arrivee,
+        depart,
+        dureeMin: Math.max(0, Math.round((depart - arrivee) / 60000)),
+        siteNom: e.siteNom,
+      }
+    })
+    .filter((x): x is { arrivee: number; depart: number; dureeMin: number; siteNom?: string } => x !== null)
+
+  const conduiteTotaleMin = segments.reduce((s, x) => s + x.dureeMin, 0)
+  const conduiteContinueMaxMin = segments.reduce((m, x) => Math.max(m, x.dureeMin), 0)
+  const pausesTotalesMin = etapes.reduce((s, e) => s + (e.pausePrevueMin ?? 0), 0)
+  const travailTotalMin = conduiteTotaleMin + pausesTotalesMin
+
+  const depassements: DepassementTemps[] = []
+  if (conduiteTotaleMin > params.tcjMaxMin) {
+    depassements.push({
+      libelle: 'Conduite totale',
+      valeurMin: conduiteTotaleMin,
+      seuilMin: params.tcjMaxMin,
+      depassementMin: conduiteTotaleMin - params.tcjMaxMin,
+      gravite: 'warning',
+    })
+  }
+  if (conduiteContinueMaxMin > params.tccMaxMin) {
+    depassements.push({
+      libelle: 'Conduite continue maximum',
+      valeurMin: conduiteContinueMaxMin,
+      seuilMin: params.tccMaxMin,
+      depassementMin: conduiteContinueMaxMin - params.tccMaxMin,
+      gravite: 'critique',
+    })
+  }
+  if (travailTotalMin > params.ttjMaxMin) {
+    depassements.push({
+      libelle: 'Travail journalier',
+      valeurMin: travailTotalMin,
+      seuilMin: params.ttjMaxMin,
+      depassementMin: travailTotalMin - params.ttjMaxMin,
+      gravite: 'warning',
+    })
+  }
+
+  return {
+    conduiteTotaleMin,
+    conduiteContinueMaxMin,
+    pausesTotalesMin,
+    travailTotalMin,
+    conforme: depassements.length === 0,
+    depassements,
+  }
+}
+
 export function analyserConformite(
   etapes: Array<{ id: string; ordre: number; siteNom: string; role: string; lat: number; lng: number }>,
   traceReel: LatLng[],

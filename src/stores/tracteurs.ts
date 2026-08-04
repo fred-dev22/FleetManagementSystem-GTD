@@ -13,6 +13,7 @@ import type {
 const mockTracteurs: Tracteur[] = [
   {
     id: 'TRC-001',
+    typeVehicule: 'tracteur',
     vin: 'YV2RT40A4SB123456',
     plaque: '1234 TAN',
     marque: 'Volvo',
@@ -32,6 +33,7 @@ const mockTracteurs: Tracteur[] = [
   },
   {
     id: 'TRC-002',
+    typeVehicule: 'tracteur',
     vin: 'WDB9634031L234567',
     plaque: '2345 TNR',
     marque: 'Mercedes',
@@ -49,6 +51,7 @@ const mockTracteurs: Tracteur[] = [
   },
   {
     id: 'TRC-003',
+    typeVehicule: 'tracteur',
     vin: 'WMAN63ZZ5KM345678',
     plaque: '3456 MJN',
     marque: 'MAN',
@@ -68,6 +71,7 @@ const mockTracteurs: Tracteur[] = [
   },
   {
     id: 'TRC-004',
+    typeVehicule: 'tracteur',
     vin: 'YS2R4X20003456789',
     plaque: '4567 FIA',
     marque: 'Scania',
@@ -92,6 +96,7 @@ const mockTracteurs: Tracteur[] = [
   },
   {
     id: 'TRC-005',
+    typeVehicule: 'tracteur',
     vin: 'XLR0T69XZE4567890',
     plaque: '5678 TAN',
     marque: 'DAF',
@@ -107,6 +112,7 @@ const mockTracteurs: Tracteur[] = [
   },
   {
     id: 'TRC-006',
+    typeVehicule: 'tracteur',
     vin: 'WDB9634031L567891',
     plaque: '6789 TNR',
     marque: 'Mercedes',
@@ -126,6 +132,7 @@ const mockTracteurs: Tracteur[] = [
   },
   {
     id: 'TRC-007',
+    typeVehicule: 'tracteur',
     vin: 'YV2RT40A4SB678912',
     plaque: '7890 TAN',
     marque: 'Volvo',
@@ -139,6 +146,7 @@ const mockTracteurs: Tracteur[] = [
   },
   {
     id: 'TRC-008',
+    typeVehicule: 'tracteur',
     vin: 'WMAN63ZZ5KM789123',
     plaque: '8901 MJN',
     marque: 'MAN',

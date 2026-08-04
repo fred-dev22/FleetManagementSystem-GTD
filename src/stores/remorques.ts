@@ -6,6 +6,7 @@ export const useRemorquesStore = defineStore('remorques', () => {
   const remorques = ref<Remorque[]>([
     {
       id: 'REM-001',
+      typeVehicule: 'remorque',
       vin: 'VIN1TR00000000001',
       plaque: '1234 TAR',
       type: 'Citerne' as TypeRemorque,
@@ -18,6 +19,7 @@ export const useRemorquesStore = defineStore('remorques', () => {
     },
     {
       id: 'REM-002',
+      typeVehicule: 'remorque',
       vin: 'VIN1TR00000000002',
       plaque: '2345 TAR',
       type: 'Citerne' as TypeRemorque,
@@ -30,6 +32,7 @@ export const useRemorquesStore = defineStore('remorques', () => {
     },
     {
       id: 'REM-003',
+      typeVehicule: 'remorque',
       vin: 'VIN1TR00000000003',
       plaque: '3456 MJN',
       type: 'Citerne' as TypeRemorque,
@@ -42,6 +45,7 @@ export const useRemorquesStore = defineStore('remorques', () => {
     },
     {
       id: 'REM-004',
+      typeVehicule: 'remorque',
       vin: 'VIN1TR00000000004',
       plaque: '4567 TNR',
       type: 'Citerne' as TypeRemorque,
@@ -54,6 +58,7 @@ export const useRemorquesStore = defineStore('remorques', () => {
     },
     {
       id: 'REM-005',
+      typeVehicule: 'remorque',
       vin: 'VIN1TR00000000005',
       plaque: '5678 TAR',
       type: 'Bâchée' as TypeRemorque,
@@ -66,6 +71,7 @@ export const useRemorquesStore = defineStore('remorques', () => {
     },
     {
       id: 'REM-006',
+      typeVehicule: 'remorque',
       vin: 'VIN1TR00000000006',
       plaque: '6789 TAR',
       type: 'Bâchée' as TypeRemorque,
@@ -78,6 +84,7 @@ export const useRemorquesStore = defineStore('remorques', () => {
     },
     {
       id: 'REM-007',
+      typeVehicule: 'remorque',
       vin: 'VIN1TR00000000007',
       plaque: '7890 TNR',
       type: 'Bâchée' as TypeRemorque,
@@ -90,6 +97,7 @@ export const useRemorquesStore = defineStore('remorques', () => {
     },
     {
       id: 'REM-008',
+      typeVehicule: 'remorque',
       vin: 'VIN1TR00000000008',
       plaque: '8901 TAR',
       type: 'Bâchée' as TypeRemorque,
@@ -102,6 +110,7 @@ export const useRemorquesStore = defineStore('remorques', () => {
     },
     {
       id: 'REM-009',
+      typeVehicule: 'remorque',
       vin: 'VIN1TR00000000009',
       plaque: '9012 MJN',
       type: 'Plateau' as TypeRemorque,
@@ -114,6 +123,7 @@ export const useRemorquesStore = defineStore('remorques', () => {
     },
     {
       id: 'REM-010',
+      typeVehicule: 'remorque',
       vin: 'VIN1TR00000000010',
       plaque: '0123 TNR',
       type: 'Plateau' as TypeRemorque,

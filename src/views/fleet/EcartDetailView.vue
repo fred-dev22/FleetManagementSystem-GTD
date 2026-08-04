@@ -34,7 +34,7 @@
       </div>
 
       <!-- ── Bandeau : le système mesure, il ne présume pas ────── -->
-      <div v-if="ecart.nature === 'a_qualifier'"
+      <!-- <div v-if="ecart.nature === 'a_qualifier'"
         class="flex items-start gap-2.5 bg-warning-bg text-warning rounded-lg px-3.5 py-2.5 mb-3.5">
         <Info class="w-4 h-4 shrink-0 mt-px" />
         <p class="text-xs leading-relaxed">
@@ -42,7 +42,7 @@
           il ne présume d’aucune intention. Seule une qualification en <strong>déviation non justifiée</strong> par
           l’exploitation alimente le score du conducteur et peut ouvrir un dossier disciplinaire.
         </p>
-      </div>
+      </div> -->
 
       <div class="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-3.5 items-start">
 
@@ -107,7 +107,7 @@
                   </button>
                 </dd></div>
               <div class="col-span-2"><dt class="text-muted-foreground text-[11px]">Lieu</dt>
-                <dd>{{ ecart.lieu ?? '—' }}</dd></div>
+                <dd>{{ ecart.lieu ?? '-' }}</dd></div>
               <div class="col-span-2"><dt class="text-muted-foreground text-[11px]">Coordonnées</dt>
                 <dd class="font-mono text-[11px]">{{ ecart.lat.toFixed(4) }}, {{ ecart.lng.toFixed(4) }}</dd></div>
             </dl>
@@ -161,7 +161,7 @@
               <div :class="F.field" class="mb-2.5">
                 <label :class="F.fieldLabel">Motif <span class="text-danger">*</span></label>
                 <textarea v-model="motif" rows="3" :class="F.fieldTextarea"
-                  placeholder="Motiver la décision — c’est ce qui rend le dossier opposable." />
+                  placeholder="Motiver la décision - c’est ce qui rend le dossier opposable." />
               </div>
 
               <div v-if="nature === 'non_justifiee'" :class="F.field" class="mb-2.5">
@@ -190,7 +190,7 @@
                 <div><dt class="text-muted-foreground text-[11px]">Motif</dt>
                   <dd class="leading-relaxed">{{ ecart.motifQualification }}</dd></div>
                 <div><dt class="text-muted-foreground text-[11px]">Qualifié par</dt>
-                  <dd>{{ ecart.qualifiePar }} — {{ fmtDateTime(ecart.qualifieLe) }}</dd></div>
+                  <dd>{{ ecart.qualifiePar }} - {{ fmtDateTime(ecart.qualifieLe) }}</dd></div>
                 <div v-if="ecart.decision"><dt class="text-muted-foreground text-[11px]">Suite donnée</dt>
                   <dd>{{ LIB_DECISION[ecart.decision] }}<span v-if="ecart.refCodis" class="font-mono"> · {{ ecart.refCodis }}</span></dd></div>
               </dl>
@@ -204,7 +204,7 @@
 
 <script setup lang="ts">
 /**
- * Fiche d'écart — écran central de la démonstration « conformité d'itinéraire ».
+ * Fiche d'écart - écran central de la démonstration « conformité d'itinéraire ».
  * Superpose l'itinéraire de référence et le trajet réellement suivi, présente
  * les mesures, la chronologie, et porte le circuit de qualification en trois natures.
  */
@@ -273,12 +273,12 @@ const mesures = computed(() => {
   return [
     { label: 'Durée hors séquence', value: fmtDuree(e.dureeMin),
       cls: (e.dureeMin ?? 0) > 30 ? 'text-danger' : 'text-foreground' },
-    { label: 'Distance parcourue hors séquence', value: e.distanceKm != null ? `${e.distanceKm} km` : '—',
+    { label: 'Distance parcourue hors séquence', value: e.distanceKm != null ? `${e.distanceKm} km` : '-',
       cls: 'text-foreground' },
     { label: 'Écart latéral maximal', value: e.ecartLateralMaxM != null
-        ? `${(e.ecartLateralMaxM / 1000).toFixed(1)} km` : '—',
+        ? `${(e.ecartLateralMaxM / 1000).toFixed(1)} km` : '-',
       cls: (e.ecartLateralMaxM ?? 0) > 5000 ? 'text-danger' : 'text-foreground' },
-    { label: 'Seuil configuré', value: typeConfig.value?.seuilValeur != null ? `${typeConfig.value.seuilValeur} ${typeConfig.value.seuilUnite ?? ''}` : '—',
+    { label: 'Seuil configuré', value: typeConfig.value?.seuilValeur != null ? `${typeConfig.value.seuilValeur} ${typeConfig.value.seuilUnite ?? ''}` : '-',
       cls: 'text-muted-foreground' },
   ]
 })
@@ -293,7 +293,7 @@ const chronologie = computed(() => {
   voyagesStore.arretsDuVoyage(e.voyageId)
     .filter(a => !a.dansSiteDeclare)
     .forEach(a => out.push({
-      titre: `Arrêt non planifié — ${fmtDuree(a.dureeMin)}`,
+      titre: `Arrêt non planifié - ${fmtDuree(a.dureeMin)}`,
       heure: fmtHeure(a.debut),
       detail: a.lieu,
       cls: a.justifie ? 'bg-success' : 'bg-danger',
@@ -306,7 +306,7 @@ const chronologie = computed(() => {
   if (e.justifieLe) out.push({ titre: 'Justification déposée par le chauffeur',
     heure: fmtDateTime(e.justifieLe), cls: 'bg-info' })
 
-  if (e.qualifieLe) out.push({ titre: `Qualifié — ${LIB_NATURE[e.nature].label}`,
+  if (e.qualifieLe) out.push({ titre: `Qualifié - ${LIB_NATURE[e.nature].label}`,
     heure: fmtDateTime(e.qualifieLe), detail: e.qualifiePar, cls: 'bg-foreground' })
 
   return out

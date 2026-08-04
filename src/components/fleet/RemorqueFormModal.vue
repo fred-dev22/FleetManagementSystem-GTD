@@ -90,10 +90,10 @@ watch(() => props.modelValue, (open) => {
     if (props.editId) {
       const r = store.getRemorqueById(props.editId)
       if (r) {
-        form.vin = r.vin
+        form.vin = r.vin ?? ''
         form.plaque = r.plaque
-        form.type = r.type
-        form.capacite = r.capacite
+        form.type = r.type ?? ''
+        form.capacite = r.capacite ?? ''
         form.dateMiseEnCirculation = r.dateMiseEnCirculation ?? ''
       }
     } else {

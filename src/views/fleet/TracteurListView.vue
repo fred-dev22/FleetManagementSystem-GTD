@@ -62,10 +62,10 @@
       <span class="text-muted-foreground text-xs"> / {{ item.modele }}</span>
     </template>
     <template #cell-chauffeur="{ item }">
-      <span class="text-muted-foreground text-xs">{{ item.chauffeurNom ?? '—' }}</span>
+      <span class="text-muted-foreground text-xs">{{ item.chauffeurNom ?? '-' }}</span>
     </template>
     <template #cell-remorque="{ item }">
-      <span class="font-mono text-xs text-muted-foreground">{{ item.remorquePlaque ?? '—' }}</span>
+      <span class="font-mono text-xs text-muted-foreground">{{ item.remorquePlaque ?? '-' }}</span>
     </template>
     <template #cell-statutAdmin="{ item }">
       <span :class="['text-[11px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap', statutAdminClass(item.statutAdmin)]">{{ statutAdminLabel(item.statutAdmin) }}</span>
@@ -94,8 +94,8 @@
           <span :class="['text-[11px] font-medium px-2 py-0.5 rounded-full', statutOpClass(item.statutOp)]">{{ statutOpLabel(item.statutOp) }}</span>
         </div>
         <div class="grid grid-cols-2 gap-2 text-[12px]">
-          <div><div class="text-muted-foreground text-[11px]">Chauffeur</div>{{ item.chauffeurNom ?? '—' }}</div>
-          <div><div class="text-muted-foreground text-[11px]">Remorque</div><span class="font-mono">{{ item.remorquePlaque ?? '—' }}</span></div>
+          <div><div class="text-muted-foreground text-[11px]">Chauffeur</div>{{ item.chauffeurNom ?? '-' }}</div>
+          <div><div class="text-muted-foreground text-[11px]">Remorque</div><span class="font-mono">{{ item.remorquePlaque ?? '-' }}</span></div>
           <div><div class="text-muted-foreground text-[11px]">Kilométrage</div>{{ (item.kilometrage ?? 0).toLocaleString('fr-FR') }} km</div>
           <div>
             <div class="text-muted-foreground text-[11px]">Carburant</div>
@@ -203,13 +203,13 @@ const pageItems  = computed(() => {
 })
 
 function statutAdminLabel(s?: string) {
-  return ({ en_service: 'En service', hors_service: 'Hors service', archive: 'Archivé' } as any)[s ?? ''] ?? s ?? '—'
+  return ({ en_service: 'En service', hors_service: 'Hors service', archive: 'Archivé' } as any)[s ?? ''] ?? s ?? '-'
 }
 function statutAdminClass(s?: string) {
   return ({ en_service: 'bg-success-bg text-success', hors_service: 'bg-warning-bg text-warning', archive: 'bg-background text-muted-foreground border border-border' } as any)[s ?? ''] ?? ''
 }
 function statutOpLabel(s?: string) {
-  return ({ en_mouvement: 'En mouvement', arrete: 'Arrêté', allume_immobile: 'Allumé / immobile', signal_perdu: 'Signal perdu' } as any)[s ?? ''] ?? s ?? '—'
+  return ({ en_mouvement: 'En mouvement', arrete: 'Arrêté', allume_immobile: 'Allumé / immobile', signal_perdu: 'Signal perdu' } as any)[s ?? ''] ?? s ?? '-'
 }
 function statutOpClass(s?: string) {
   return ({ en_mouvement: 'bg-success-bg text-success', arrete: 'bg-primary/10 text-primary', allume_immobile: 'bg-warning-bg text-warning', signal_perdu: 'bg-danger-bg text-danger' } as any)[s ?? ''] ?? ''

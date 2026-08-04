@@ -276,7 +276,7 @@ const attelages = computed(() =>
 )
 
 const documents = computed(() =>
-  documentsStore.getDocsByVehicule(id.value, 'tracteur')
+  documentsStore.getDocsByVehicule(id.value)
 )
 
 const historiquePlaques = computed(() =>
@@ -290,7 +290,7 @@ const statutAdminLabel = computed(() => {
     hors_service: 'Hors service',
     archive: 'Archivé',
   }
-  return map[tracteur.value?.statutAdmin ?? ''] ?? tracteur.value?.statutAdmin ?? '—'
+  return map[tracteur.value?.statutAdmin ?? ''] ?? tracteur.value?.statutAdmin ?? '-'
 })
 
 const statutAdminClass = computed(() => {
@@ -309,7 +309,7 @@ const statutOpLabel = computed(() => {
     arrete: 'Arrêté',
     signal_perdu: 'Signal perdu',
   }
-  return map[tracteur.value?.statutOp ?? ''] ?? tracteur.value?.statutOp ?? '—'
+  return map[tracteur.value?.statutOp ?? ''] ?? tracteur.value?.statutOp ?? '-'
 })
 
 const statutOpClass = computed(() => {
@@ -335,7 +335,9 @@ const carburantClass = computed(() => {
 const TODAY = new Date('2026-06-28')
 
 function docStatus(doc: DocumentVehicule): 'expired' | 'soon' | 'ok' {
+  if (!doc.dateExpiration) return 'ok'
   const exp = new Date(doc.dateExpiration)
+  if (Number.isNaN(exp.getTime())) return 'ok'
   if (exp < TODAY) return 'expired'
   const diff = (exp.getTime() - TODAY.getTime()) / (1000 * 60 * 60 * 24)
   if (diff <= 30) return 'soon'
@@ -380,17 +382,17 @@ function handleArchiver() {
 
 // ── Format helpers ───────────────────────────────────────────────
 function formatDate(d?: string): string {
-  if (!d) return '—'
+  if (!d) return '-'
   return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 function formatDateTime(d?: string): string {
-  if (!d) return '—'
+  if (!d) return '-'
   return new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 function formatKm(km?: number): string {
-  if (km == null) return '—'
+  if (km == null) return '-'
   return km.toLocaleString('fr-FR') + ' km'
 }
 </script>

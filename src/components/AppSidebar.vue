@@ -43,6 +43,7 @@
   <!-- ── NOUVEAU : l'exploitation ── -->
   <SidebarSection label="Exploitation">
     <SidebarItem :icon="Package"     label="Voyages"    :to="{ name: 'fleet-voyages' }" />
+    <!-- <SidebarItem :icon="Route"       label="Trajets"    :to="{ name: 'fleet-trajets' }" /> -->
     <SidebarItem :icon="ShieldAlert" label="Conformité" :to="{ name: 'fleet-ecarts' }" />
     <SidebarItem :icon="Fuel"        label="Carburant"  :to="{ name: 'fleet-carburant' }" />
   </SidebarSection>
@@ -61,6 +62,10 @@
   <SidebarSection label="Sites & Géofences">
     <SidebarItem :icon="MapPinned" label="Sites" :to="{ name: 'fleet-sites' }" />
   </SidebarSection>
+
+  <!-- <SidebarSection label="Registres">
+    <SidebarItem :icon="ClipboardCheck" label="Registres" :to="{ name: 'fleet-registres' }" />
+  </SidebarSection> -->
 
   <SidebarSection label="Documents">
     <SidebarItem :icon="FileText" label="Documents" :to="{ name: 'fleet-documents' }" />
@@ -101,9 +106,9 @@
 
 <script setup lang="ts">
 import { computed, defineComponent, h, type Component, type PropType } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import {
-  Building, CalendarDays, CalendarOff, CalendarRange, ClipboardCheck, Coins, Cpu, FileText, Fuel, LayoutDashboard, Link2, MapPin, MapPinned, Network, Package, PieChart, Plane, Receipt, Settings, ShieldAlert, Truck, UserCheck, UserCheck2, Users,
+  Building, CalendarDays, CalendarOff, CalendarRange, ClipboardCheck, Coins, Cpu, FileText, Fuel, LayoutDashboard, Link2, MapPin, MapPinned, Network, Package, PieChart, Plane, Receipt, Route, Settings, ShieldAlert, Truck, UserCheck, UserCheck2, Users,
 } from 'lucide-vue-next'
 import { useAuthStore }       from '../stores/auth'
 import { useNavigationStore } from '../stores/navigation'
@@ -146,6 +151,25 @@ const SidebarItem = defineComponent({
     forceActive: { type: Boolean, default: false },
   },
   setup(props) {
+    const router = useRouter()
+
+    /**
+     * Garde défensive.
+     *
+     * RouterLink lève une exception si la route nommée n'existe pas, et
+     * l'exception interrompt le rendu de TOUT ce qui suit dans la barre —
+     * les sections suivantes disparaissent sans message d'erreur visible.
+     *
+     * On vérifie donc l'existence de la route avant de créer le lien.
+     * Une entrée dont la route manque s'affiche grisée et non cliquable,
+     * au lieu de faire disparaître la moitié du menu.
+     */
+    const routeExiste = computed(() => {
+      const nom = (props.to as { name?: string }).name
+      if (!nom) return true          // chemin littéral : rien à vérifier
+      return router.hasRoute(nom)
+    })
+
     return () => {
       const iconEl  = h(props.icon, { class: 'w-4 h-4 shrink-0', 'aria-hidden': 'true' })
       const labelEl = h('span', { class: 'flex-1' }, props.label)
@@ -153,6 +177,14 @@ const SidebarItem = defineComponent({
         ? h('span', { class: props.badgeOrange ? badgeOrangeClass : badgeClass }, String(props.badge))
         : null
       const children = [iconEl, labelEl, badgeEl].filter(Boolean)
+
+      if (!routeExiste.value) {
+        return h('div', {
+          class: itemClass + ' opacity-40 cursor-not-allowed',
+          title: 'Écran non installé',
+        }, children)
+      }
+
       return h(RouterLink, {
         to: props.to,
         class: props.forceActive ? [itemClass, itemActiveClass] : itemClass,

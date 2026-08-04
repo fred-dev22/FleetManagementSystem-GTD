@@ -7,7 +7,7 @@
           {{ isEdit ? 'Modifier la remorque' : 'Nouvelle remorque' }}
         </h1>
         <p class="form-card__subtitle" v-if="isEdit && remorque">
-          {{ remorque.plaque }} — {{ remorque.type }}
+          {{ remorque.plaque }} - {{ remorque.type }}
         </p>
       </div>
 

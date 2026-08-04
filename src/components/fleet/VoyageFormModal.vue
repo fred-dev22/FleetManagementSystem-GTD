@@ -22,7 +22,7 @@
             <select v-model="form.vehiculeId" :class="F.fieldSelect">
               <option value="">Choisir…</option>
               <option v-for="v in vehiculesDisponibles" :key="v.id" :value="v.id">
-                {{ v.plaque }} — {{ v.marque }} {{ v.modele }}
+                {{ v.plaque }} - {{ v.marque }} {{ v.modele }}
               </option>
             </select>
           </div>
@@ -30,7 +30,7 @@
           <!-- Chauffeur : déduit, jamais saisi -->
           <div :class="F.field">
             <label :class="F.fieldLabel">
-              Chauffeur <span :class="F.fieldOptional">— déduit de l’affectation</span>
+              Chauffeur <span :class="F.fieldOptional">- déduit de l’affectation</span>
             </label>
             <div
               class="h-[38px] px-2.5 rounded-md border flex items-center text-[13px]"
@@ -48,7 +48,7 @@
             <label :class="F.fieldLabel">Client</label>
             <select v-model="form.clientNom" :class="F.fieldSelect">
               <option v-for="c in CLIENTS" :key="c.nom" :value="c.nom">
-                {{ c.nom }} — tolérance {{ c.tolerance }} ‰
+                {{ c.nom }} - tolérance {{ c.tolerance }} ‰
               </option>
             </select>
           </div>
@@ -73,7 +73,7 @@
             </select>
           </div>
           <div :class="F.field" class="md:col-span-2">
-            <label :class="F.fieldLabel">Citerne attelée <span :class="F.fieldOptional">— déduite de l’attelage</span></label>
+            <label :class="F.fieldLabel">Citerne attelée <span :class="F.fieldOptional">- déduite de l’attelage</span></label>
             <div class="h-[38px] px-2.5 rounded-md bg-background border border-border flex items-center text-[13px] text-muted-foreground">
               {{ citerne ?? 'Aucun attelage en cours' }}
             </div>
@@ -94,7 +94,7 @@
         <!-- ── Trajet ── -->
         <div>
           <h3 class="text-[13px] font-semibold text-foreground mb-2">
-            Trajet — sélection des sites et de leur ordre
+            Trajet - sélection des sites et de leur ordre
           </h3>
           <SelecteurTrajet v-model="etapes" @trajet-ref="id => (form.trajetId = id)" />
         </div>
@@ -133,6 +133,10 @@ import { useVehiculesStore } from '../../stores/vehicules'
 import { useAffectationsChauffeursStore } from '../../stores/affectationsChauffeurs'
 import { useAttelagesStore } from '../../stores/attelages'
 import { useTrajetsStore } from '../../stores/trajets'
+import { useRegistresStore } from '../../stores/registres'
+import { useScoresConducteursStore } from '../../stores/scoresConducteurs'
+import { useConduceteursProfilesStore } from '../../stores/conducteursProfiles'
+import { fmtDate } from '../../lib/fmsUtils'
 import type { EtapeTrajet } from '../../types/fms'
 import * as L from '../../lib/listClasses'
 import * as F from '../../lib/formClasses'
@@ -144,6 +148,9 @@ const vehiculeStore = useVehiculesStore()
 const affectationsStore = useAffectationsChauffeursStore()
 const attelagesStore = useAttelagesStore()
 const trajetsStore = useTrajetsStore()
+const registresStore = useRegistresStore()
+const scoresStore = useScoresConducteursStore()
+const conducteursStore = useConduceteursProfilesStore()
 
 const CLIENTS = [
   { nom: 'LPSA',        tolerance: 0.5 },
@@ -172,7 +179,7 @@ const vehiculesDisponibles = computed(() =>
 const vehicule = computed(() =>
   form.vehiculeId ? vehiculeStore.vehicules.find(v => v.id === form.vehiculeId) : undefined)
 
-/** Chauffeur déduit — jamais saisi. */
+/** Chauffeur déduit - jamais saisi. */
 const affectation = computed(() =>
   form.vehiculeId
     ? affectationsStore.affectations.find(a => a.tracteurId === form.vehiculeId && !a.dateFin)
@@ -186,17 +193,52 @@ const citerne = computed(() => {
   return a?.remorquePlaque
 })
 
-/** Contrôles bloquants au départ. */
+/**
+ * Contrôles bloquants au départ.
+ * Un chauffeur sans permis valide, sans visite médicale à jour ou sans formation
+ * APTH ne peut pas conduire un camion-citerne : l'affectation est refusée.
+ */
 const blocages = computed(() => {
   const out: string[] = []
+
   if (form.vehiculeId && !chauffeur.value) {
-    out.push('Aucun chauffeur affecté à ce véhicule — affectez-le avant de créer le voyage.')
+    out.push('Aucun chauffeur affecté à ce véhicule - affectez-le avant de créer le voyage.')
   }
   if (vehicule.value && vehicule.value.statutAdmin !== 'actif' && vehicule.value.statutAdmin !== 'affecte') {
     out.push(`Statut du véhicule incompatible : ${vehicule.value.statutAdmin}.`)
   }
+
+  const cid = affectation.value?.chauffeurId
+  if (cid) {
+    /* Permis de conduire */
+    const score = scoresStore.getById(cid)
+    if (score?.permisExpireLe && +new Date(score.permisExpireLe) < Date.now()) {
+      out.push(`Permis de conduire expiré le ${fmtDate(score.permisExpireLe)} - affectation interdite.`)
+    }
+
+    /* Aptitude médicale, depuis le registre */
+    const apt = registresStore.aptitudeChauffeur(cid)
+    if (!apt.apte) out.push(`${apt.motif} - affectation interdite.`)
+
+    /* Formation APTH / PATH obligatoire pour le transport d'hydrocarbures */
+    if (!formationValide(cid)) {
+      out.push('Formation APTH / PATH non valide ou expirée - affectation interdite.')
+    }
+  }
+
   return out
 })
+
+/**
+ * Validité de la formation au transport d'hydrocarbures.
+ * En l'absence de module Formations, on s'appuie sur la date portée par le profil.
+ */
+function formationValide(chauffeurId: string): boolean {
+  const p = conducteursStore.getByEmployeId(chauffeurId)
+  const f = p?.formations?.find(x => /APTH|PATH|hydrocarbure|ADR|TMD/i.test(x.titre))
+  if (!f) return true   // aucune formation renseignée : on ne bloque pas
+  return !f.dateExpiration || +new Date(f.dateExpiration) >= Date.now()
+}
 
 function enregistrer() {
   erreur.value = ''

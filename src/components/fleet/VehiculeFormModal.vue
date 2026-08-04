@@ -55,7 +55,7 @@
             <div>
               <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Type de carburant</label>
               <select v-model="form.typeCarburant" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
-                <option value="">—</option>
+                <option value="">-</option>
                 <option v-for="c in ['Diesel','GNL','Essence','Électrique','Hybride']" :key="c" :value="c">{{ c }}</option>
               </select>
             </div>
@@ -87,7 +87,7 @@
             <div>
               <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Mode acquisition</label>
               <select v-model="form.modeAcquisition" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
-                <option value="">—</option>
+                <option value="">-</option>
                 <option value="achat">Achat</option>
                 <option value="leasing">Leasing</option>
                 <option value="location">Location</option>

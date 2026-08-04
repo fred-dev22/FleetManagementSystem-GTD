@@ -6,7 +6,7 @@
 
     <div class="sim-banner">
       <span class="sim-icon">ℹ</span>
-      Données simulées — Connecter le boîtier embarqué pour données réelles
+      Données simulées - Connecter le boîtier embarqué pour données réelles
     </div>
 
     <!-- Tracteur selector -->
@@ -15,7 +15,7 @@
       <select v-model="selectedTracteurId">
         <option value="">-- Choisir un tracteur --</option>
         <option v-for="t in tracteurs" :key="t.id" :value="t.id">
-          {{ t.plaque }} — {{ t.marque }} {{ t.modele }}
+          {{ t.plaque }} - {{ t.marque }} {{ t.modele }}
         </option>
       </select>
     </div>
@@ -208,13 +208,13 @@ const mockTelemetrie: Record<string, TelemetrieVehicule> = {
     kilometrage: 198700,
     niveauCarburant: 28,
     etatMoteur: false,
-    codeDefaut: 'P0401 — EGR insuffisant',
+    codeDefaut: 'P0401 - EGR insuffisant',
     derniereMAJ: '2026-06-29T06:00:00',
     signalOk: true,
     signalPerduDepuis: '',
     historique: [
-      { timestamp: '2026-06-29T06:00:00', kilometrage: 198700, niveauCarburant: 28, etatMoteur: false, codeDefaut: 'P0401 — EGR insuffisant' },
-      { timestamp: '2026-06-28T20:00:00', kilometrage: 198580, niveauCarburant: 35, etatMoteur: true, codeDefaut: 'P0401 — EGR insuffisant' },
+      { timestamp: '2026-06-29T06:00:00', kilometrage: 198700, niveauCarburant: 28, etatMoteur: false, codeDefaut: 'P0401 - EGR insuffisant' },
+      { timestamp: '2026-06-28T20:00:00', kilometrage: 198580, niveauCarburant: 35, etatMoteur: true, codeDefaut: 'P0401 - EGR insuffisant' },
       { timestamp: '2026-06-28T14:00:00', kilometrage: 198420, niveauCarburant: 45, etatMoteur: true, codeDefaut: null },
       { timestamp: '2026-06-28T08:00:00', kilometrage: 198200, niveauCarburant: 55, etatMoteur: true, codeDefaut: null },
       { timestamp: '2026-06-27T18:00:00', kilometrage: 197900, niveauCarburant: 65, etatMoteur: false, codeDefaut: null },
@@ -242,13 +242,13 @@ const mockTelemetrie: Record<string, TelemetrieVehicule> = {
     kilometrage: 178320,
     niveauCarburant: 15,
     etatMoteur: true,
-    codeDefaut: 'U0100 — Perte comm. ECU',
+    codeDefaut: 'U0100 - Perte comm. ECU',
     derniereMAJ: '2026-06-29T07:55:00',
     signalOk: true,
     signalPerduDepuis: '',
     historique: [
-      { timestamp: '2026-06-29T07:55:00', kilometrage: 178320, niveauCarburant: 15, etatMoteur: true, codeDefaut: 'U0100 — Perte comm. ECU' },
-      { timestamp: '2026-06-29T05:00:00', kilometrage: 178200, niveauCarburant: 22, etatMoteur: true, codeDefaut: 'U0100 — Perte comm. ECU' },
+      { timestamp: '2026-06-29T07:55:00', kilometrage: 178320, niveauCarburant: 15, etatMoteur: true, codeDefaut: 'U0100 - Perte comm. ECU' },
+      { timestamp: '2026-06-29T05:00:00', kilometrage: 178200, niveauCarburant: 22, etatMoteur: true, codeDefaut: 'U0100 - Perte comm. ECU' },
       { timestamp: '2026-06-28T20:00:00', kilometrage: 177950, niveauCarburant: 30, etatMoteur: false, codeDefaut: null },
       { timestamp: '2026-06-28T14:00:00', kilometrage: 177700, niveauCarburant: 40, etatMoteur: true, codeDefaut: null },
       { timestamp: '2026-06-28T08:00:00', kilometrage: 177400, niveauCarburant: 50, etatMoteur: true, codeDefaut: null },

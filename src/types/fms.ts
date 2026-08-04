@@ -60,6 +60,76 @@ export interface EtapeTrajet {
   franchi?: boolean
 }
 
+export type ExamenType = 'visite_medicale' | 'permis' | 'formation_apth'
+export type AptitudeChauffeur = 'apte' | 'non_apte' | 'a_renouveler'
+
+export const LIB_EXAMEN: Record<ExamenType, string> = {
+  visite_medicale: 'Visite médicale',
+  permis: 'Permis',
+  formation_apth: 'Formation APTH',
+}
+
+export const LIB_APTITUDE: Record<AptitudeChauffeur, { label: string; cls: string }> = {
+  apte: { label: 'Apte', cls: 'bg-success-bg text-success' },
+  non_apte: { label: 'Inapte', cls: 'bg-danger-bg text-danger' },
+  a_renouveler: { label: 'À renouveler', cls: 'bg-warning-bg text-warning' },
+}
+
+export type CodeInfractionDebrief =
+  | 'retard_depart'
+  | 'non_respect_plan'
+  | 'arret_non_autorise'
+  | 'repos_non_respecte'
+  | 'controle_non_effectue'
+  | 'tcc_non_respecte'
+  | 'conduite_agressive'
+  | 'document_manquant'
+  | 'autre'
+
+export type NiveauInfraction = 'leger' | 'moyen' | 'grave'
+
+export interface LigneInfractionDebrief {
+  code: CodeInfractionDebrief
+  nombre: number
+  niveau?: NiveauInfraction
+  date?: string
+  explication?: string
+}
+
+export interface InfractionDebrief extends LigneInfractionDebrief {}
+
+export const LIB_INFRACTION_DEBRIEF: Record<CodeInfractionDebrief, string> = {
+  retard_depart: 'Retard au départ',
+  non_respect_plan: 'Non respect du plan de trajet',
+  arret_non_autorise: 'Arrêt non autorisé',
+  repos_non_respecte: 'Repos non respecté',
+  controle_non_effectue: 'Contrôle non effectué',
+  tcc_non_respecte: 'TCC non respecté',
+  conduite_agressive: 'Conduite agressive',
+  document_manquant: 'Document manquant',
+  autre: 'Autre',
+}
+
+export interface DebriefingVoyage {
+  voyageId: string
+  remontees?: string
+  actions: Array<{
+    id: string
+    libelle: string
+    priorite?: 'faible' | 'normale' | 'elevee'
+    close?: boolean
+    responsable?: string
+    dateLimite?: string
+  }>
+  signatureResponsable?: string
+  signatureChauffeur?: string
+  dateCloture?: string
+  planTrajetRespecte?: boolean
+  arretsRespectes?: boolean
+  reposRespectes?: boolean
+  infractions: InfractionDebrief[]
+}
+
 export type StatutTrajet = 'actif' | 'archive'
 
 export interface Trajet {

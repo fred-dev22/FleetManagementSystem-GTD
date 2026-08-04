@@ -71,7 +71,7 @@
       </button>
     </template>
 
-    <!-- ══════════ VUE 1 — REGISTRE DES RECHARGES ══════════ -->
+    <!-- ══════════ VUE 1 - REGISTRE DES RECHARGES ══════════ -->
     <template #cell-date="{ item }">
       <button class="font-medium text-foreground hover:text-primary hover:underline bg-transparent border-0 p-0 cursor-pointer text-left"
         @click="item.id && openCard(item.id)">
@@ -81,11 +81,11 @@
 
     <template #cell-vehicule="{ item }">
       <span class="font-mono font-semibold text-foreground">{{ item.vehiculePlaque }}</span>
-      <div class="text-[11px] text-muted-foreground">{{ item.chauffeurNom ?? '—' }}</div>
+      <div class="text-[11px] text-muted-foreground">{{ item.chauffeurNom ?? '-' }}</div>
     </template>
 
     <template #cell-bons="{ item }">
-      <span class="text-sm font-bold text-primary">{{ item.nombreBons ?? '—' }}</span>
+      <span class="text-sm font-bold text-primary">{{ item.nombreBons ?? '-' }}</span>
       <div v-if="item.litresParBon" class="text-[11px] text-muted-foreground">{{ item.litresParBon }} L/bon</div>
     </template>
 
@@ -99,7 +99,7 @@
     </template>
 
     <template #cell-canal="{ item }">
-      <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{{ item.canal ? LIB_CANAL[item.canal] : "—" }}</span>
+      <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{{ item.canal ? LIB_CANAL[item.canal] : "-" }}</span>
     </template>
 
     <template #cell-controles="{ item }">
@@ -110,14 +110,14 @@
       </span>
     </template>
 
-    <!-- ══════════ VUE 2 — CONSOMMATION PLEIN-À-PLEIN ══════════ -->
+    <!-- ══════════ VUE 2 - CONSOMMATION PLEIN-À-PLEIN ══════════ -->
     <template #cell-periode="{ item }">
       <span class="text-xs">{{ fmtDate(item.du) }} → {{ fmtDate(item.au) }}</span>
     </template>
 
     <template #cell-plaqueConso="{ item }">
       <span class="font-mono font-semibold text-foreground">{{ item.vehiculePlaque }}</span>
-      <div class="text-[11px] text-muted-foreground">{{ item.chauffeurNom ?? '—' }}</div>
+      <div class="text-[11px] text-muted-foreground">{{ item.chauffeurNom ?? '-' }}</div>
     </template>
 
     <template #cell-km="{ item }">
@@ -144,7 +144,7 @@
       </span>
     </template>
 
-    <!-- ══════════ VUE 3 — BONS PAR VÉHICULE ══════════ -->
+    <!-- ══════════ VUE 3 - BONS PAR VÉHICULE ══════════ -->
     <template #cell-plaqueBons="{ item }">
       <span class="font-mono font-semibold text-foreground">{{ item.plaque }}</span>
     </template>
@@ -186,10 +186,10 @@
           <div class="text-xs text-muted-foreground">{{ fmtDateTime(item.date) }}</div>
         </div>
         <div class="grid grid-cols-2 gap-2 text-xs">
-          <div><div class="text-muted-foreground text-[11px]">Bons</div>{{ item.nombreBons ?? '—' }}</div>
+          <div><div class="text-muted-foreground text-[11px]">Bons</div>{{ item.nombreBons ?? '-' }}</div>
           <div><div class="text-muted-foreground text-[11px]">Litres</div>{{ fmtL(item.litres) }}</div>
           <div><div class="text-muted-foreground text-[11px]">Montant</div>{{ fmtAr(item.montant) }}</div>
-          <div><div class="text-muted-foreground text-[11px]">Chauffeur</div>{{ item.chauffeurNom ?? '—' }}</div>
+          <div><div class="text-muted-foreground text-[11px]">Chauffeur</div>{{ item.chauffeurNom ?? '-' }}</div>
           <div class="col-span-2"><div class="text-muted-foreground text-[11px]">Lieu déclaré</div>{{ item.lieu }}</div>
         </div>
         <div v-if="item.positionVehicule && item.positionVehicule.ecartKm > 2"
@@ -241,7 +241,7 @@
 
 <script setup lang="ts">
 /**
- * Carburant — même modèle d'affichage que la page Véhicules :
+ * Carburant - même modèle d'affichage que la page Véhicules :
  * un seul ListPageLayout, des indicateurs au-dessus, un panneau d'aperçu à droite,
  * et une fiche en superposition au clic.
  *

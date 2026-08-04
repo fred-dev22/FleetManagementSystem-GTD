@@ -8,6 +8,9 @@ export type UserRole =
   | 'maintenance'
   | 'chauffeur'
   | 'employee'
+  | 'hr_admin'
+  | 'hr_director'
+  | 'validator'
 
 export interface AuthUser {
   id:              string
@@ -397,7 +400,7 @@ export type TypeSite       = 'Garage' | 'Dépôt chargement' | 'Dépôt décharg
 export type TypeAlerteGeozone = 'entree' | 'sortie' | 'entree_sortie'
 
 // Statuts UCODIS : actif | affecte | en_reparation | hors_service | vendu | archive
-export type StatutAdminVehicule       = 'actif' | 'affecte' | 'en_reparation' | 'hors_service' | 'vendu' | 'archive'
+export type StatutAdminVehicule       = 'actif' | 'affecte' | 'en_reparation' | 'hors_service' | 'vendu' | 'archive' | 'en_service'
 export type StatutOperationnelVehicule = 'en_mouvement' | 'allume_immobile' | 'arrete' | 'signal_perdu'
 
 export interface HistoriquePlaque {
@@ -430,8 +433,10 @@ export interface Vehicule {
   niveauCarburant?: number
 
   // Remorque uniquement
+  type?:         TypeRemorque
   typeRemorque?: TypeRemorque
   capacite?:     string
+  uniteCapacite?: string
 
   // Admin
   statutAdmin:   StatutAdminVehicule
@@ -446,10 +451,15 @@ export interface Vehicule {
   chauffeurNom?:     string
   vehiculeLieId?:    string
   vehiculeLiePlaque?: string
+  tracteurId?:       string
+  tracteurPlaque?:   string
+  remorqueId?:       string
+  remorquePlaque?:   string
 
   // Meta
   photos?:             string[]
   historiquePlayque?:  HistoriquePlaque[]
+  historiquePlaques?:  HistoriquePlaque[]
   createdAt:           string
 }
 
@@ -485,6 +495,7 @@ export interface DocumentVehicule {
   entityId:     string                        // ID véhicule ou conducteur
   entityType:   'vehicule' | 'conducteur'
   type:         string
+  typeDocument?: string
   numero?:      string
   dateEmission: string
   dateExpiration?: string

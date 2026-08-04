@@ -54,7 +54,7 @@
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Région</label>
               <input v-if="isEditMode" v-model="form.region" :class="cls.fieldInput" />
-              <span v-else class="text-[13px] text-foreground">{{ current.region ?? '—' }}</span>
+              <span v-else class="text-[13px] text-foreground">{{ current.region ?? '-' }}</span>
             </div>
             <div class="col-span-2 flex items-center gap-3 pt-1">
               <input v-if="isEditMode" id="actifCard" v-model="form.actif" type="checkbox" class="w-4 h-4 rounded" />

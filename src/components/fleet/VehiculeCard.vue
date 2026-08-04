@@ -40,22 +40,22 @@
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">VIN</label>
               <input v-if="isEditMode" v-model="form.vin" :class="cls.fieldInput" />
-              <span v-else class="text-xs font-mono text-gray-600">{{ vehicule.vin ?? '—' }}</span>
+              <span v-else class="text-xs font-mono text-gray-600">{{ vehicule.vin ?? '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Marque</label>
               <input v-if="isEditMode" v-model="form.marque" :class="cls.fieldInput" />
-              <span v-else class="text-sm text-foreground">{{ vehicule.marque ?? '—' }}</span>
+              <span v-else class="text-sm text-foreground">{{ vehicule.marque ?? '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Modèle</label>
               <input v-if="isEditMode" v-model="form.modele" :class="cls.fieldInput" />
-              <span v-else class="text-sm text-foreground">{{ vehicule.modele ?? '—' }}</span>
+              <span v-else class="text-sm text-foreground">{{ vehicule.modele ?? '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Année</label>
               <input v-if="isEditMode" v-model.number="form.annee" type="number" :class="cls.fieldInput" />
-              <span v-else class="text-sm text-foreground">{{ vehicule.annee ?? '—' }}</span>
+              <span v-else class="text-sm text-foreground">{{ vehicule.annee ?? '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Mise en circulation</label>
@@ -65,7 +65,7 @@
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Site d'affectation</label>
               <input v-if="isEditMode" v-model="form.siteAffectation" :class="cls.fieldInput" />
-              <span v-else class="text-sm text-foreground">{{ vehicule.siteAffectation ?? '—' }}</span>
+              <span v-else class="text-sm text-foreground">{{ vehicule.siteAffectation ?? '-' }}</span>
             </div>
           </div>
         </FormSection>
@@ -76,14 +76,14 @@
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Type de carburant</label>
               <select v-if="isEditMode" v-model="form.typeCarburant" :class="cls.fieldInput">
-                <option value="">—</option>
+                <option value="">-</option>
                 <option v-for="c in ['Diesel','GNL','Essence','Électrique','Hybride']" :key="c" :value="c">{{ c }}</option>
               </select>
-              <span v-else class="text-sm text-foreground">{{ vehicule.typeCarburant ?? '—' }}</span>
+              <span v-else class="text-sm text-foreground">{{ vehicule.typeCarburant ?? '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Kilométrage</label>
-              <span class="text-sm text-foreground">{{ vehicule.kilometrage != null ? vehicule.kilometrage.toLocaleString('fr-FR') + ' km' : '—' }}</span>
+              <span class="text-sm text-foreground">{{ vehicule.kilometrage != null ? vehicule.kilometrage.toLocaleString('fr-FR') + ' km' : '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Niveau carburant</label>
@@ -95,7 +95,7 @@
                 </div>
                 <span class="text-sm font-semibold">{{ vehicule.niveauCarburant }}%</span>
               </div>
-              <span v-else class="text-sm text-gray-400">—</span>
+              <span v-else class="text-sm text-gray-400">-</span>
             </div>
           </div>
         </FormSection>
@@ -108,12 +108,12 @@
               <select v-if="isEditMode" v-model="form.typeRemorque" :class="cls.fieldInput">
                 <option v-for="t in ['Citerne','Bâchée','Frigorifique','Plateau','Autre']" :key="t" :value="t">{{ t }}</option>
               </select>
-              <span v-else class="text-sm text-foreground">{{ vehicule.typeRemorque ?? '—' }}</span>
+              <span v-else class="text-sm text-foreground">{{ vehicule.typeRemorque ?? '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Capacité</label>
               <input v-if="isEditMode" v-model="form.capacite" :class="cls.fieldInput" />
-              <span v-else class="text-sm text-foreground">{{ vehicule.capacite ?? '—' }}</span>
+              <span v-else class="text-sm text-foreground">{{ vehicule.capacite ?? '-' }}</span>
             </div>
           </div>
         </FormSection>
@@ -160,12 +160,12 @@
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Mode d'acquisition</label>
               <select v-if="isEditMode" v-model="form.modeAcquisition" :class="cls.fieldInput">
-                <option value="">—</option>
+                <option value="">-</option>
                 <option value="achat">Achat</option>
                 <option value="leasing">Leasing</option>
                 <option value="location">Location</option>
               </select>
-              <span v-else class="text-sm capitalize text-foreground">{{ vehicule.modeAcquisition ?? '—' }}</span>
+              <span v-else class="text-sm capitalize text-foreground">{{ vehicule.modeAcquisition ?? '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Coût d'acquisition (MGA)</label>
@@ -225,15 +225,16 @@ function handleCancel() {
 }
 
 function fmtDate(d?: string) {
-  return d ? new Date(d).toLocaleDateString('fr-FR') : '—'
+  return d ? new Date(d).toLocaleDateString('fr-FR') : '-'
 }
 function fmtMGA(n?: number) {
-  return n != null ? n.toLocaleString('fr-FR') + ' MGA' : '—'
+  return n != null ? n.toLocaleString('fr-FR') + ' MGA' : '-'
 }
 
 const STATUT_MAP: Record<StatutAdminVehicule, { label: string; cls: string }> = {
   actif:         { label: 'Actif',          cls: 'bg-success-bg text-success' },
   affecte:       { label: 'Affecté',        cls: 'bg-primary/10 text-primary' },
+  en_service:    { label: 'En service',     cls: 'bg-success-bg text-success' },
   en_reparation: { label: 'En réparation',  cls: 'bg-warning-bg text-warning' },
   hors_service:  { label: 'Hors service',   cls: 'bg-danger-bg text-danger'   },
   vendu:         { label: 'Vendu',          cls: 'bg-gray-100 text-gray-500'  },
@@ -248,6 +249,6 @@ const OP_MAP: Partial<Record<StatutOperationnelVehicule, { label: string; cls: s
   arrete:          { label: 'Arrêté',          cls: 'bg-gray-100 text-gray-500'  },
   signal_perdu:    { label: 'Signal perdu',    cls: 'bg-danger-bg text-danger'   },
 }
-const opLabel = (s?: StatutOperationnelVehicule) => s ? (OP_MAP[s]?.label ?? s) : '—'
+const opLabel = (s?: StatutOperationnelVehicule) => s ? (OP_MAP[s]?.label ?? s) : '-'
 const opClass  = (s?: StatutOperationnelVehicule) => s ? (OP_MAP[s]?.cls ?? '') : ''
 </script>

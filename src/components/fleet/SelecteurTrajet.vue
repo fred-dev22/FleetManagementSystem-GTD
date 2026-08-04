@@ -1,7 +1,7 @@
 <template>
   <div class="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-3.5 items-start">
 
-    <!-- ══ VOLET GAUCHE — composition de la séquence ══════════ -->
+    <!-- ══ VOLET GAUCHE - composition de la séquence ══════════ -->
     <div class="flex flex-col gap-3">
 
       <!-- Trajet de référence -->
@@ -120,11 +120,11 @@
       </div>
     </div>
 
-    <!-- ══ VOLET DROIT — simulation cartographique ════════════ -->
+    <!-- ══ VOLET DROIT - simulation cartographique ════════════ -->
     <div :class="L.card">
       <div :class="L.cardHeader">
         <h3 :class="L.cardTitle"><Route class="w-4 h-4 text-primary" /> Itinéraire proposé</h3>
-        <span class="text-[11px] text-muted-foreground">Simulation — non enregistrée</span>
+        <span class="text-[11px] text-muted-foreground">Simulation - non enregistrée</span>
       </div>
 
       <FleetMap

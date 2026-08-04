@@ -164,7 +164,8 @@ export const useVehiculesStore = defineStore('vehicules', () => {
 
   function update(id: string, data: Partial<Vehicule>) {
     const idx = vehicules.value.findIndex(v => v.id === id)
-    if (idx !== -1) Object.assign(vehicules.value[idx], data)
+    const current = vehicules.value[idx]
+    if (idx !== -1 && current) Object.assign(current, data)
   }
 
   function remove(id: string) {

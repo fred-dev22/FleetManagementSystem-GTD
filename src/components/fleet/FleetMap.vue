@@ -22,7 +22,7 @@
 
 <script setup lang="ts">
 /**
- * FleetMap — carte Leaflet réutilisable du module Flotte.
+ * FleetMap - carte Leaflet réutilisable du module Flotte.
  *
  * Conçue comme un COMPOSANT et non comme un écran : la même carte sert la tour
  * de contrôle, la fiche voyage, la fiche d'écart et le sélecteur de trajet.
@@ -42,7 +42,7 @@ const props = withDefaults(defineProps<{
   traceReel?: LatLng[]
   pointsPassage?: ZoneCarte[]
   arrets?: MapArret[]
-  /** Largeur du couloir de tolérance, en mètres — dessiné autour du tracé prévu */
+  /** Largeur du couloir de tolérance, en mètres - dessiné autour du tracé prévu */
   couloirM?: number
   center?: LatLng
   zoom?: number
@@ -132,7 +132,7 @@ function draw() {
     }).addTo(layer)
   }
 
-  // Tracé prévu — bleu pointillé
+  // Tracé prévu - bleu pointillé
   if (props.tracePrevu.length > 1) {
     L.polyline(props.tracePrevu.map(p => [p.lat, p.lng]), {
       color: COLORS.prevu, weight: 4, opacity: 0.9, dashArray: '9 7',
@@ -140,7 +140,7 @@ function draw() {
     props.tracePrevu.forEach(p => bounds.push([p.lat, p.lng]))
   }
 
-  // Tracé réel — rouge plein
+  // Tracé réel - rouge plein
   if (props.traceReel.length > 1) {
     L.polyline(props.traceReel.map(p => [p.lat, p.lng]), {
       color: COLORS.reel, weight: 4, opacity: 0.95,
@@ -172,7 +172,7 @@ function draw() {
     L.marker([a.lat, a.lng], { icon: pinIcon(color, String(a.dureeMin)) })
       .bindPopup(
         `<div style="font:600 12px Inter,sans-serif">${a.label}</div>
-         <div style="font:400 11px Inter,sans-serif;color:#555">Arrêt de ${a.dureeMin} min — ${a.justifie ? 'justifié' : 'non justifié'}</div>`,
+         <div style="font:400 11px Inter,sans-serif;color:#555">Arrêt de ${a.dureeMin} min - ${a.justifie ? 'justifié' : 'non justifié'}</div>`,
       )
       .addTo(layer)
     bounds.push([a.lat, a.lng])
