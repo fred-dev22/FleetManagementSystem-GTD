@@ -71,36 +71,21 @@
         </FormSection>
 
         <!-- Permis & Visite médicale -->
-        <!-- ═══ Décomposition du score - un score opaque est contesté ═══ -->
-        <FormSection
-          v-if="score"
-          title="Décomposition du score"
-          :recaps="[`${score.score}/100`, `${score.voyagesPeriode} voyage(s)`, `${score.kmPeriode.toLocaleString('fr-FR')} km`]"
-        >
-          <div class="flex flex-col gap-3">
-            <div v-for="f in score.familles" :key="f.famille">
-              <div class="flex items-center justify-between mb-1">
-                <div class="flex items-center gap-2">
-                  <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: PONDERATIONS[f.famille].couleur }" />
-                  <span class="text-xs font-medium text-foreground">{{ f.libelle }}</span>
-                  <span class="text-[11px] text-muted-foreground">coef. {{ f.poids }} %</span>
-                </div>
-                <div class="flex items-center gap-2">
-                  <span v-if="f.evenements" class="text-[11px] text-muted-foreground">{{ f.evenements }} évènement(s)</span>
-                  <span class="text-xs font-semibold" :class="couleurScore(f.note)">{{ f.note }}</span>
-                </div>
-              </div>
-              <div class="h-2 rounded-full bg-gray-100 overflow-hidden">
-                <div class="h-full rounded-full transition-all"
-                  :style="{ width: f.note + '%', backgroundColor: PONDERATIONS[f.famille].couleur }" />
-              </div>
-            </div>
+        <!-- ═══════════════════════════════════════════════════════
+             Le cahier des charges demande « scoring conducteur » et
+             « pondération selon infractions » sans définir ni les
+             familles ni les coefficients. On n'invente donc pas de
+             barème : on affiche le score et on signale ce qui manque.
+             ═══════════════════════════════════════════════════════ -->
+        <FormSection title="Barème du score" :recaps="['à définir']">
+          <div class="flex items-start gap-2.5 bg-warning-bg text-warning rounded-lg px-3.5 py-2.5">
+            <AlertCircle class="w-4 h-4 shrink-0 mt-px" />
+            <p class="text-xs leading-relaxed">
+              Le cahier des charges prévoit une <strong>pondération du score selon les infractions</strong>
+              et des <strong>seuils déclenchant un accompagnement</strong>, sans en préciser les valeurs.
+              Le barème reste à arrêter par la direction de GTD.
+            </p>
           </div>
-          <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
-            Score calculé sur une fenêtre glissante de douze mois, avec atténuation : une infraction
-            ancienne pèse moins qu’une infraction récente. Un conducteur qui corrige son comportement
-            voit son score remonter.
-          </p>
         </FormSection>
 
         <!-- ═══ Exploitation ═══ -->
@@ -178,35 +163,21 @@
         </FormSection>
 
         <!-- ═══ Prime ═══ -->
-        <FormSection
-          v-if="score"
-          title="Prime de la période"
-          :recaps="[fmtAr(score.primeMontant), palier.libelle]"
-          :default-open="false"
-        >
-          <p class="text-2xl font-bold leading-none mb-1"
-            :class="score.primeEligible ? 'text-success' : 'text-muted-foreground'">
-            {{ fmtAr(score.primeMontant) }}
-          </p>
-          <p class="text-[11px] text-muted-foreground mb-3">{{ palier.libelle }}</p>
 
-          <div v-if="!score.primeEligible" class="bg-danger-bg text-danger rounded-md px-2.5 py-2 text-[11px] mb-3">
-            Non éligible - {{ score.motifNonEligibilite }}
+        <!-- La note de priorisation demande d'afficher les primes,
+             mais aucune grille ni condition n'a été communiquée. -->
+        <FormSection title="Prime de la période" :recaps="['grille non communiquée']" :default-open="false">
+          <div class="flex items-start gap-2.5 bg-background border border-border rounded-lg px-3.5 py-3">
+            <FileQuestion class="w-4 h-4 shrink-0 mt-px text-muted-foreground" />
+            <div>
+              <p class="text-xs font-medium text-foreground">Grille non communiquée</p>
+              <p class="text-[11px] text-muted-foreground leading-relaxed mt-1">
+                À fournir par la direction : les paliers, les montants, et les conditions rendant
+                un conducteur inéligible. Le versement passera par le circuit de validation
+                du module Administration.
+              </p>
+            </div>
           </div>
-
-          <p class="text-[11px] font-semibold text-foreground mb-1.5">Grille en vigueur</p>
-          <ul class="flex flex-col gap-1">
-            <li v-for="g in GRILLE_PRIME.filter(x => x.montant > 0)" :key="g.min"
-              class="flex justify-between text-[11px]"
-              :class="score.score >= g.min ? 'text-foreground font-medium' : 'text-muted-foreground'">
-              <span>{{ g.libelle }} - score ≥ {{ g.min }}</span>
-              <span>{{ fmtAr(g.montant) }}</span>
-            </li>
-          </ul>
-          <p class="text-[10px] text-muted-foreground mt-2 leading-snug">
-            Calcul automatique, validation hiérarchique par le circuit RH existant.
-            Grille à valider par la direction et les ressources humaines.
-          </p>
         </FormSection>
 
         <FormSection title="Permis & Réglementaire">
@@ -281,11 +252,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ShieldAlert } from 'lucide-vue-next'
+import { ShieldAlert, AlertCircle, FileQuestion } from 'lucide-vue-next'
 import CardModalShell from '../shared/CardModalShell.vue'
 import FormSection    from '../ui/form-field/FormSection.vue'
 import type { ConducteurProfil } from '../../types'
-import { useScoresConducteursStore, PONDERATIONS, GRILLE_PRIME, primePour } from '../../stores/scoresConducteurs'
+import { useScoresConducteursStore } from '../../stores/scoresConducteurs'
 import { useRegistresStore } from '../../stores/registres'
 import { LIB_EXAMEN, LIB_APTITUDE } from '../../types/fms'
 import { fmtAr } from '../../lib/fmsUtils'
@@ -305,8 +276,6 @@ const chauffeurId = computed<string>(() => props.profil?.employeId ?? props.empl
 
 const score = computed(() => chauffeurId.value ? scoresStore.getById(chauffeurId.value) : undefined)
 
-const palier = computed(() =>
-  score.value ? primePour(score.value.score, score.value.primeEligible) : { montant: 0, libelle: '' })
 
 const aptitude = computed(() => registresStore.aptitudeChauffeur(chauffeurId.value))
 const examens  = computed(() => registresStore.examensDuChauffeur(chauffeurId.value))

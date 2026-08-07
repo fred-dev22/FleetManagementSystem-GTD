@@ -72,6 +72,46 @@
       </div>
     </template>
 
+    <template #details-panel="{ item }">
+      <div class="flex flex-col gap-3">
+        <div>
+          <span class="text-xs font-medium px-2 py-0.5 rounded-full"
+            :class="item.entityType === 'vehicule' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'">
+            {{ item.entityType === 'vehicule' ? 'Véhicule' : 'Conducteur' }}
+          </span>
+          <div class="font-medium text-foreground mt-1.5">{{ item.type }}</div>
+          <div class="font-mono text-xs text-muted-foreground">{{ item.entityId }}</div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div>
+            <div class="text-muted-foreground text-[11px]">N°</div>
+            <span class="font-mono">{{ item.numero ?? '—' }}</span>
+          </div>
+          <div>
+            <div class="text-muted-foreground text-[11px]">Statut</div>{{ LIB_STATUT[item.statut] ?? item.statut }}
+          </div>
+          <div>
+            <div class="text-muted-foreground text-[11px]">Émission</div>{{ fmtDate(item.dateEmission) }}
+          </div>
+          <div>
+            <div class="text-muted-foreground text-[11px]">Expiration</div>
+            {{ item.dateExpiration ? fmtDate(item.dateExpiration) : '—' }}
+          </div>
+        </div>
+
+        <!-- Échéance : le seuil de 30 jours vient de la règle documentaire du client -->
+        <div v-if="item.dateExpiration" class="rounded-md px-2.5 py-2 text-[11px] leading-snug"
+          :class="clsEcheance(item.dateExpiration)">
+          {{ libelleEcheance(item.dateExpiration) }}
+        </div>
+
+        <button :class="L.btnPrimary" class="w-full justify-center" @click="openDetail(item)">
+          Ouvrir la fiche
+        </button>
+      </div>
+    </template>
+
     <template #cell-type="{ item }">
       <span class="text-gray-700 text-sm">{{ item.type }}</span>
     </template>
@@ -179,6 +219,7 @@ import { Plus, AlertTriangle, Clock, X } from 'lucide-vue-next'
 import { ListPageLayout } from '../../components'
 import { useDocumentsVehiculesStore } from '../../stores/documentsVehicules'
 import type { DocumentVehicule } from '../../types'
+import { fmtDate } from '../../lib/fmsUtils'
 import * as L from '../../lib/listClasses'
 
 const store = useDocumentsVehiculesStore()
@@ -250,6 +291,32 @@ const pageItems  = computed(() => {
 })
 
 function openDetail(row: DocumentVehicule) { openModal(row) }
+
+/* Échéance documentaire — le préavis de 30 jours est la règle du cahier
+   des charges : « alertes programmées à J-30, escalade si non validés ». */
+const PREAVIS_JOURS = 30
+
+const LIB_STATUT: Record<string, string> = {
+  depose: 'Déposé', valide: 'Validé', refuse: 'Refusé', archive: 'Archivé',
+}
+
+function joursRestants(iso: string): number {
+  return Math.ceil((+new Date(iso) - Date.now()) / 86_400_000)
+}
+
+function libelleEcheance(iso: string): string {
+  const j = joursRestants(iso)
+  if (j < 0) return `Expiré depuis ${Math.abs(j)} jour(s) — régularisation requise`
+  if (j <= PREAVIS_JOURS) return `Expire dans ${j} jour(s) — à renouveler`
+  return `Valide encore ${j} jour(s)`
+}
+
+function clsEcheance(iso: string): string {
+  const j = joursRestants(iso)
+  if (j < 0) return 'bg-danger-bg text-danger'
+  if (j <= PREAVIS_JOURS) return 'bg-warning-bg text-warning'
+  return 'bg-success-bg text-success'
+}
 
 const canSave = computed(() => !!form.entityId && !!form.type && !!form.dateEmission && !!form.entityType)
 

@@ -18,7 +18,22 @@
           </div>
         </div>
         <div class="flex items-center gap-3">
-          <div class="text-right">
+          <!-- Navigation d'un conducteur à l'autre, comme dans les fiches -->
+          <div class="flex items-center gap-1">
+            <button :class="L.tbIconBtn" :disabled="indexCourant <= 0"
+              title="Conducteur précédent" @click="naviguer(-1)">
+              <ChevronLeft class="w-4 h-4" />
+            </button>
+            <span class="text-[11px] text-muted-foreground px-1">
+              {{ indexCourant + 1 }} / {{ scoresStore.scores.length }}
+            </span>
+            <button :class="L.tbIconBtn" :disabled="indexCourant >= scoresStore.scores.length - 1"
+              title="Conducteur suivant" @click="naviguer(1)">
+              <ChevronRight class="w-4 h-4" />
+            </button>
+          </div>
+
+          <!-- <div class="text-right">
             <p class="text-3xl font-bold leading-none" :class="couleurScore(score.score)">{{ score.score }}</p>
             <p class="text-[11px] text-muted-foreground">
               sur 100
@@ -26,7 +41,7 @@
                 ({{ delta >= 0 ? '+' : '' }}{{ delta }})
               </span>
             </p>
-          </div>
+          </div> -->
         </div>
       </div>
 
@@ -434,6 +449,7 @@ import {
   ArrowLeft, UserX, Gauge, TrendingUp, Award, AlertTriangle, Fuel, IdCard, Users,
   FileText, GraduationCap, ShieldCheck, CheckCircle2, XCircle, CalendarCheck, CalendarOff, Package,
   ClipboardCheck, AlertCircle, FileQuestion,
+  ChevronLeft, ChevronRight,
 } from 'lucide-vue-next'
 import {
   useScoresConducteursStore,
@@ -477,6 +493,15 @@ const tabs = computed(() => [
 ])
 
 const delta = computed(() => (score.value?.score ?? 0) - (score.value?.scoreMoisPrecedent ?? 0))
+
+/* ── Navigation d'un conducteur à l'autre, sans repasser par la liste ── */
+const indexCourant = computed(() =>
+  scoresStore.scores.findIndex(s => s.chauffeurId === chauffeurId.value))
+
+function naviguer(delta: number) {
+  const cible = scoresStore.scores[indexCourant.value + delta]
+  if (cible) router.replace({ name: 'fleet-conducteur-detail', params: { id: cible.chauffeurId } })
+}
 
 /* ═══════════════════════════════════════════════════════════════
    ONGLET DOCUMENTS

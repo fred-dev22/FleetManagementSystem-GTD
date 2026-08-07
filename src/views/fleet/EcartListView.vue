@@ -16,7 +16,7 @@
     v-model:page="page"
     v-model:page-size="pageSize"
     @reset-filters="resetFilters"
-    @open-card="(e) => ouvrir(e.id)"
+    @open-card="(e) => openCard(e.id)"
   >
     <template #above-table>
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-3.5">
@@ -56,7 +56,7 @@
 
     <template #cell-id="{ item }">
       <button class="font-mono font-semibold text-foreground hover:text-primary hover:underline bg-transparent border-0 p-0 cursor-pointer"
-        @click="ouvrir(item.id)">{{ item.id }}</button>
+        @click="openCard(item.id)">{{ item.id }}</button>
       <div class="text-[11px] text-muted-foreground font-mono">{{ item.voyageRef }}</div>
     </template>
 
@@ -78,7 +78,13 @@
     </template>
 
     <template #cell-chauffeur="{ item }">
-      <span class="text-xs">{{ item.chauffeurNom }}</span>
+      <button v-if="item.chauffeurId"
+        class="text-xs text-foreground hover:text-primary hover:underline bg-transparent border-0 p-0 cursor-pointer text-left"
+        title="Ouvrir le tableau de bord du conducteur"
+        @click.stop="voirConducteur(item.chauffeurId)">
+        {{ item.chauffeurNom }}
+      </button>
+      <span v-else class="text-xs">{{ item.chauffeurNom ?? '—' }}</span>
       <div class="text-[11px] text-muted-foreground font-mono">{{ item.vehiculePlaque }}</div>
     </template>
 
@@ -94,18 +100,83 @@
     </template>
 
     <template #row-actions="{ item }">
-      <button v-if="item && item.nature === 'a_qualifier'" :class="L.actApprove" @click="ouvrir(item.id)">
+      <button v-if="item && item.nature === 'a_qualifier'" :class="L.actApprove" @click="openCard(item.id)">
         <Gavel class="w-3 h-3" /> Qualifier
       </button>
-      <button v-else-if="item" :class="L.actView" @click="ouvrir(item.id)">
+      <button v-else-if="item" :class="L.actView" @click="openCard(item.id)">
         <Eye class="w-3 h-3" /> Consulter
       </button>
+    </template>
+
+    <template #details-panel="{ item }">
+      <div class="flex flex-col gap-3">
+        <div>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span :class="LIB_GRAVITE[item.gravite].cls" class="text-xs font-medium px-2 py-0.5 rounded-full">
+              {{ LIB_GRAVITE[item.gravite].label }}
+            </span>
+            <span :class="LIB_NATURE[item.nature].cls" class="text-xs font-medium px-2 py-0.5 rounded-full">
+              {{ LIB_NATURE[item.nature].label }}
+            </span>
+          </div>
+          <div class="font-mono font-semibold text-foreground mt-1.5">{{ item.id }}</div>
+          <div class="text-xs text-muted-foreground">{{ LIB_TYPE_ECART[item.type] }}</div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div>
+            <div class="text-muted-foreground text-[11px]">Voyage</div>
+            <span class="font-mono">{{ item.voyageRef }}</span>
+          </div>
+          <div>
+            <div class="text-muted-foreground text-[11px]">Véhicule</div>
+            <span class="font-mono">{{ item.vehiculePlaque }}</span>
+          </div>
+          <div class="col-span-2">
+            <div class="text-muted-foreground text-[11px]">Chauffeur</div>
+            <button v-if="item.chauffeurId"
+              class="text-primary hover:underline bg-transparent border-0 p-0 cursor-pointer text-left"
+              @click="voirConducteur(item.chauffeurId)">
+              {{ item.chauffeurNom }}
+            </button>
+            <span v-else>{{ item.chauffeurNom ?? '—' }}</span>
+          </div>
+          <div>
+            <div class="text-muted-foreground text-[11px]">Durée</div>{{ fmtDuree(item.dureeMin) }}
+          </div>
+          <div>
+            <div class="text-muted-foreground text-[11px]">Détecté le</div>{{ fmtDate(item.detecteLe) }}
+          </div>
+          <div v-if="item.lieu" class="col-span-2">
+            <div class="text-muted-foreground text-[11px]">Lieu</div>{{ item.lieu }}
+          </div>
+        </div>
+
+        <div v-if="item.nature === 'a_qualifier'"
+          class="bg-warning-bg text-warning rounded-md px-2.5 py-2 text-[11px] leading-snug">
+          Écart en attente de qualification. Tant qu'un responsable ne l'a pas qualifié,
+          il n'a aucune conséquence pour le conducteur.
+        </div>
+
+        <button :class="L.btnPrimary" class="w-full justify-center" @click="openCard(item.id)">
+          Ouvrir la fiche
+        </button>
+      </div>
     </template>
 
     <template #empty>
       <ShieldCheck class="w-8 h-8" />
       <p class="text-sm">Aucun écart - tous les voyages sont conformes</p>
     </template>
+
+    <EcartCard
+      v-if="selectedId !== null"
+      :ecart="store.getById(selectedId)!"
+      @close="selectedId = null"
+      @navigate="(id: string) => (selectedId = id)"
+      @ouvrir-voyage="(id: string) => router.push({ name: 'fleet-voyage-detail', params: { id } })"
+      @voir-conducteur="voirConducteur"
+    />
   </ListPageLayout>
 </template>
 
@@ -114,11 +185,12 @@ import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { AlertTriangle, ShieldCheck, Gavel, Eye, Ban, Clock } from 'lucide-vue-next'
 import { ListPageLayout } from '../../components'
+import EcartCard from '../../components/fleet/EcartCard.vue'
 import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
 import { useEcartsStore, LIB_TYPE_ECART, LIB_NATURE, LIB_GRAVITE } from '../../stores/ecarts'
 import { useVoyagesStore } from '../../stores/voyages'
 import type { EcartItineraire } from '../../types/fms'
-import { fmtDateTime, fmtDuree } from '../../lib/fmsUtils'
+import { fmtDate, fmtDateTime, fmtDuree } from '../../lib/fmsUtils'
 import * as L from '../../lib/listClasses'
 
 const router = useRouter()
@@ -126,6 +198,7 @@ const store  = useEcartsStore()
 const voyages = useVoyagesStore()
 
 const searchQuery   = ref('')
+const selectedId    = ref<string | null>(null)
 const activeScope   = ref('')
 const filterType    = ref('')
 const filterGravite = ref('')
@@ -198,7 +271,14 @@ const pageItems  = computed(() => {
   return filtered.value.slice(start, start + pageSize.value)
 })
 
-function ouvrir(id: string) {
-  router.push({ name: 'fleet-ecart-detail', params: { id } })
+/** Ouvre la fiche en superposition, comme les pages Véhicules et Carburant. */
+function openCard(id: string) {
+  selectedId.value = id
+}
+
+/** Ouvre le tableau de bord du conducteur — ses six onglets : itinéraires,
+ *  carburant, documents, formations, planning, ressources humaines. */
+function voirConducteur(chauffeurId: string) {
+  router.push({ name: 'fleet-conducteur-detail', params: { id: chauffeurId } })
 }
 </script>

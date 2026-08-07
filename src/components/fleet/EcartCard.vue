@@ -69,7 +69,13 @@
             </div>
             <div class="flex flex-col gap-1">
               <label :class="F.fieldLabel">Chauffeur</label>
-              <span class="text-sm text-foreground">{{ item.chauffeurNom }}</span>
+              <button v-if="item.chauffeurId"
+                class="text-sm text-primary hover:underline bg-transparent border-0 p-0 cursor-pointer text-left w-fit"
+                title="Ouvrir le tableau de bord du conducteur"
+                @click="emit('voir-conducteur', item.chauffeurId)">
+                {{ item.chauffeurNom }}
+              </button>
+              <span v-else class="text-sm text-foreground">{{ item.chauffeurNom ?? '—' }}</span>
             </div>
             <div class="col-span-2 flex flex-col gap-1 max-sm:col-span-1">
               <label :class="F.fieldLabel">Lieu</label>
@@ -247,7 +253,13 @@ import * as F  from '../../lib/formClasses'
 import * as Lc from '../../lib/listClasses'
 
 const props = defineProps<{ ecart: EcartItineraire }>()
-const emit  = defineEmits<{ close: []; navigate: [id: string]; 'ouvrir-voyage': [id: string] }>()
+const emit  = defineEmits<{
+  close: []
+  navigate: [id: string]
+  'ouvrir-voyage': [id: string]
+  /** Ouvre le tableau de bord du conducteur, avec ses six onglets. */
+  'voir-conducteur': [id: string]
+}>()
 
 const store        = useEcartsStore()
 const configStore  = useConfigurationStore()
