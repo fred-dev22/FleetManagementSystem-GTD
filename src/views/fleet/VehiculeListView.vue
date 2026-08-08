@@ -19,6 +19,10 @@
     @open-card="(e) => openCard(e.id)"
   >
     <template #header-actions>
+      <button :class="L.btnOutline" @click="importOuvert = true">
+        <Upload class="w-4 h-4" />
+        Importer le parc
+      </button>
       <button :class="L.btnPrimary" @click="showForm = true">
         <Plus class="w-4 h-4" />
         Ajouter un véhicule
@@ -134,6 +138,12 @@
       <p class="text-sm">Aucun véhicule trouvé</p>
     </template>
 
+    <ImportParcModal
+      v-if="importOuvert"
+      @close="importOuvert = false"
+      @imported="() => { importOuvert = false }"
+    />
+
     <VehiculeCard v-if="selectedId !== null" :vehicule="store.getById(selectedId)!" @close="selectedId = null" />
     <VehiculeFormModal v-if="showForm" @close="showForm = false" />
   </ListPageLayout>
@@ -141,10 +151,11 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { Plus, Truck, AlertTriangle, Wrench } from 'lucide-vue-next'
+import { AlertTriangle, Plus, Truck, Upload, Wrench } from 'lucide-vue-next'
 import { ListPageLayout } from '../../components'
 import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
 import VehiculeCard from '../../components/fleet/VehiculeCard.vue'
+import ImportParcModal from '../../components/fleet/ImportParcModal.vue'
 import VehiculeFormModal from '../../components/fleet/VehiculeFormModal.vue'
 import { useVehiculesStore } from '../../stores/vehicules'
 import type { Vehicule, StatutAdminVehicule } from '../../types'
@@ -152,7 +163,8 @@ import * as L from '../../lib/listClasses'
 
 const store    = useVehiculesStore()
 const showForm = ref(false)
-const selectedId = ref<string | null>(null)
+const selectedId   = ref<string | null>(null)
+const importOuvert = ref(false)
 
 const searchQuery = ref('')
 const activeScope = ref('')
@@ -230,6 +242,7 @@ const pageItems  = computed(() => {
 function openCard(id: string) { selectedId.value = id }
 
 const STATUT_MAP: Record<StatutAdminVehicule, { label: string; cls: string }> = {
+  en_service:    { label: 'En service',    cls: 'bg-success-bg text-success' },
   actif:         { label: 'Actif',          cls: 'bg-success-bg text-success' },
   affecte:       { label: 'Affecté',        cls: 'bg-primary/10 text-primary' },
   en_reparation: { label: 'En réparation',  cls: 'bg-warning-bg text-warning' },

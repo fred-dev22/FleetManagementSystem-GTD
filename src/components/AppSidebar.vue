@@ -48,8 +48,18 @@
     <SidebarItem :icon="Fuel"        label="Carburant"  :to="{ name: 'fleet-carburant' }" />
   </SidebarSection>
 
+  <SidebarSection label="Maintenance">
+    <SidebarItem :icon="Wrench" label="Interventions"  :to="{ name: 'fleet-maintenance' }" />
+    <SidebarItem :icon="Gauge"  label="Fiabilité"      :to="{ name: 'fleet-maintenance-dashboard' }" />
+    <SidebarItem :icon="Users"  label="Équipe mobile"  :to="{ name: 'fleet-equipe-mobile' }" />
+  </SidebarSection>
+
   <SidebarSection label="Parc véhicules">
     <SidebarItem :icon="Truck"      label="Véhicules"    :to="{ name: 'fleet-vehicules' }" />
+    <SidebarItem :icon="ClipboardList"  label="État de flotte" :to="{ name: 'fleet-etat-flotte' }" />
+    <SidebarItem :icon="ClipboardCheck" label="Contrôles"      :to="{ name: 'fleet-controles' }" />
+    <SidebarItem :icon="ShieldCheck"    label="Départs"        :to="{ name: 'fleet-autorisations' }" />
+    <SidebarItem :icon="ShieldAlert"    label="Assurances"     :to="{ name: 'fleet-assurances' }" />
     <SidebarItem :icon="UserCheck2" label="Conducteurs"  :to="{ name: 'fleet-conducteurs' }" />
     <SidebarItem :icon="Link2"      label="Attelages"    :to="{ name: 'fleet-attelages' }" />
     <SidebarItem :icon="UserCheck"  label="Affectations" :to="{ name: 'fleet-affectations' }" />
@@ -108,7 +118,7 @@
 import { computed, defineComponent, h, type Component, type PropType } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import {
-  Building, CalendarDays, CalendarOff, CalendarRange, ClipboardCheck, Coins, Cpu, FileText, Fuel, LayoutDashboard, Link2, MapPin, MapPinned, Network, Package, PieChart, Plane, Receipt, Route, Settings, ShieldAlert, Truck, UserCheck, UserCheck2, Users,
+  Building, CalendarDays, CalendarOff, CalendarRange, ClipboardCheck, ClipboardList, Coins, Cpu, FileText, Fuel, Gauge, LayoutDashboard, Link2, MapPin, MapPinned, Network, Package, PieChart, Plane, Receipt, Route, Settings, ShieldAlert, ShieldCheck, Truck, UserCheck, UserCheck2, Users, Wrench,
 } from 'lucide-vue-next'
 import { useAuthStore }       from '../stores/auth'
 import { useNavigationStore } from '../stores/navigation'

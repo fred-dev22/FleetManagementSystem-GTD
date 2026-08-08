@@ -180,6 +180,92 @@
           </div>
         </FormSection>
 
+        <!-- ═══════════════════════════════════════════════════
+             US 2.1.6 — Équipements embarqués
+             Cible 100 % au cahier des charges ERP, domaine Technologie.
+             ═══════════════════════════════════════════════════ -->
+        <FormSection
+          title="Équipements embarqués"
+          :recaps="[`${equipements.length} équipement(s)`, equipementsHS ? `${equipementsHS} hors service` : 'tous opérationnels']"
+        >
+          <div v-if="!equipements.length" class="text-xs text-muted-foreground py-2">
+            Aucun équipement enregistré pour ce véhicule.
+          </div>
+          <table v-else class="w-full border-collapse">
+            <thead>
+              <tr class="border-b border-border">
+                <th class="text-left py-1.5 text-[11px] font-semibold text-muted-foreground">Équipement</th>
+                <th class="text-left py-1.5 text-[11px] font-semibold text-muted-foreground">N° série</th>
+                <th class="text-left py-1.5 text-[11px] font-semibold text-muted-foreground">Plateforme</th>
+                <th class="text-left py-1.5 text-[11px] font-semibold text-muted-foreground">État</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="e in equipements" :key="e.id" class="border-b border-border/60">
+                <td class="py-2 text-xs">{{ LIB_EQUIPEMENT[e.type] }}</td>
+                <td class="py-2 text-[11px] font-mono">{{ e.numeroSerie ?? '—' }}</td>
+                <td class="py-2 text-[11px] text-muted-foreground">{{ e.plateforme ?? '—' }}</td>
+                <td class="py-2">
+                  <span class="text-[10px] font-medium px-2 py-0.5 rounded-full" :class="LIB_ETAT_EQUIPEMENT[e.etat].cls">
+                    {{ LIB_ETAT_EQUIPEMENT[e.etat].label }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div v-if="tentatives.length" class="bg-danger-bg text-danger rounded-md px-3 py-2 mt-3 text-[11px] leading-snug">
+            <strong>{{ tentatives.length }} tentative(s) de désactivation détectée(s)</strong> par la télématique.
+            <div v-for="(t, i) in tentatives" :key="i" class="mt-1">{{ t.detail }}</div>
+          </div>
+        </FormSection>
+
+        <!-- ═══════════════════════════════════════════════════
+             US 3.4.2 — Carnet d'entretien
+             Toute la vie technique du véhicule en un écran.
+             ═══════════════════════════════════════════════════ -->
+        <FormSection
+          title="Carnet d'entretien"
+          :recaps="[`${ordres.length} intervention(s)`, joursImmobilise ? `${joursImmobilise} j immobilisé` : '']"
+          :default-open="false"
+        >
+          <div v-if="!ordres.length" class="text-xs text-muted-foreground py-2">
+            Aucune intervention enregistrée pour ce véhicule.
+          </div>
+          <template v-else>
+            <table class="w-full border-collapse">
+              <thead>
+                <tr class="border-b border-border">
+                  <th class="text-left py-1.5 text-[11px] font-semibold text-muted-foreground">Date</th>
+                  <th class="text-left py-1.5 text-[11px] font-semibold text-muted-foreground">Ordre</th>
+                  <th class="text-left py-1.5 text-[11px] font-semibold text-muted-foreground">Diagnostic</th>
+                  <th class="text-left py-1.5 text-[11px] font-semibold text-muted-foreground">Km</th>
+                  <th class="text-left py-1.5 text-[11px] font-semibold text-muted-foreground">Coût</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="o in ordres" :key="o.id" class="border-b border-border/60">
+                  <td class="py-2 text-xs">{{ fmtDate(o.declareLe) }}</td>
+                  <td class="py-2 text-[11px] font-mono">{{ o.reference }}</td>
+                  <td class="py-2">
+                    <span class="text-xs">{{ o.sousSysteme ? LIB_SOUS_SYSTEME[o.sousSysteme] : '—' }}</span>
+                    <div v-if="o.modeDefaillance" class="text-[11px] text-muted-foreground">
+                      {{ LIB_MODE_DEFAILLANCE[o.modeDefaillance] }}
+                    </div>
+                  </td>
+                  <td class="py-2 text-xs">{{ o.kilometrage ? o.kilometrage.toLocaleString('fr-FR') : '—' }}</td>
+                  <td class="py-2 text-xs">{{ maintStore.coutOT(o) ? fmtAr(maintStore.coutOT(o)) : '—' }}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div v-if="recurrences.length" class="bg-warning-bg text-warning rounded-md px-3 py-2 mt-3 text-[11px] leading-snug">
+              <strong>Récurrence signalée</strong> — {{ recurrences.join(', ') }} : ce sous-système
+              a défailli plusieurs fois. Une usure répétée relève souvent d'une maintenance
+              insuffisante plutôt que d'un défaut fournisseur.
+            </div>
+          </template>
+        </FormSection>
+
       </div>
     </template>
   </CardModalShell>
@@ -190,14 +276,45 @@ import { ref, reactive, computed } from 'vue'
 import CardModalShell from '../shared/CardModalShell.vue'
 import FormSection    from '../ui/form-field/FormSection.vue'
 import { useVehiculesStore } from '../../stores/vehicules'
+import { useFlotteStore } from '../../stores/flotte'
+import { useMaintenanceStore } from '../../stores/maintenance'
+import { LIB_EQUIPEMENT, LIB_ETAT_EQUIPEMENT } from '../../types/flotte'
+import { LIB_SOUS_SYSTEME, LIB_MODE_DEFAILLANCE } from '../../types/maintenance'
+import { fmtAr } from '../../lib/fmsUtils'
 import type { Vehicule, StatutAdminVehicule, StatutOperationnelVehicule } from '../../types'
 
 const props = defineProps<{ vehicule: Vehicule }>()
 const emit  = defineEmits<{ close: [] }>()
 
 // Access the vehicule from store reactively
-const store = useVehiculesStore()
+const store      = useVehiculesStore()
+const flotteStore = useFlotteStore()
+const maintStore  = useMaintenanceStore()
 const item  = computed(() => store.getById(props.vehicule.id) ?? props.vehicule)
+
+/* ── US 2.1.6 — Équipements embarqués ─────────────────────── */
+const equipements  = computed(() => flotteStore.equipementsDuVehicule(item.value.id))
+const equipementsHS = computed(() => equipements.value.filter(e => e.etat !== 'operationnel').length)
+const tentatives   = computed(() =>
+  equipements.value.flatMap(e => e.tentativeDesactivation ?? []))
+
+/* ── US 3.4.2 — Carnet d'entretien ────────────────────────── */
+const ordres = computed(() => maintStore.ordresDuVehicule(item.value.id))
+
+const joursImmobilise = computed(() =>
+  maintStore.indisposDuVehicule(item.value.id)
+    .reduce((s, i) => s + maintStore.dureeIndispo(i), 0))
+
+/** Sous-systèmes ayant défailli plus d'une fois — signal d'usure répétée. */
+const recurrences = computed(() => {
+  const acc = new Map<string, number>()
+  ordres.value
+    .filter(o => o.typeMaintenance === 'correctif' && o.sousSysteme)
+    .forEach(o => acc.set(o.sousSysteme!, (acc.get(o.sousSysteme!) ?? 0) + 1))
+  return [...acc.entries()]
+    .filter(([, n]) => n > 1)
+    .map(([k]) => LIB_SOUS_SYSTEME[k as keyof typeof LIB_SOUS_SYSTEME])
+})
 
 const isEditMode = ref(false)
 const saving     = ref(false)

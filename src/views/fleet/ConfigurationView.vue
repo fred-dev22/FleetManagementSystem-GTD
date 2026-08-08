@@ -138,6 +138,69 @@
     </div>
 
     <!-- ══ PARAMÈTRES ════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════
+         US 3.1.1 — Plans d'entretien par modèle
+         Source : plan constructeur SINOTRUCK HOWO NX-400,
+         cinq échéances de 5 000 à 45 000 km.
+         ═══════════════════════════════════════════════════════ -->
+    <div v-else-if="onglet === 'entretien'" class="flex flex-col gap-3.5">
+      <div v-for="plan in maintStore.plans" :key="plan.id" :class="L.card">
+        <div :class="L.cardHeader">
+          <h2 :class="L.cardTitle">
+            <Wrench class="w-4 h-4 text-primary" /> {{ plan.marque }} {{ plan.modele }}
+          </h2>
+          <span class="text-[11px] font-medium px-2 py-0.5 rounded-full"
+            :class="plan.actif ? 'bg-success-bg text-success' : 'bg-gray-100 text-gray-400'">
+            {{ plan.actif ? 'Actif' : 'Inactif' }}
+          </span>
+        </div>
+
+        <table :class="L.table">
+          <thead><tr>
+            <th :class="L.th" class="cursor-default">Opération</th>
+            <th :class="L.th" class="cursor-default">Sous-système</th>
+            <th :class="L.th" class="cursor-default">Nature</th>
+            <th :class="L.th" class="cursor-default">Intervalle</th>
+          </tr></thead>
+          <tbody>
+            <tr v-for="op in plan.operations" :key="op.id" :class="L.rowHover">
+              <td :class="L.td"><span class="text-xs font-medium">{{ op.libelle }}</span></td>
+              <td :class="L.td">
+                <span class="text-xs text-muted-foreground">{{ LIB_SOUS_SYSTEME[op.sousSysteme] }}</span>
+              </td>
+              <td :class="L.td">
+                <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                  {{ LIB_NATURE_OPERATION[op.nature] }}
+                </span>
+              </td>
+              <td :class="L.td">
+                <span v-if="op.intervalleKm" class="text-xs">
+                  tous les {{ op.intervalleKm.toLocaleString('fr-FR') }} km
+                </span>
+                <span v-else-if="op.intervalleJours" class="text-xs">
+                  tous les {{ op.intervalleJours }} jours
+                </span>
+                <span v-else class="text-gray-300">—</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
+          Le déclenchement se fait au premier des deux seuils atteint. Ce plan s’applique à tous
+          les véhicules de ce modèle et sert de base au calcul des échéances.
+        </p>
+      </div>
+
+      <div class="flex items-start gap-2.5 bg-background border border-border rounded-lg px-3.5 py-3">
+        <FileQuestion class="w-4 h-4 shrink-0 mt-px text-muted-foreground" />
+        <p class="text-[11px] text-muted-foreground leading-relaxed">
+          Un seul plan constructeur a été transmis, celui du SINOTRUCK HOWO NX-400. Les plans des
+          autres modèles du parc restent à fournir par GTD pour que leurs échéances soient calculées.
+        </p>
+      </div>
+    </div>
+
     <div v-else-if="onglet === 'parametres'" class="grid grid-cols-1 lg:grid-cols-2 gap-3.5 items-start">
       <div :class="L.card">
         <div :class="L.cardHeader"><h2 :class="L.cardTitle"><Clock class="w-4 h-4 text-primary" /> Temps réglementaires</h2></div>
@@ -206,10 +269,12 @@
  * réglages dispersés dans chaque écran.
  */
 import { ref, computed } from 'vue'
-import { Info, Route, Clock, SlidersHorizontal } from 'lucide-vue-next'
+import { Info, Route, Clock, SlidersHorizontal, Wrench, FileQuestion } from 'lucide-vue-next'
 import FleetMap from '../../components/fleet/FleetMap.vue'
 import { useTrajetsStore } from '../../stores/trajets'
 import { useConfigurationStore } from '../../stores/configuration'
+import { useMaintenanceStore } from '../../stores/maintenance'
+import { LIB_SOUS_SYSTEME, LIB_NATURE_OPERATION } from '../../types/maintenance'
 import { LIB_ROLE_ETAPE, LIB_CATEGORIE_ECART } from '../../types/fms'
 import type { GraviteEcart, MapMarker } from '../../types/fms'
 import { fmtDuree } from '../../lib/fmsUtils'
@@ -218,13 +283,15 @@ import * as F from '../../lib/formClasses'
 
 const trajetsStore = useTrajetsStore()
 const configStore = useConfigurationStore()
+const maintStore  = useMaintenanceStore()
 
-const onglet = ref<'trajets' | 'ecarts' | 'parametres'>('trajets')
+const onglet = ref<'trajets' | 'ecarts' | 'entretien' | 'parametres'>('trajets')
 const trajetSel = ref<string | null>(trajetsStore.trajets[0]?.id ?? null)
 
 const onglets = computed(() => [
   { key: 'trajets' as const,    label: 'Trajets de référence', compte: trajetsStore.trajets.length },
   { key: 'ecarts' as const,     label: 'Types d’écart',        compte: configStore.typesEcart.length },
+  { key: 'entretien' as const,  label: 'Plans d’entretien',   compte: maintStore.plans.length },
   { key: 'parametres' as const, label: 'Paramètres',           compte: 0 },
 ])
 
