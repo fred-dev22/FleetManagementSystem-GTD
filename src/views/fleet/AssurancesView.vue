@@ -55,7 +55,7 @@
     </template>
 
     <template #cell-dommages="{ item }">
-      <span class="text-xs">{{ item.montantDommagesAr ? fmtAr(item.montantDommagesAr) : '—' }}</span>
+      <span class="text-xs">{{ item.montantDommagesAr ? fmtAr(item.montantDommagesAr) : '-' }}</span>
     </template>
 
     <!-- L'indemnisation est suivie séparément du coût de réparation -->
@@ -71,7 +71,7 @@
 
     <template #cell-reste="{ item }">
       <span class="text-xs font-semibold" :class="(item.resteACharge ?? 0) > 0 ? 'text-danger' : 'text-success'">
-        {{ item.resteACharge != null ? fmtAr(item.resteACharge) : '—' }}
+        {{ item.resteACharge != null ? fmtAr(item.resteACharge) : '-' }}
       </span>
     </template>
 
@@ -90,14 +90,14 @@
     </template>
 
     <template #cell-echeance="{ item }">
-      <span class="text-xs">{{ item.dateEcheance ? fmtDate(item.dateEcheance) : "—" }}</span>
+      <span class="text-xs">{{ item.dateEcheance ? fmtDate(item.dateEcheance) : "-" }}</span>
       <div v-if="item.dateEcheance" class="text-[11px]" :class="clsEcheance(item.dateEcheance)">
         {{ libelleEcheance(item.dateEcheance) }}
       </div>
     </template>
 
     <template #cell-prime="{ item }">
-      <span class="text-xs">{{ item.primeAnnuelleAr ? fmtAr(item.primeAnnuelleAr) : '—' }}</span>
+      <span class="text-xs">{{ item.primeAnnuelleAr ? fmtAr(item.primeAnnuelleAr) : '-' }}</span>
       <div v-if="item.franchiseAr" class="text-[11px] text-muted-foreground">
         franchise {{ fmtAr(item.franchiseAr) }}
       </div>
@@ -130,16 +130,16 @@
             <span class="font-mono">{{ item.vehiculePlaque }}</span>
           </div>
           <div>
-            <div class="text-muted-foreground text-[11px]">Chauffeur</div>{{ item.chauffeurNom ?? '—' }}
+            <div class="text-muted-foreground text-[11px]">Chauffeur</div>{{ item.chauffeurNom ?? '-' }}
           </div>
           <div>
             <div class="text-muted-foreground text-[11px]">Dommages</div>
-            {{ item.montantDommagesAr ? fmtAr(item.montantDommagesAr) : '—' }}
+            {{ item.montantDommagesAr ? fmtAr(item.montantDommagesAr) : '-' }}
           </div>
           <div>
             <div class="text-muted-foreground text-[11px]">Reste à charge</div>
             <span :class="(item.resteACharge ?? 0) > 0 ? 'text-danger font-medium' : 'text-success'">
-              {{ item.resteACharge != null ? fmtAr(item.resteACharge) : '—' }}
+              {{ item.resteACharge != null ? fmtAr(item.resteACharge) : '-' }}
             </span>
           </div>
         </div>
@@ -199,13 +199,13 @@
 
 <script setup lang="ts">
 /**
- * US 2.7.3 — Assurances et sinistres.
+ * US 2.7.3 - Assurances et sinistres.
  *
  * Deux vues qui partagent la même coquille : les sinistres et les polices.
  * Le suivi de l'indemnisation est volontairement distinct du coût de
  * réparation, comme le demande la user story.
  *
- * Source : cahier des charges ERP GTD, domaine Infractions & discipline —
+ * Source : cahier des charges ERP GTD, domaine Infractions & discipline -
  * « accidents par million de km, tendre vers 0 ».
  */
 import { ref, computed, watch } from 'vue'
@@ -291,7 +291,7 @@ const kpis = computed(() =>
     ? [
         { label: 'Sinistres', value: String(store.sinistres.length), cls: 'text-foreground', cible: '' },
         { label: 'Accidents par million de km',
-          value: accidentsParMKm.value != null ? String(accidentsParMKm.value) : '—',
+          value: accidentsParMKm.value != null ? String(accidentsParMKm.value) : '-',
           cls: 'text-foreground', cible: 'cible : tendre vers 0' },
         { label: 'Dommages', value: fmtAr(store.totalDommages), cls: 'text-foreground', cible: '' },
         { label: 'Reste à charge', value: fmtAr(resteTotal.value),
@@ -343,7 +343,7 @@ function joursRestants(iso: string): number {
 function libelleEcheance(iso: string): string {
   const j = joursRestants(iso)
   if (j < 0) return `expirée depuis ${Math.abs(j)} j`
-  if (j <= PREAVIS_JOURS) return `dans ${j} j — à renouveler`
+  if (j <= PREAVIS_JOURS) return `dans ${j} j - à renouveler`
   return `dans ${j} j`
 }
 

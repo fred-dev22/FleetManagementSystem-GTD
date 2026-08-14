@@ -3,12 +3,11 @@
 
     <div :class="L.pageHeader">
       <div>
-        <h1 :class="L.pageTitle">Tableau de bord maintenance</h1>
-        <p :class="L.pageSub">Fiabilité, coûts et échéances préventives</p>
+        <h1 :class="L.pageTitle">Fiabilité</h1>
+        <p :class="L.pageSub">Indicateurs de fiabilité et coûts de maintenance</p>
       </div>
     </div>
 
-    <!-- ═══ Indicateurs, mêmes tuiles que les autres pages ═══ -->
     <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 mb-3.5">
       <div v-for="k in kpis" :key="k.label"
         class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3">
@@ -18,78 +17,18 @@
       </div>
     </div>
 
-    <!-- Onglets, même style que Configuration et fiche conducteur -->
     <div class="flex gap-1 border-b border-border mb-3.5 overflow-x-auto">
       <button v-for="t in onglets" :key="t.key" @click="onglet = t.key"
         class="px-3.5 py-2 text-[13px] font-medium border-b-2 -mb-px transition-colors whitespace-nowrap cursor-pointer bg-transparent"
         :class="onglet === t.key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'">
         {{ t.label }}
-        <span v-if="t.badge" class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-danger-bg text-danger">{{ t.badge }}</span>
       </button>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════
-         ÉCHÉANCES PRÉVENTIVES - US 3.1.2
-         ═══════════════════════════════════════════════════════ -->
-    <div v-if="onglet === 'echeances'" class="flex flex-col gap-3.5">
-      <div :class="L.card">
-        <div :class="L.cardHeader">
-          <h2 :class="L.cardTitle"><CalendarClock class="w-4 h-4 text-primary" /> Échéances à venir</h2>
-          <span class="text-[11px] text-muted-foreground">
-          </span>
-        </div>
-
-        <div v-if="!echeances.length" class="text-xs text-muted-foreground py-3">
-          Aucune échéance calculable - le plan d’entretien n’est défini que pour le modèle SINOTRUCK HOWO NX-400.
-        </div>
-
-        <table v-else :class="L.table">
-          <thead><tr>
-            <th :class="L.th" class="cursor-default">Véhicule</th>
-            <th :class="L.th" class="cursor-default">Opération</th>
-            <th :class="L.th" class="cursor-default">Sous-système</th>
-            <th :class="L.th" class="cursor-default">Nature</th>
-            <th :class="L.th" class="cursor-default">Échéance</th>
-            <th :class="L.th" class="cursor-default">État</th>
-          </tr></thead>
-          <tbody>
-            <tr v-for="e in echeances" :key="e.vehiculeId + e.operationId" :class="L.rowHover">
-              <td :class="L.td"><span class="font-mono text-xs font-medium">{{ e.vehiculePlaque }}</span></td>
-              <td :class="L.td"><span class="text-xs">{{ e.operationLibelle }}</span></td>
-              <td :class="L.td"><span class="text-xs text-muted-foreground">{{ LIB_SOUS_SYSTEME[e.sousSysteme] }}</span></td>
-              <td :class="L.td">
-                <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                  {{ LIB_NATURE_OPERATION[e.nature] }}
-                </span>
-              </td>
-              <td :class="L.td">
-                <span v-if="e.kmProchain" class="text-xs">{{ e.kmProchain.toLocaleString('fr-FR') }} km</span>
-                <div v-if="e.kmRestants != null" class="text-[11px]"
-                  :class="e.kmRestants < 0 ? 'text-danger font-medium' : 'text-muted-foreground'">
-                  {{ e.kmRestants < 0 ? `dépassée de ${Math.abs(e.kmRestants).toLocaleString('fr-FR')} km`
-                                      : `dans ${e.kmRestants.toLocaleString('fr-FR')} km` }}
-                </div>
-              </td>
-              <td :class="L.td">
-                <span class="text-[11px] font-medium px-2 py-0.5 rounded-full" :class="CLS_ECHEANCE[e.statut]">
-                  {{ LIB_ECHEANCE[e.statut] }}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
-          Le déclenchement se fait au premier des deux seuils atteint - kilométrage ou date.
-          Le plan constructeur du SINOTRUCK HOWO NX-400 sert de référence, il reste modifiable.
-        </p>
-      </div>
     </div>
 
     <!-- ═══════════════════════════════════════════════════════
          FIABILITÉ - US 3.5.1
          ═══════════════════════════════════════════════════════ -->
-    <div v-else-if="onglet === 'fiabilite'" class="grid grid-cols-1 lg:grid-cols-2 gap-3.5 items-start">
+    <div v-if="onglet === 'fiabilite'" class="grid grid-cols-1 lg:grid-cols-2 gap-3.5 items-start">
       <div :class="L.card">
         <div :class="L.cardHeader">
           <h2 :class="L.cardTitle"><Gauge class="w-4 h-4 text-primary" /> Indicateurs de fiabilité</h2>
@@ -117,6 +56,24 @@
               <td :class="L.td">
                 <span class="text-xs font-semibold" :class="(store.ratioPreventif ?? 0) >= 60 ? 'text-success' : 'text-danger'">
                   {{ store.ratioPreventif != null ? store.ratioPreventif + ' %' : '-' }}
+                </span>
+              </td>
+            </tr>
+            <tr :class="L.rowHover">
+              <td :class="L.td"><span class="text-xs font-medium">Taux de disponibilité</span></td>
+              <td :class="L.td"><span class="text-[11px] text-muted-foreground">(Jours théoriques − jours perdus) ÷ jours théoriques</span></td>
+              <td :class="L.td">
+                <span class="text-xs font-semibold" :class="(tauxDispo ?? 0) >= 80 ? 'text-success' : 'text-danger'">
+                  {{ tauxDispo != null ? tauxDispo + ' %' : '-' }}
+                </span>
+              </td>
+            </tr>
+            <tr :class="L.rowHover">
+              <td :class="L.td"><span class="text-xs font-medium">Préventif réalisé dans les délais</span></td>
+              <td :class="L.td"><span class="text-[11px] text-muted-foreground">Préventifs clôturés ÷ préventifs planifiés</span></td>
+              <td :class="L.td">
+                <span class="text-xs font-semibold">
+                  {{ store.tauxRealisationPreventif != null ? store.tauxRealisationPreventif + ' %' : '-' }}
                 </span>
               </td>
             </tr>
@@ -153,6 +110,34 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <div :class="L.card">
+        <div :class="L.cardHeader">
+          <h2 :class="L.cardTitle"><Gauge class="w-4 h-4 text-primary" /> MTBF par sous-système</h2>
+          <span class="text-[11px] text-muted-foreground">kilomètres entre deux pannes</span>
+        </div>
+        <div v-if="!store.mtbfParSousSysteme.length" class="text-xs text-muted-foreground py-3">
+          Pas assez de pannes enregistrées pour calculer un MTBF par organe.
+        </div>
+        <table v-else :class="L.table">
+          <thead><tr>
+            <th :class="L.th" class="cursor-default">Sous-système</th>
+            <th :class="L.th" class="cursor-default">Pannes</th>
+            <th :class="L.th" class="cursor-default">MTBF</th>
+          </tr></thead>
+          <tbody>
+            <tr v-for="m in store.mtbfParSousSysteme" :key="m.sousSysteme" :class="L.rowHover">
+              <td :class="L.td"><span class="text-xs">{{ LIB_SOUS_SYSTEME[m.sousSysteme] }}</span></td>
+              <td :class="L.td"><span class="text-xs">{{ m.nb }}</span></td>
+              <td :class="L.td">
+                <span class="text-xs font-semibold">
+                  {{ m.mtbfKm != null ? m.mtbfKm.toLocaleString('fr-FR') + ' km' : 'panne unique' }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <div :class="L.card">
@@ -213,6 +198,32 @@
         </tbody>
       </table>
 
+      <p class="text-[13px] font-semibold text-foreground mt-5 mb-2">Coût cumulé par véhicule</p>
+      <table :class="L.table">
+        <thead><tr>
+          <th :class="L.th" class="cursor-default">Véhicule</th>
+          <th :class="L.th" class="cursor-default">Interventions</th>
+          <th :class="L.th" class="cursor-default">Jours immobilisé</th>
+          <th :class="L.th" class="cursor-default">Coût cumulé</th>
+          <th :class="L.th" class="cursor-default">Coût au km</th>
+        </tr></thead>
+        <tbody>
+          <tr v-for="v in store.coutCumuleParVehicule" :key="v.vehiculeId" :class="L.rowHover">
+            <td :class="L.td"><span class="font-mono text-xs">{{ v.plaque }}</span></td>
+            <td :class="L.td"><span class="text-xs">{{ v.nb }}</span></td>
+            <td :class="L.td">
+              <span class="text-xs" :class="v.joursImmo > 5 ? 'text-danger font-medium' : ''">
+                {{ v.joursImmo }} j
+              </span>
+            </td>
+            <td :class="L.td"><span class="text-xs font-semibold">{{ fmtAr(v.cout) }}</span></td>
+            <td :class="L.td">
+              <span class="text-xs">{{ coutKm(v.vehiculeId) != null ? fmtAr(coutKm(v.vehiculeId)!) + ' / km' : '-' }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
       <div class="flex items-start gap-2.5 bg-background border border-border rounded-lg px-3.5 py-2.5 mt-3">
         <FileQuestion class="w-4 h-4 shrink-0 mt-px text-muted-foreground" />
         <p class="text-[11px] text-muted-foreground leading-relaxed">
@@ -235,33 +246,20 @@
  */
 import { ref, computed } from 'vue'
 import {
-  CalendarClock, Gauge, AlertTriangle, CalendarOff, Coins, FileQuestion,
+  Gauge, AlertTriangle, CalendarOff, Coins, FileQuestion,
 } from 'lucide-vue-next'
 import { useMaintenanceStore } from '../../stores/maintenance'
 import { useVehiculesStore } from '../../stores/vehicules'
 import {
-  LIB_SOUS_SYSTEME, LIB_NATURE_OPERATION, LIB_TYPE_MAINTENANCE, LIB_FAMILLE_INDISPO,
+  LIB_SOUS_SYSTEME, LIB_TYPE_MAINTENANCE, LIB_FAMILLE_INDISPO,
 } from '../../types/maintenance'
-import type { EcheanceEntretien, FamilleIndispo } from '../../types/maintenance'
+import type { FamilleIndispo } from '../../types/maintenance'
 import { fmtAr } from '../../lib/fmsUtils'
 import * as L from '../../lib/listClasses'
 
 const store    = useMaintenanceStore()
-const vehicules = useVehiculesStore()
 
-const onglet = ref<'echeances' | 'fiabilite' | 'couts'>('echeances')
-
-const LIB_ECHEANCE: Record<EcheanceEntretien['statut'], string> = {
-  a_venir:  'À venir',
-  proche:   'Proche',
-  depassee: 'Dépassée',
-}
-
-const CLS_ECHEANCE: Record<EcheanceEntretien['statut'], string> = {
-  a_venir:  'bg-gray-100 text-gray-600',
-  proche:   'bg-warning-bg text-warning',
-  depassee: 'bg-danger-bg text-danger',
-}
+const onglet = ref<'fiabilite' | 'couts'>('fiabilite')
 
 const CLS_FAMILLE: Record<FamilleIndispo, string> = {
   technique:      'bg-danger',
@@ -270,19 +268,18 @@ const CLS_FAMILLE: Record<FamilleIndispo, string> = {
   humaine:        'bg-primary',
 }
 
-/* ── Échéances calculées pour les tracteurs du parc ────────── */
-const echeances = computed<EcheanceEntretien[]>(() =>
-  vehicules.vehicules
-    .filter(v => v.typeVehicule === 'tracteur' && v.kilometrage != null)
-    .flatMap(v => store.echeancesDuVehicule(
-      v.id, v.plaque, v.modele, v.kilometrage ?? 0,
-      // Dernier passage non historisé : on part du dernier multiple atteint
-      {},
-    ))
-    .filter(e => e.statut !== 'a_venir' || (e.kmRestants ?? 0) < 5_000)
-    .sort((a, b) => (a.kmRestants ?? 0) - (b.kmRestants ?? 0)))
 
-const echeancesDepassees = computed(() => echeances.value.filter(e => e.statut === 'depassee').length)
+/* ── Indicateurs exigés par les user stories 3.3.1 et 3.5.2 ── */
+const vehicules = useVehiculesStore()
+
+const tauxDispo = computed(() =>
+  store.tauxDisponibilite(vehicules.vehicules.filter(v => v.statutAdmin !== 'archive').length))
+
+/** Coût au kilomètre d'un véhicule, à partir de son kilométrage réel. */
+function coutKm(vehiculeId: string): number | null {
+  const v = vehicules.vehicules.find(x => x.id === vehiculeId)
+  return v?.kilometrage ? store.coutParKm(vehiculeId, v.kilometrage) : null
+}
 
 const maxPannes = computed(() =>
   Math.max(1, ...store.pannesParSousSysteme.map(p => p.nb)))
@@ -294,9 +291,8 @@ const ordresParCout = computed(() =>
   [...store.ordres].sort((a, b) => store.coutOT(b) - store.coutOT(a)))
 
 const onglets = computed(() => [
-  { key: 'echeances' as const, label: 'Échéances préventives', badge: echeancesDepassees.value },
-  { key: 'fiabilite' as const, label: 'Fiabilité',             badge: 0 },
-  { key: 'couts' as const,     label: 'Coûts',                 badge: 0 },
+  { key: 'fiabilite' as const, label: 'Fiabilité' },
+  { key: 'couts' as const,     label: 'Coûts' },
 ])
 
 const kpis = computed(() => [

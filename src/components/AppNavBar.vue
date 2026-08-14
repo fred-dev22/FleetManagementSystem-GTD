@@ -65,6 +65,7 @@ const mobileItemClass =
 const navItems = computed(() => [
   { key: 'administration', label: t('nav.admin') },
   { key: 'fleet',          label: t('nav.fleet') },
+  { key: 'maintenance',    label: 'Maintenance' },
 ])
 
 function handleNav(key: string) {
@@ -72,6 +73,7 @@ function handleNav(key: string) {
   const defaults: Record<string, string> = {
     fleet:          'fleet-dashboard',
     administration: 'hr-dashboard',
+    maintenance:    'maintenance-dashboard',
   }
   if (defaults[key]) router.push({ name: defaults[key] })
 }
@@ -87,9 +89,16 @@ const contextLabel = computed(() => {
 
 const isMobileMenuOpen = ref(false)
 
-// Auto-détecter le module actif depuis le path courant
+/**
+ * Détermine le module actif à partir de l'adresse courante.
+ *
+ * Cette fonction doit connaître TOUS les préfixes de module. Un préfixe
+ * oublié renvoie « administration » et écrase le module que l'utilisateur
+ * vient de choisir : l'onglet paraît alors ne pas réagir au premier clic.
+ */
 function detectModule(path: string): string {
-  if (path.startsWith('/fleet')) return 'fleet'
+  if (path.startsWith('/maintenance')) return 'maintenance'
+  if (path.startsWith('/fleet'))       return 'fleet'
   return 'administration'
 }
 

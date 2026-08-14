@@ -84,7 +84,7 @@
         @click.stop="voirConducteur(item.chauffeurId)">
         {{ item.chauffeurNom }}
       </button>
-      <span v-else class="text-xs">{{ item.chauffeurNom ?? '—' }}</span>
+      <span v-else class="text-xs">{{ item.chauffeurNom ?? '-' }}</span>
       <div class="text-[11px] text-muted-foreground font-mono">{{ item.vehiculePlaque }}</div>
     </template>
 
@@ -139,7 +139,7 @@
               @click="voirConducteur(item.chauffeurId)">
               {{ item.chauffeurNom }}
             </button>
-            <span v-else>{{ item.chauffeurNom ?? '—' }}</span>
+            <span v-else>{{ item.chauffeurNom ?? '-' }}</span>
           </div>
           <div>
             <div class="text-muted-foreground text-[11px]">Durée</div>{{ fmtDuree(item.dureeMin) }}
@@ -276,7 +276,7 @@ function openCard(id: string) {
   selectedId.value = id
 }
 
-/** Ouvre le tableau de bord du conducteur — ses six onglets : itinéraires,
+/** Ouvre le tableau de bord du conducteur - ses six onglets : itinéraires,
  *  carburant, documents, formations, planning, ressources humaines. */
 function voirConducteur(chauffeurId: string) {
   router.push({ name: 'fleet-conducteur-detail', params: { id: chauffeurId } })

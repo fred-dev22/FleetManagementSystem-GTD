@@ -32,7 +32,7 @@
             </div>
             <div class="flex flex-col gap-1">
               <label :class="F.fieldLabel">Voyage</label>
-              <span class="text-sm font-mono text-foreground">{{ item.voyageRef ?? '—' }}</span>
+              <span class="text-sm font-mono text-foreground">{{ item.voyageRef ?? '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
               <label :class="F.fieldLabel">Véhicule</label>
@@ -106,7 +106,7 @@
               </div>
               <div class="flex flex-col gap-1">
                 <label :class="F.fieldLabel">Décidée par</label>
-                <span class="text-sm text-foreground">{{ item.decidePar }} — {{ fmtDateTime(item.decideLe) }}</span>
+                <span class="text-sm text-foreground">{{ item.decidePar }} - {{ fmtDateTime(item.decideLe) }}</span>
               </div>
             </div>
             <div v-if="item.motifRefus" class="flex flex-col gap-1 mt-4">
@@ -148,7 +148,7 @@
 </template>
 
 <script setup lang="ts">
-/** US 2.4.1 — Fiche d'une autorisation de départ. */
+/** US 2.4.1 - Fiche d'une autorisation de départ. */
 import { ref, computed } from 'vue'
 import { CheckCircle2, XCircle, Circle, AlertCircle } from 'lucide-vue-next'
 import CardModalShell from '../shared/CardModalShell.vue'

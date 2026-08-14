@@ -33,8 +33,22 @@ export const LIB_ROLE_ETAPE: Record<RoleEtape, string> = {
   arrivee:    'Arrivée',
 }
 
+/**
+ * US 2.4.2 — Le plan de trajet comporte deux volets distincts.
+ * L'aller n'a pas les mêmes sites ni les mêmes contraintes que le retour :
+ * un camion chargé ne s'arrête pas où un camion vide peut le faire.
+ */
+export type VoletTrajet = 'aller' | 'retour'
+
+export const LIB_VOLET: Record<VoletTrajet, string> = {
+  aller:  'Aller',
+  retour: 'Retour',
+}
+
 export interface EtapeTrajet {
   id: string
+  /** Volet auquel appartient l'étape — aller par défaut */
+  volet?: VoletTrajet
   siteId: string
   siteNom: string
   ordre: number

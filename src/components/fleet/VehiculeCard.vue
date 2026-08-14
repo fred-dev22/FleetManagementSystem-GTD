@@ -181,7 +181,7 @@
         </FormSection>
 
         <!-- ═══════════════════════════════════════════════════
-             US 2.1.6 — Équipements embarqués
+             US 2.1.6 - Équipements embarqués
              Cible 100 % au cahier des charges ERP, domaine Technologie.
              ═══════════════════════════════════════════════════ -->
         <FormSection
@@ -203,8 +203,8 @@
             <tbody>
               <tr v-for="e in equipements" :key="e.id" class="border-b border-border/60">
                 <td class="py-2 text-xs">{{ LIB_EQUIPEMENT[e.type] }}</td>
-                <td class="py-2 text-[11px] font-mono">{{ e.numeroSerie ?? '—' }}</td>
-                <td class="py-2 text-[11px] text-muted-foreground">{{ e.plateforme ?? '—' }}</td>
+                <td class="py-2 text-[11px] font-mono">{{ e.numeroSerie ?? '-' }}</td>
+                <td class="py-2 text-[11px] text-muted-foreground">{{ e.plateforme ?? '-' }}</td>
                 <td class="py-2">
                   <span class="text-[10px] font-medium px-2 py-0.5 rounded-full" :class="LIB_ETAT_EQUIPEMENT[e.etat].cls">
                     {{ LIB_ETAT_EQUIPEMENT[e.etat].label }}
@@ -220,7 +220,7 @@
         </FormSection>
 
         <!-- ═══════════════════════════════════════════════════
-             US 3.4.2 — Carnet d'entretien
+             US 3.4.2 - Carnet d'entretien
              Toute la vie technique du véhicule en un écran.
              ═══════════════════════════════════════════════════ -->
         <FormSection
@@ -247,19 +247,19 @@
                   <td class="py-2 text-xs">{{ fmtDate(o.declareLe) }}</td>
                   <td class="py-2 text-[11px] font-mono">{{ o.reference }}</td>
                   <td class="py-2">
-                    <span class="text-xs">{{ o.sousSysteme ? LIB_SOUS_SYSTEME[o.sousSysteme] : '—' }}</span>
+                    <span class="text-xs">{{ o.sousSysteme ? LIB_SOUS_SYSTEME[o.sousSysteme] : '-' }}</span>
                     <div v-if="o.modeDefaillance" class="text-[11px] text-muted-foreground">
                       {{ LIB_MODE_DEFAILLANCE[o.modeDefaillance] }}
                     </div>
                   </td>
-                  <td class="py-2 text-xs">{{ o.kilometrage ? o.kilometrage.toLocaleString('fr-FR') : '—' }}</td>
-                  <td class="py-2 text-xs">{{ maintStore.coutOT(o) ? fmtAr(maintStore.coutOT(o)) : '—' }}</td>
+                  <td class="py-2 text-xs">{{ o.kilometrage ? o.kilometrage.toLocaleString('fr-FR') : '-' }}</td>
+                  <td class="py-2 text-xs">{{ maintStore.coutOT(o) ? fmtAr(maintStore.coutOT(o)) : '-' }}</td>
                 </tr>
               </tbody>
             </table>
 
             <div v-if="recurrences.length" class="bg-warning-bg text-warning rounded-md px-3 py-2 mt-3 text-[11px] leading-snug">
-              <strong>Récurrence signalée</strong> — {{ recurrences.join(', ') }} : ce sous-système
+              <strong>Récurrence signalée</strong> - {{ recurrences.join(', ') }} : ce sous-système
               a défailli plusieurs fois. Une usure répétée relève souvent d'une maintenance
               insuffisante plutôt que d'un défaut fournisseur.
             </div>
@@ -292,20 +292,20 @@ const flotteStore = useFlotteStore()
 const maintStore  = useMaintenanceStore()
 const item  = computed(() => store.getById(props.vehicule.id) ?? props.vehicule)
 
-/* ── US 2.1.6 — Équipements embarqués ─────────────────────── */
+/* ── US 2.1.6 - Équipements embarqués ─────────────────────── */
 const equipements  = computed(() => flotteStore.equipementsDuVehicule(item.value.id))
 const equipementsHS = computed(() => equipements.value.filter(e => e.etat !== 'operationnel').length)
 const tentatives   = computed(() =>
   equipements.value.flatMap(e => e.tentativeDesactivation ?? []))
 
-/* ── US 3.4.2 — Carnet d'entretien ────────────────────────── */
+/* ── US 3.4.2 - Carnet d'entretien ────────────────────────── */
 const ordres = computed(() => maintStore.ordresDuVehicule(item.value.id))
 
 const joursImmobilise = computed(() =>
   maintStore.indisposDuVehicule(item.value.id)
     .reduce((s, i) => s + maintStore.dureeIndispo(i), 0))
 
-/** Sous-systèmes ayant défailli plus d'une fois — signal d'usure répétée. */
+/** Sous-systèmes ayant défailli plus d'une fois - signal d'usure répétée. */
 const recurrences = computed(() => {
   const acc = new Map<string, number>()
   ordres.value

@@ -15,7 +15,7 @@
 
       <div class="px-5 py-4 flex flex-col gap-4">
 
-        <!-- Étape 1 — le fichier -->
+        <!-- Étape 1 - le fichier -->
         <div>
           <p class="text-[13px] font-semibold text-foreground mb-2">1. Choisir le fichier</p>
           <label
@@ -32,7 +32,7 @@
         </div>
 
         <template v-if="entetes.length">
-          <!-- Étape 2 — correspondance des colonnes -->
+          <!-- Étape 2 - correspondance des colonnes -->
           <div>
             <p class="text-[13px] font-semibold text-foreground mb-1">2. Faire correspondre les colonnes</p>
             <p class="text-[11px] text-muted-foreground mb-2.5">
@@ -45,22 +45,22 @@
                 <label :class="F.fieldLabel">
                   {{ ch.libelle }}
                   <span v-if="ch.requis" class="text-danger">*</span>
-                  <span v-else :class="F.fieldOptional">— facultatif</span>
+                  <span v-else :class="F.fieldOptional">- facultatif</span>
                 </label>
                 <select v-model="mapping[ch.cle]" :class="F.fieldSelect">
-                  <option value="">— ignorer —</option>
+                  <option value="">- ignorer -</option>
                   <option v-for="e in entetes" :key="e" :value="e">{{ e }}</option>
                 </select>
               </div>
             </div>
           </div>
 
-          <!-- Étape 3 — contrôles et aperçu -->
+          <!-- Étape 3 - contrôles et aperçu -->
           <div>
             <p class="text-[13px] font-semibold text-foreground mb-2">
               3. Vérifier les contrôles
               <span class="font-normal text-muted-foreground">
-                — {{ lignesValides.length }} ligne(s) importable(s), {{ lignesRejetees.length }} rejetée(s)
+                - {{ lignesValides.length }} ligne(s) importable(s), {{ lignesRejetees.length }} rejetée(s)
               </span>
             </p>
 
@@ -83,10 +83,10 @@
                 </tr></thead>
                 <tbody>
                   <tr v-for="(l, i) in apercu" :key="i" :class="L.rowHover">
-                    <td :class="L.td"><span class="font-mono text-xs">{{ l.plaque || '—' }}</span></td>
-                    <td :class="L.td"><span class="text-xs">{{ l.typeVehicule || '—' }}</span></td>
-                    <td :class="L.td"><span class="font-mono text-[11px]">{{ l.vin || '—' }}</span></td>
-                    <td :class="L.td"><span class="text-xs">{{ [l.marque, l.modele].filter(Boolean).join(' ') || '—' }}</span></td>
+                    <td :class="L.td"><span class="font-mono text-xs">{{ l.plaque || '-' }}</span></td>
+                    <td :class="L.td"><span class="text-xs">{{ l.typeVehicule || '-' }}</span></td>
+                    <td :class="L.td"><span class="font-mono text-[11px]">{{ l.vin || '-' }}</span></td>
+                    <td :class="L.td"><span class="text-xs">{{ [l.marque, l.modele].filter(Boolean).join(' ') || '-' }}</span></td>
                     <td :class="L.td">
                       <span v-if="l.valide" class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-success-bg text-success">
                         Importable
@@ -117,7 +117,7 @@
             <template v-if="rapport.rejets.length">
               <p class="text-xs text-danger font-medium mb-1">{{ rapport.rejets.length }} ligne(s) rejetée(s) :</p>
               <div v-for="(r, i) in rapport.rejets" :key="i" class="text-[11px] text-muted-foreground">
-                Ligne {{ r.ligne }} — {{ r.plaque || 'sans plaque' }} : {{ r.motif }}
+                Ligne {{ r.ligne }} - {{ r.plaque || 'sans plaque' }} : {{ r.motif }}
               </div>
             </template>
           </div>
@@ -141,7 +141,7 @@
 
 <script setup lang="ts">
 /**
- * US 2.9.1 — Import du parc depuis les fichiers actuels.
+ * US 2.9.1 - Import du parc depuis les fichiers actuels.
  *
  * Quatre contrôles avant import, comme le demande la user story :
  * VIN en double, plaque inconnue ou déjà prise, date invalide,

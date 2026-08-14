@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════
-   MODULE 3 — MAINTENANCE & INTERVENTIONS
+   MODULE 3 - MAINTENANCE & INTERVENTIONS
    ══════════════════════════════════════════════════════════════
 
    Toutes les nomenclatures de ce fichier sont reprises telles quelles
@@ -11,7 +11,7 @@
    Ce que le client n'a pas défini est signalé en commentaire.
    ══════════════════════════════════════════════════════════════ */
 
-/* ── Nomenclature ISO 14224 — les onze sous-systèmes ─────────── */
+/* ── Nomenclature ISO 14224 - les onze sous-systèmes ─────────── */
 export type SousSysteme =
   | 'moteur' | 'transmission' | 'circuit_air' | 'circuit_carburant'
   | 'freinage' | 'electricite' | 'direction_suspension'
@@ -61,7 +61,7 @@ export const LIB_CAUSE_RACINE: Record<CauseRacine, string> = {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   Codes d'indisponibilité — CRM 2025, quatre familles
+   Codes d'indisponibilité - CRM 2025, quatre familles
    ══════════════════════════════════════════════════════════════ */
 export type FamilleIndispo = 'technique' | 'reglementaire' | 'administrative' | 'humaine'
 
@@ -113,7 +113,7 @@ export const libelleDuCode = (c: CodeIndispo): string =>
   CODES_INDISPO.find(x => x.code === c)?.libelle ?? c
 
 /* ══════════════════════════════════════════════════════════════
-   US 3.3.1 — Indisponibilité
+   US 3.3.1 - Indisponibilité
    ══════════════════════════════════════════════════════════════ */
 export interface Indisponibilite {
   id: string
@@ -130,7 +130,7 @@ export interface Indisponibilite {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   US 3.2.1 à 3.2.5 — Ordre de travail
+   US 3.2.1 à 3.2.5 - Ordre de travail
    ══════════════════════════════════════════════════════════════ */
 export type StatutOT =
   | 'ouvert'            // déclaré, pas encore affecté
@@ -151,7 +151,7 @@ export const LIB_STATUT_OT: Record<StatutOT, string> = {
   annule:             'Annulé',
 }
 
-/** Ce qui a déclenché la déclaration — US 3.2.1. */
+/** Ce qui a déclenché la déclaration - US 3.2.1. */
 export type OrigineOT =
   | 'remontee_chauffeur' | 'checklist' | 'alerte_preventive'
   | 'constat_garage' | 'equipe_mobile' | 'diagnostic_obc'
@@ -181,7 +181,7 @@ export const LIB_GRAVITE_OT: Record<GraviteOT, { label: string; cls: string }> =
   critique: { label: 'Critique', cls: 'bg-danger-bg text-danger' },
 }
 
-/** Pièce consommée — US 3.2.3, imputation obligatoire à l'intervention. */
+/** Pièce consommée - US 3.2.3, imputation obligatoire à l'intervention. */
 export interface PieceConsommee {
   id: string
   reference: string
@@ -195,7 +195,7 @@ export interface PieceConsommee {
   dateReception?: string
 }
 
-/** Demande d'achat déclenchée depuis une intervention — US 3.2.3. */
+/** Demande d'achat déclenchée depuis une intervention - US 3.2.3. */
 export type StatutAchat = 'demandee' | 'commandee' | 'receptionnee' | 'annulee'
 
 export const LIB_STATUT_ACHAT: Record<StatutAchat, string> = {
@@ -218,11 +218,11 @@ export interface DemandeAchat {
   dateCommande?: string
   dateReception?: string
   montantAr?: number
-  /** Délai réellement constaté, isolé du temps de réparation — voir US 3.2.4 */
+  /** Délai réellement constaté, isolé du temps de réparation - voir US 3.2.4 */
   delaiJours?: number
 }
 
-/** Main-d'œuvre — US 3.2.4.
+/** Main-d'œuvre - US 3.2.4.
  *  Le tarif horaire interne n'a pas été communiqué par GTD :
  *  le coût de main-d'œuvre reste donc non valorisé tant qu'il manque. */
 export interface TempsPasse {
@@ -230,6 +230,60 @@ export interface TempsPasse {
   mecanicienNom: string
   heures: number
   date: string
+}
+
+/**
+ * US 3.2.2 - Jusqu'à quatre pannes simultanées sur un même véhicule,
+ * chacune avec sa gravité et son diagnostic codifié.
+ */
+export interface PanneDiagnostiquee {
+  id: string
+  sousSysteme: SousSysteme
+  modeDefaillance: ModeDefaillance
+  causeRacine: CauseRacine
+  gravite: GraviteOT
+  observation?: string
+}
+
+export const MAX_PANNES_SIMULTANEES = 4
+
+/* ══════════════════════════════════════════════════════════════
+   US 3.4.1 - Charge de l'atelier
+   Les quatre compétences sont nommées dans la user story elle-même :
+   mécanique, électricité, citerne, pneumatique.
+   ══════════════════════════════════════════════════════════════ */
+export type CompetenceAtelier = 'mecanique' | 'electricite' | 'citerne' | 'pneumatique'
+
+export const LIB_COMPETENCE: Record<CompetenceAtelier, string> = {
+  mecanique:   'Mécanique',
+  electricite: 'Électricité',
+  citerne:     'Citerne',
+  pneumatique: 'Pneumatique',
+}
+
+/**
+ * Compétence déduite du sous-système concerné : elle n'a pas à être saisie,
+ * le diagnostic ISO 14224 la détermine.
+ */
+export const COMPETENCE_PAR_SOUS_SYSTEME: Record<SousSysteme, CompetenceAtelier> = {
+  moteur:               'mecanique',
+  transmission:         'mecanique',
+  circuit_air:          'mecanique',
+  circuit_carburant:    'mecanique',
+  freinage:             'mecanique',
+  electricite:          'electricite',
+  direction_suspension: 'mecanique',
+  roues_roulements:     'pneumatique',
+  chassis_tolerie:      'mecanique',
+  refroidissement:      'mecanique',
+  citerne:              'citerne',
+}
+
+/** Priorité d'ordonnancement, déduite de la gravité déjà saisie. */
+export const PRIORITE_PAR_GRAVITE: Record<GraviteOT, number> = {
+  critique: 1,
+  majeure:  2,
+  mineure:  3,
 }
 
 export interface OrdreTravail {
@@ -246,12 +300,14 @@ export interface OrdreTravail {
   gravite: GraviteOT
   typeMaintenance: TypeMaintenance
 
-  /* Diagnostic ISO 14224 — US 3.2.2 */
+  /* Diagnostic ISO 14224 - US 3.2.2 */
   sousSysteme?: SousSysteme
   modeDefaillance?: ModeDefaillance
   causeRacine?: CauseRacine
   diagnostiquePar?: string
   diagnostiqueLe?: string
+  /** Pannes additionnelles relevées sur le même véhicule - US 3.2.2 */
+  pannes?: PanneDiagnostiquee[]
 
   /* Réalisation */
   statut: StatutOT
@@ -260,12 +316,12 @@ export interface OrdreTravail {
   temps: TempsPasse[]
   travauxRealises?: string
 
-  /* Sous-traitance — US 3.2.5 */
+  /* Sous-traitance - US 3.2.5 */
   prestataire?: string
   montantDevisAr?: number
   sousGarantie?: boolean
 
-  /* Clôture — US 3.2.4 */
+  /* Clôture - US 3.2.4 */
   clotureLe?: string
   cloturePar?: string
   /** Coût des pièces + sous-traitance. La main-d'œuvre n'est pas valorisée
@@ -274,10 +330,16 @@ export interface OrdreTravail {
 
   /* Kilométrage au moment de l'intervention, pour le MTBF */
   kilometrage?: number
+
+  /* US 3.4.1 - Planification de l'atelier */
+  /** Durée estimée des travaux, en heures. Saisie par le chef de garage. */
+  dureeEstimeeH?: number
+  /** Date à laquelle l'intervention est programmée à l'atelier */
+  planifieeLe?: string
 }
 
 /* ══════════════════════════════════════════════════════════════
-   US 3.1.1 — Plan d'entretien par modèle
+   US 3.1.1 - Plan d'entretien par modèle
    ══════════════════════════════════════════════════════════════ */
 export type NatureOperation = 'verifier' | 'lubrifier' | 'remplacer'
 
@@ -305,7 +367,7 @@ export interface PlanEntretien {
   actif: boolean
 }
 
-/** Échéance calculée pour un véhicule donné — US 3.1.2. */
+/** Échéance calculée pour un véhicule donné - US 3.1.2. */
 export interface EcheanceEntretien {
   vehiculeId: string
   vehiculePlaque: string
@@ -322,7 +384,7 @@ export interface EcheanceEntretien {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   US 3.3.2 — Intervention de l'équipe mobile
+   US 3.3.2 - Intervention de l'équipe mobile
    ══════════════════════════════════════════════════════════════ */
 export type TypeMissionMobile =
   | 'depannage_mecanique' | 'depannage_electrique' | 'securisation'

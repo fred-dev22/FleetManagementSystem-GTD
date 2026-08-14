@@ -104,7 +104,7 @@
       <span v-if="item.contreVisiteLe" class="text-xs text-warning font-medium">
         {{ fmtDate(item.contreVisiteLe) }}
       </span>
-      <span v-else class="text-gray-300">—</span>
+      <span v-else class="text-gray-300">-</span>
     </template>
 
     <template #cell-date="{ item }">
@@ -179,11 +179,11 @@
 
 <script setup lang="ts">
 /**
- * Contrôles techniques — deux vues qui partagent la même coquille.
+ * Contrôles techniques - deux vues qui partagent la même coquille.
  *
- * US 2.3.1 — Checklist sur route : 16 points, jusqu'à 11 pauses.
+ * US 2.3.1 - Checklist sur route : 16 points, jusqu'à 11 pauses.
  *   Source : formulaire « Checklist sur Route » version 4.
- * US 2.3.2 — Audit de conformité : postes codés, prépare le vetting.
+ * US 2.3.2 - Audit de conformité : postes codés, prépare le vetting.
  *   Source : classeur « base gestion véhicule et maintenance ».
  */
 import { ref, computed, watch } from 'vue'

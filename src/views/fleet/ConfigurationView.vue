@@ -139,7 +139,7 @@
 
     <!-- ══ PARAMÈTRES ════════════════════════════════════════ -->
     <!-- ═══════════════════════════════════════════════════════
-         US 3.1.1 — Plans d'entretien par modèle
+         US 3.1.1 - Plans d'entretien par modèle
          Source : plan constructeur SINOTRUCK HOWO NX-400,
          cinq échéances de 5 000 à 45 000 km.
          ═══════════════════════════════════════════════════════ -->
@@ -180,7 +180,7 @@
                 <span v-else-if="op.intervalleJours" class="text-xs">
                   tous les {{ op.intervalleJours }} jours
                 </span>
-                <span v-else class="text-gray-300">—</span>
+                <span v-else class="text-gray-300">-</span>
               </td>
             </tr>
           </tbody>
@@ -192,14 +192,7 @@
         </p>
       </div>
 
-      <div class="flex items-start gap-2.5 bg-background border border-border rounded-lg px-3.5 py-3">
-        <FileQuestion class="w-4 h-4 shrink-0 mt-px text-muted-foreground" />
-        <p class="text-[11px] text-muted-foreground leading-relaxed">
-          Un seul plan constructeur a été transmis, celui du SINOTRUCK HOWO NX-400. Les plans des
-          autres modèles du parc restent à fournir par GTD pour que leurs échéances soient calculées.
-        </p>
       </div>
-    </div>
 
     <div v-else-if="onglet === 'parametres'" class="grid grid-cols-1 lg:grid-cols-2 gap-3.5 items-start">
       <div :class="L.card">
@@ -269,7 +262,7 @@
  * réglages dispersés dans chaque écran.
  */
 import { ref, computed } from 'vue'
-import { Info, Route, Clock, SlidersHorizontal, Wrench, FileQuestion } from 'lucide-vue-next'
+import { Info, Route, Clock, SlidersHorizontal, Wrench } from 'lucide-vue-next'
 import FleetMap from '../../components/fleet/FleetMap.vue'
 import { useTrajetsStore } from '../../stores/trajets'
 import { useConfigurationStore } from '../../stores/configuration'

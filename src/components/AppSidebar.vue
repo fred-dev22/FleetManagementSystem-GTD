@@ -48,12 +48,6 @@
     <SidebarItem :icon="Fuel"        label="Carburant"  :to="{ name: 'fleet-carburant' }" />
   </SidebarSection>
 
-  <SidebarSection label="Maintenance">
-    <SidebarItem :icon="Wrench" label="Interventions"  :to="{ name: 'fleet-maintenance' }" />
-    <SidebarItem :icon="Gauge"  label="Fiabilité"      :to="{ name: 'fleet-maintenance-dashboard' }" />
-    <SidebarItem :icon="Users"  label="Équipe mobile"  :to="{ name: 'fleet-equipe-mobile' }" />
-  </SidebarSection>
-
   <SidebarSection label="Parc véhicules">
     <SidebarItem :icon="Truck"      label="Véhicules"    :to="{ name: 'fleet-vehicules' }" />
     <SidebarItem :icon="ClipboardList"  label="État de flotte" :to="{ name: 'fleet-etat-flotte' }" />
@@ -84,6 +78,33 @@
   <!-- Toutes les données de référence en un seul endroit -->
   <SidebarSection label="Paramétrage">
     <SidebarItem :icon="Settings" label="Configuration" :to="{ name: 'fleet-configuration' }" />
+  </SidebarSection>
+</template>
+
+<template v-else-if="navStore.activeModule === 'maintenance'">
+  <!-- ═══════════════════════════════════════════════════════
+       MODULE MAINTENANCE
+       Écrans propres à l'atelier et aux interventions, séparés
+       de l'exploitation de la flotte.
+       ═══════════════════════════════════════════════════════ -->
+  <SidebarSection label="Tableau de bord">
+    <SidebarItem :icon="LayoutGrid"     label="Vue d'ensemble"    :to="{ name: 'maintenance-dashboard' }" />
+  </SidebarSection>
+
+  <SidebarSection label="Atelier">
+    <SidebarItem :icon="Wrench"         label="Interventions"     :to="{ name: 'maintenance-ordres' }" />
+    <SidebarItem :icon="CalendarClock"  label="Échéances"         :to="{ name: 'maintenance-echeances' }" />
+    <SidebarItem :icon="ClipboardList"  label="Charge atelier"    :to="{ name: 'maintenance-atelier' }" />
+    <SidebarItem :icon="Users"          label="Équipe mobile"     :to="{ name: 'maintenance-equipe-mobile' }" />
+  </SidebarSection>
+
+  <SidebarSection label="Suivi & Fiabilité">
+    <SidebarItem :icon="Gauge"          label="Fiabilité"         :to="{ name: 'maintenance-fiabilite' }" />
+    <SidebarItem :icon="CalendarOff"    label="Immobilisations"   :to="{ name: 'maintenance-indisponibilites' }" />
+  </SidebarSection>
+
+  <SidebarSection label="Paramétrage">
+    <SidebarItem :icon="ClipboardList"  label="Plans d'entretien" :to="{ name: 'maintenance-plans' }" />
   </SidebarSection>
 </template>
 
@@ -118,7 +139,7 @@
 import { computed, defineComponent, h, type Component, type PropType } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import {
-  Building, CalendarDays, CalendarOff, CalendarRange, ClipboardCheck, ClipboardList, Coins, Cpu, FileText, Fuel, Gauge, LayoutDashboard, Link2, MapPin, MapPinned, Network, Package, PieChart, Plane, Receipt, Route, Settings, ShieldAlert, ShieldCheck, Truck, UserCheck, UserCheck2, Users, Wrench,
+  Building, CalendarClock, CalendarDays, CalendarOff, CalendarRange, ClipboardCheck, ClipboardList, Coins, Cpu, FileText, Fuel, Gauge, LayoutDashboard, LayoutGrid, Link2, MapPin, MapPinned, Network, Package, PieChart, Plane, Receipt, Route, Settings, ShieldAlert, ShieldCheck, Truck, UserCheck, UserCheck2, Users, Wrench,
 } from 'lucide-vue-next'
 import { useAuthStore }       from '../stores/auth'
 import { useNavigationStore } from '../stores/navigation'

@@ -79,7 +79,7 @@
         <span v-for="e in item.etapes" :key="e.id"
           class="w-2 h-2 rounded-full shrink-0"
           :style="{ backgroundColor: COULEUR_ROLE[e.role] }"
-          :title="`${e.ordre}. ${e.siteNom} — ${LIB_ROLE_ETAPE[e.role]}`" />
+          :title="`${e.ordre}. ${e.siteNom} - ${LIB_ROLE_ETAPE[e.role]}`" />
       </div>
     </template>
 

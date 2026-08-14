@@ -44,7 +44,7 @@
             </div>
             <div class="flex flex-col gap-1">
               <label :class="F.fieldLabel">Citerne</label>
-              <span class="text-sm font-mono text-foreground">{{ item.citernePlaque ?? '—' }}</span>
+              <span class="text-sm font-mono text-foreground">{{ item.citernePlaque ?? '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
               <label :class="F.fieldLabel">Auditeur</label>
@@ -90,6 +90,29 @@
           </table>
         </FormSection>
 
+        <!-- US 2.3.2 - Le rapport archivé constitue la preuve d'audit -->
+        <FormSection
+          title="Rapport archivé"
+          :recaps="[item.rapportArchiveLe ? 'archivé' : 'non archivé']"
+        >
+          <div v-if="item.rapportArchiveLe" class="flex items-start gap-2.5 bg-success-bg text-success rounded-lg px-3.5 py-2.5">
+            <FileCheck class="w-4 h-4 shrink-0 mt-px" />
+            <div>
+              <p class="text-xs font-medium">Rapport archivé le {{ fmtDate(item.rapportArchiveLe) }}</p>
+              <p class="text-[11px] leading-relaxed mt-0.5">
+                Il reste consultable indéfiniment et constitue la preuve à présenter lors d’un
+                vetting ou d’un audit de conformité.
+              </p>
+            </div>
+          </div>
+          <div v-else class="flex items-start gap-2.5 bg-warning-bg text-warning rounded-lg px-3.5 py-2.5">
+            <AlertTriangle class="w-4 h-4 shrink-0 mt-px" />
+            <p class="text-xs leading-relaxed">
+              Rapport non encore archivé. Un audit sans rapport archivé n’est pas opposable.
+            </p>
+          </div>
+        </FormSection>
+
         <FormSection v-if="!item.conforme" title="Suite à donner" :recaps="['contre-visite']">
           <div class="flex items-start gap-2.5 bg-danger-bg text-danger rounded-lg px-3.5 py-2.5">
             <AlertTriangle class="w-4 h-4 shrink-0 mt-px" />
@@ -107,9 +130,9 @@
 </template>
 
 <script setup lang="ts">
-/** US 2.3.2 — Fiche d'un audit de conformité, préparant le vetting. */
+/** US 2.3.2 - Fiche d'un audit de conformité, préparant le vetting. */
 import { computed } from 'vue'
-import { AlertTriangle } from 'lucide-vue-next'
+import { AlertTriangle, FileCheck } from 'lucide-vue-next'
 import CardModalShell from '../shared/CardModalShell.vue'
 import FormSection    from '../ui/form-field/FormSection.vue'
 import { useFlotteStore } from '../../stores/flotte'

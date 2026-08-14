@@ -43,7 +43,7 @@
             </div>
             <div class="flex flex-col gap-1">
               <label :class="F.fieldLabel">Chauffeur au volant</label>
-              <span class="text-sm text-foreground">{{ item.chauffeurNom ?? '—' }}</span>
+              <span class="text-sm text-foreground">{{ item.chauffeurNom ?? '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
               <label :class="F.fieldLabel">Lieu</label>
@@ -52,7 +52,7 @@
             <div class="flex flex-col gap-1">
               <label :class="F.fieldLabel">Kilométrage</label>
               <span class="text-sm text-foreground">
-                {{ item.kilometrage ? item.kilometrage.toLocaleString('fr-FR') + ' km' : '—' }}
+                {{ item.kilometrage ? item.kilometrage.toLocaleString('fr-FR') + ' km' : '-' }}
               </span>
             </div>
           </div>
@@ -78,13 +78,13 @@
             <div>
               <label :class="F.fieldLabel">Dommages constatés</label>
               <p class="text-lg font-bold text-foreground">
-                {{ item.montantDommagesAr ? fmtAr(item.montantDommagesAr) : '—' }}
+                {{ item.montantDommagesAr ? fmtAr(item.montantDommagesAr) : '-' }}
               </p>
             </div>
             <div>
               <label :class="F.fieldLabel">Indemnisation reçue</label>
               <p class="text-lg font-bold" :class="item.montantIndemniseAr ? 'text-success' : 'text-muted-foreground'">
-                {{ item.montantIndemniseAr ? fmtAr(item.montantIndemniseAr) : '—' }}
+                {{ item.montantIndemniseAr ? fmtAr(item.montantIndemniseAr) : '-' }}
               </p>
             </div>
             <div>
@@ -111,7 +111,7 @@
             </div>
             <div class="flex flex-col gap-1">
               <label :class="F.fieldLabel">Franchise</label>
-              <span class="text-sm text-foreground">{{ police.franchiseAr ? fmtAr(police.franchiseAr) : '—' }}</span>
+              <span class="text-sm text-foreground">{{ police.franchiseAr ? fmtAr(police.franchiseAr) : '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
               <label :class="F.fieldLabel">Échéance de la police</label>
@@ -150,7 +150,7 @@
 </template>
 
 <script setup lang="ts">
-/** US 2.7.3 — Fiche d'un sinistre. */
+/** US 2.7.3 - Fiche d'un sinistre. */
 import { computed } from 'vue'
 import { Wrench, TrendingDown } from 'lucide-vue-next'
 import CardModalShell from '../shared/CardModalShell.vue'

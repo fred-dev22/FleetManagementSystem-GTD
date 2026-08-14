@@ -50,7 +50,7 @@
             </div>
             <div class="flex flex-col gap-1">
               <label :class="F.fieldLabel">Réutilisable</label>
-              <span class="text-sm text-foreground">{{ item.recurrent ? 'Oui — trajet de référence' : 'Non — ponctuel' }}</span>
+              <span class="text-sm text-foreground">{{ item.recurrent ? 'Oui - trajet de référence' : 'Non - ponctuel' }}</span>
             </div>
             <div class="flex flex-col gap-1">
               <label :class="F.fieldLabel">Distance estimée</label>
@@ -113,9 +113,9 @@
                     {{ LIB_ROLE_ETAPE[e.role] }}
                   </span>
                 </td>
-                <td class="py-2 text-xs">{{ e.intervalleMin ? fmtDuree(e.intervalleMin) : '—' }}</td>
-                <td class="py-2 text-xs">{{ e.pausePrevueMin ? fmtDuree(e.pausePrevueMin) : '—' }}</td>
-                <td class="py-2 text-xs">{{ e.volumePrevuL ? fmtL(e.volumePrevuL) : '—' }}</td>
+                <td class="py-2 text-xs">{{ e.intervalleMin ? fmtDuree(e.intervalleMin) : '-' }}</td>
+                <td class="py-2 text-xs">{{ e.pausePrevueMin ? fmtDuree(e.pausePrevueMin) : '-' }}</td>
+                <td class="py-2 text-xs">{{ e.volumePrevuL ? fmtL(e.volumePrevuL) : '-' }}</td>
               </tr>
             </tbody>
           </table>
@@ -144,7 +144,7 @@
             <tbody>
               <tr v-for="v in voyagesLies" :key="v.id" class="border-b border-border/60">
                 <td class="py-2 text-xs font-mono">{{ v.reference }}</td>
-                <td class="py-2 text-xs font-mono">{{ v.vehiculePlaque ?? '—' }}</td>
+                <td class="py-2 text-xs font-mono">{{ v.vehiculePlaque ?? '-' }}</td>
                 <td class="py-2 text-xs">{{ fmtDate(v.datePlanifiee) }}</td>
                 <td class="py-2 text-xs">{{ v.statut }}</td>
               </tr>

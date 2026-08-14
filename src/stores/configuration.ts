@@ -86,7 +86,35 @@ export const useConfigurationStore = defineStore('configuration', () => {
     Object.assign(parametres.value, data)
   }
 
+  /* ══ US 2.8.2 — Détection des règles systématiquement ignorées ══
+     Le cahier des charges FMS Trucks prévoit un indicateur de « fatigue
+     d'alerte » : une règle qui se déclenche souvent sans jamais donner
+     lieu à une action doit être revue, plutôt que subie.
+     ══════════════════════════════════════════════════════════════ */
+
+  /** Seuil au-delà duquel une règle est jugée ignorée — à confirmer par GTD. */
+  const SEUIL_IGNOREE_PCT = 80
+  const MIN_DECLENCHEMENTS = 5
+
+  /**
+   * Une règle est signalée si elle s'est déclenchée au moins cinq fois
+   * et que plus de 80 % de ses alertes sont restées sans suite.
+   * @param stats déclenchements et actions par type d'écart
+   */
+  function reglesIgnorees(stats: { typeEcartId: string; declenchees: number; traitees: number }[]) {
+    return stats
+      .filter(s => s.declenchees >= MIN_DECLENCHEMENTS)
+      .map(s => ({
+        ...s,
+        type: typesEcart.value.find(t => t.id === s.typeEcartId),
+        tauxIgnore: Math.round(((s.declenchees - s.traitees) / s.declenchees) * 100),
+      }))
+      .filter(s => s.tauxIgnore >= SEUIL_IGNOREE_PCT)
+      .sort((a, b) => b.tauxIgnore - a.tauxIgnore)
+  }
+
   return {
+    SEUIL_IGNOREE_PCT, MIN_DECLENCHEMENTS, reglesIgnorees,
     typesEcart, typesActifs, parCategorie,
     getTypeEcart, getParCode, creerTypeEcart, majTypeEcart, basculerActif,
     parametres, majParametres,

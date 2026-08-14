@@ -75,7 +75,7 @@
                 @click="emit('voir-conducteur', item.chauffeurId)">
                 {{ item.chauffeurNom }}
               </button>
-              <span v-else class="text-sm text-foreground">{{ item.chauffeurNom ?? '—' }}</span>
+              <span v-else class="text-sm text-foreground">{{ item.chauffeurNom ?? '-' }}</span>
             </div>
             <div class="col-span-2 flex flex-col gap-1 max-sm:col-span-1">
               <label :class="F.fieldLabel">Lieu</label>

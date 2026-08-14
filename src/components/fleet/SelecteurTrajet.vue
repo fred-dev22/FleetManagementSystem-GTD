@@ -25,7 +25,9 @@
       <div :class="L.card">
         <div :class="L.cardHeader">
           <h3 :class="L.cardTitle"><ListOrdered class="w-4 h-4 text-primary" /> Séquence</h3>
-          <span class="text-[11px] text-muted-foreground">{{ etapes.length }} site(s)</span>
+          <span class="text-[11px] text-muted-foreground">
+          {{ nbAller }} aller · {{ nbRetour }} retour
+        </span>
         </div>
 
         <div v-if="!etapes.length" class="text-xs text-muted-foreground py-4 text-center">
@@ -59,21 +61,43 @@
                 >
                   <option v-for="(lib, k) in LIB_ROLE_ETAPE" :key="k" :value="k">{{ lib }}</option>
                 </select>
-                <input
-                  v-model.number="e.intervalleMin"
-                  type="number" min="0" placeholder="min"
-                  class="w-14 text-[10px] border border-border rounded px-1 py-0.5 bg-card"
-                  title="Durée prévue depuis l’étape précédente (minutes)"
+                <!-- US 2.4.2 - deux volets distincts : aller et retour -->
+                <select
+                  v-model="e.volet"
+                  class="text-[10px] border border-border rounded px-1 py-0.5 bg-card"
+                  :class="e.volet === 'retour' ? 'text-info' : 'text-muted-foreground'"
+                  title="Volet du plan de trajet"
                   @change="emettre"
-                />
-                <input
-                  v-if="e.role === 'repos'"
-                  v-model.number="e.pausePrevueMin"
-                  type="number" min="0" placeholder="pause"
-                  class="w-14 text-[10px] border border-border rounded px-1 py-0.5 bg-card"
-                  title="Pause programmée (minutes)"
-                  @change="emettre"
-                />
+                >
+                  <option v-for="(lib, k) in LIB_VOLET" :key="k" :value="k">{{ lib }}</option>
+                </select>
+              </div>
+
+              <!-- Deux durées, chacune avec son libellé -->
+              <div class="flex items-center gap-3 mt-1">
+                <label class="flex items-center gap-1">
+                  <span class="text-[10px] text-muted-foreground whitespace-nowrap">Trajet max</span>
+                  <input
+                    v-model.number="e.intervalleMin"
+                    type="number" min="0" placeholder="-"
+                    class="w-12 text-[10px] border border-border rounded px-1 py-0.5 bg-card"
+                    title="Temps maximal pour se rendre depuis l’étape précédente jusqu’à ce site"
+                    @change="emettre"
+                  />
+                  <span class="text-[10px] text-muted-foreground">min</span>
+                </label>
+
+                <label v-if="e.role === 'repos' || e.role === 'controle'" class="flex items-center gap-1">
+                  <span class="text-[10px] text-muted-foreground whitespace-nowrap">Arrêt max</span>
+                  <input
+                    v-model.number="e.pausePrevueMin"
+                    type="number" min="0" placeholder="-"
+                    class="w-12 text-[10px] border border-border rounded px-1 py-0.5 bg-card"
+                    title="Durée maximale d’arrêt autorisée sur ce site"
+                    @change="emettre"
+                  />
+                  <span class="text-[10px] text-muted-foreground">min</span>
+                </label>
               </div>
             </div>
 
@@ -158,7 +182,7 @@ import {
 import FleetMap from './FleetMap.vue'
 import { useTrajetsStore } from '../../stores/trajets'
 import { useSitesStore } from '../../stores/sites'
-import { LIB_ROLE_ETAPE } from '../../types/fms'
+import { LIB_ROLE_ETAPE, LIB_VOLET } from '../../types/fms'
 import type { EtapeTrajet, RoleEtape, LatLng, MapMarker } from '../../types/fms'
 import { fmtDuree } from '../../lib/fmsUtils'
 import * as L from '../../lib/listClasses'
@@ -172,6 +196,10 @@ const emit = defineEmits<{
 
 const trajetsStore = useTrajetsStore()
 const sitesStore = useSitesStore()
+
+/* US 2.4.2 - répartition des étapes entre les deux volets */
+const nbAller  = computed(() => etapes.value.filter(e => (e.volet ?? 'aller') === 'aller').length)
+const nbRetour = computed(() => etapes.value.filter(e => e.volet === 'retour').length)
 
 const COULEUR_ROLE: Record<RoleEtape, string> = {
   depart:     '#0B4480',

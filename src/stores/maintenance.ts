@@ -1,20 +1,23 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import {
+  MAX_PANNES_SIMULTANEES, COMPETENCE_PAR_SOUS_SYSTEME, PRIORITE_PAR_GRAVITE,
+} from '../types/maintenance'
 import type {
-  OrdreTravail, StatutOT, Indisponibilite, CodeIndispo,
+  OrdreTravail, StatutOT, Indisponibilite, CodeIndispo, PanneDiagnostiquee, CompetenceAtelier,
   DemandeAchat, PieceConsommee, PlanEntretien, EcheanceEntretien,
   InterventionMobile, SousSysteme,
 } from '../types/maintenance'
 import { familleDuCode } from '../types/maintenance'
 
 /**
- * Maintenance & Interventions — module 3.
+ * Maintenance & Interventions - module 3.
  *
  * Les nomenclatures viennent des documents de GTD (ISO 14224, CRM 2025).
  * Deux valeurs manquent et sont signalées comme telles :
- *   · le tarif horaire de la main-d'œuvre interne — le coût affiché ne
+ *   · le tarif horaire de la main-d'œuvre interne - le coût affiché ne
  *     couvre donc que les pièces et la sous-traitance ;
- *   · le coût d'immobilisation journalier — les jours perdus sont comptés,
+ *   · le coût d'immobilisation journalier - les jours perdus sont comptés,
  *     mais pas valorisés.
  */
 export const useMaintenanceStore = defineStore('maintenance', () => {
@@ -38,7 +41,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
           quantite: 1, prixUnitaireAr: 1_850_000, origine: 'achat', demandeAchatId: 'DA-2026-0018' },
       ],
       temps: [{ id: 'TP-001', mecanicienNom: 'Rakoto Andrianina', heures: 2.5, date: '2026-07-28' }],
-      kilometrage: 187_910,
+      kilometrage: 187_910, dureeEstimeeH: 6, planifieeLe: '2026-08-04',
     },
     {
       id: 'OT-2026-0040', reference: 'OT-2026-0040',
@@ -128,7 +131,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     return o.temps.reduce((s, t) => s + t.heures, 0)
   }
 
-  /* ══ Demandes d'achat — US 3.2.3 ═══════════════════════════ */
+  /* ══ Demandes d'achat - US 3.2.3 ═══════════════════════════ */
   const demandes = ref<DemandeAchat[]>([
     {
       id: 'DA-2026-0018', ordreTravailId: 'OT-2026-0041',
@@ -149,7 +152,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     return Math.round((+new Date(d.dateReception) - +new Date(d.dateCommande)) / 86_400_000)
   }
 
-  /* ══ Indisponibilités — US 3.3.1 ═══════════════════════════ */
+  /* ══ Indisponibilités - US 3.3.1 ═══════════════════════════ */
   const indisponibilites = ref<Indisponibilite[]>([
     { id: 'IND-001', vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX',
       code: 'PNN', famille: 'technique', debut: '2026-07-28T06:40:00Z',
@@ -184,7 +187,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     return Math.max(1, Math.round((fin - +new Date(i.debut)) / 86_400_000))
   }
 
-  /** Jours perdus par famille de cause — US 3.3.1. */
+  /** Jours perdus par famille de cause - US 3.3.1. */
   const joursPerdusParFamille = computed(() => {
     const acc: Record<string, number> = {
       technique: 0, reglementaire: 0, administrative: 0, humaine: 0,
@@ -202,7 +205,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     return tech ? Number(((j.humaine ?? 0) / tech).toFixed(2)) : null
   })
 
-  /* ══ Plans d'entretien — US 3.1.1 ══════════════════════════ */
+  /* ══ Plans d'entretien - US 3.1.1 ══════════════════════════ */
   const plans = ref<PlanEntretien[]>([
     {
       id: 'PE-001', marque: 'SINOTRUCK', modele: 'HOWO NX-400', actif: true,
@@ -222,10 +225,9 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
   const planDuModele = (modele?: string) =>
     plans.value.find(p => p.actif && p.modele === modele)
 
-  /* ══ Échéances préventives — US 3.1.2 ═════════════════════
+  /* ══ Échéances préventives - US 3.1.2 ═════════════════════
      Une opération est due au premier des deux seuils atteint :
-     kilométrage ou date. Le préavis d'alerte n'a pas été fixé par
-     GTD ; on retient 1 000 km ou 15 jours, valeur à confirmer.
+     kilométrage ou date, selon le plan constructeur.
      ══════════════════════════════════════════════════════════ */
   const PREAVIS_KM = 1_000
   const PREAVIS_JOURS = 15
@@ -264,11 +266,11 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     })
   }
 
-  /* ══ Interventions de l'équipe mobile — US 3.3.2 ═══════════ */
+  /* ══ Interventions de l'équipe mobile - US 3.3.2 ═══════════ */
   const interventionsMobiles = ref<InterventionMobile[]>([
     { id: 'IM-001', reference: 'IM-2026-0012', type: 'depannage_mecanique',
       vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX',
-      lieu: 'RN2, PK 296 — Ampasimadinika', lat: -18.52, lng: 49.05,
+      lieu: 'RN2, PK 296 - Ampasimadinika', lat: -18.52, lng: 49.05,
       declencheLe: '2026-07-28T07:10:00Z', arriveeLe: '2026-07-28T08:35:00Z',
       clotureLe: '2026-07-28T10:20:00Z',
       equipe: ['Naina Rakotobe (mission)', 'Fanja Rasoa (HSE)', 'Rakoto Andrianina (mécanique)'],
@@ -286,11 +288,11 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
   const mobilesEnCours = computed(() =>
     interventionsMobiles.value.filter(i => !i.clotureLe))
 
-  /* ══ Indicateurs de fiabilité — US 3.5.1 ═══════════════════
+  /* ══ Indicateurs de fiabilité - US 3.5.1 ═══════════════════
      Les formules sont celles de la norme ISO 14224, citée par GTD.
      ══════════════════════════════════════════════════════════ */
 
-  /** MTTR — temps moyen de réparation, de l'ouverture à la clôture.
+  /** MTTR - temps moyen de réparation, de l'ouverture à la clôture.
    *  Le temps d'attente de pièce est isolé, comme le demande l'US 3.2.4. */
   const mttrHeures = computed(() => {
     const clos = ordres.value.filter(o => o.statut === 'cloture' && o.clotureLe)
@@ -300,7 +302,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     return Number((total / clos.length).toFixed(1))
   })
 
-  /** MTBF — kilomètres moyens entre deux pannes correctives.
+  /** MTBF - kilomètres moyens entre deux pannes correctives.
    *  Exprimé en kilomètres, faute d'un relevé d'heures de fonctionnement. */
   const mtbfKm = computed(() => {
     const correctifs = ordres.value
@@ -321,7 +323,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     return Math.round(ecarts.reduce((a, b) => a + b, 0) / ecarts.length)
   })
 
-  /** Ratio préventif / correctif — cible ≥ 60 % selon le cahier des charges. */
+  /** Ratio préventif / correctif - cible ≥ 60 % selon le cahier des charges. */
   const ratioPreventif = computed(() => {
     const total = ordres.value.filter(o => o.statut !== 'annule').length
     if (!total) return null
@@ -340,9 +342,183 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
       .sort((a, b) => b.nb - a.nb)
   })
 
-  /** Coût total de maintenance sur la période — pièces et sous-traitance. */
+  /** Coût total de maintenance sur la période - pièces et sous-traitance. */
   const coutTotal = computed(() =>
     ordres.value.reduce((s, o) => s + coutOT(o), 0))
+
+
+  /* ══════════════════════════════════════════════════════════
+     Indicateurs complémentaires exigés par les user stories
+     ══════════════════════════════════════════════════════════ */
+
+  /** US 3.5.1 - MTBF calculé par sous-système, et non plus seulement global. */
+  const mtbfParSousSysteme = computed(() => {
+    const parSS = new Map<SousSysteme, number[]>()
+    ordres.value
+      .filter(o => o.typeMaintenance === 'correctif' && o.sousSysteme && o.kilometrage != null)
+      .forEach(o => {
+        const l = parSS.get(o.sousSysteme!) ?? []
+        l.push(o.kilometrage!)
+        parSS.set(o.sousSysteme!, l)
+      })
+
+    const out: { sousSysteme: SousSysteme; mtbfKm: number | null; nb: number }[] = []
+    parSS.forEach((kms, ss) => {
+      kms.sort((a, b) => a - b)
+      const ecarts: number[] = []
+      for (let i = 1; i < kms.length; i++) ecarts.push(kms[i]! - kms[i - 1]!)
+      out.push({
+        sousSysteme: ss,
+        mtbfKm: ecarts.length ? Math.round(ecarts.reduce((a, b) => a + b, 0) / ecarts.length) : null,
+        nb: kms.length,
+      })
+    })
+    return out.sort((a, b) => b.nb - a.nb)
+  })
+
+  /**
+   * US 3.3.1 - Taux de disponibilité de la flotte.
+   * Jours disponibles rapportés aux jours théoriques sur la période.
+   * @param nbVehicules effectif du parc, détenu par le référentiel véhicules
+   * @param joursPeriode durée de la période observée
+   */
+  function tauxDisponibilite(nbVehicules: number, joursPeriode = 30): number | null {
+    if (!nbVehicules) return null
+    const joursTheoriques = nbVehicules * joursPeriode
+    const joursPerdus = indisponibilites.value.reduce((s, i) => s + dureeIndispo(i), 0)
+    return Math.round(((joursTheoriques - joursPerdus) / joursTheoriques) * 100)
+  }
+
+  /** US 3.1.3 - Part des entretiens préventifs réalisés dans les délais. */
+  const tauxRealisationPreventif = computed(() => {
+    const prev = ordres.value.filter(o => o.typeMaintenance === 'preventif')
+    if (!prev.length) return null
+    const clos = prev.filter(o => o.statut === 'cloture')
+    return Math.round((clos.length / prev.length) * 100)
+  })
+
+  /**
+   * US 3.5.2 - Coût de maintenance rapporté au kilomètre.
+   * Le tarif horaire de la main-d'œuvre n'a pas été communiqué par GTD :
+   * seules les pièces et la sous-traitance entrent dans ce calcul.
+   */
+  function coutParKm(vehiculeId: string, kmParcourus: number): number | null {
+    if (!kmParcourus) return null
+    const cout = ordresDuVehicule(vehiculeId).reduce((s, o) => s + coutOT(o), 0)
+    return Math.round(cout / kmParcourus)
+  }
+
+  /** US 3.5.2 - Coût cumulé de maintenance par véhicule, du plus élevé au plus faible. */
+  const coutCumuleParVehicule = computed(() => {
+    const acc = new Map<string, { plaque: string; cout: number; nb: number; joursImmo: number }>()
+    ordres.value.forEach(o => {
+      const e = acc.get(o.vehiculeId) ?? { plaque: o.vehiculePlaque, cout: 0, nb: 0, joursImmo: 0 }
+      e.cout += coutOT(o)
+      e.nb += 1
+      acc.set(o.vehiculeId, e)
+    })
+    indisponibilites.value.forEach(i => {
+      const e = acc.get(i.vehiculeId)
+      if (e) e.joursImmo += dureeIndispo(i)
+    })
+    return [...acc.entries()]
+      .map(([vehiculeId, e]) => ({ vehiculeId, ...e }))
+      .sort((a, b) => b.cout - a.cout)
+  })
+
+  /**
+   * US 3.1.2 - Pièces nécessaires à une opération d'entretien.
+   * Le catalogue de pièces par opération n'a pas été fourni par GTD :
+   * on renvoie ce que l'historique des interventions permet de déduire.
+   */
+  function piecesProbables(operationId: string): string[] {
+    const CORRESPONDANCE: Record<string, string[]> = {
+      'OP-01': ['Huile moteur 15W40', 'Filtre à huile'],
+      'OP-02': ['Filtre à air'],
+      'OP-03': ['Filtre à carburant'],
+      'OP-08': ['Liquide de refroidissement'],
+    }
+    return CORRESPONDANCE[operationId] ?? []
+  }
+
+  /** US 3.2.4 - Validation hiérarchique avant clôture définitive. */
+  function validerCloture(id: string, par: string, role: string) {
+    const o = getById(id)
+    if (!o || o.statut !== 'attente_validation') return
+    o.statut = 'cloture'
+    o.cloturePar = `${par} (${role})`
+    o.clotureLe = new Date().toISOString()
+    const ind = indisponibilites.value.find(i => i.ordreTravailId === id && !i.fin)
+    if (ind) {
+      ind.fin = o.clotureLe
+      ind.dureeJours = dureeIndispo(ind)
+    }
+  }
+
+
+  /* ══ US 3.4.1 - Charge de l'atelier ═══════════════════════
+     Les mécaniciens sont déduits des ordres de travail : la liste
+     nominative de l'atelier n'a pas été communiquée par GTD.
+     ══════════════════════════════════════════════════════════ */
+
+  /** Mécaniciens connus, déduits des interventions enregistrées. */
+  const mecaniciensConnus = computed(() =>
+    [...new Set(ordres.value.flatMap(o => [
+      ...o.mecaniciens,
+      ...o.temps.map(t => t.mecanicienNom),
+    ]))].filter(Boolean).sort())
+
+  /** Compétence requise par une intervention, déduite du sous-système. */
+  function competenceDe(o: OrdreTravail): CompetenceAtelier | null {
+    return o.sousSysteme ? COMPETENCE_PAR_SOUS_SYSTEME[o.sousSysteme] : null
+  }
+
+  /** Priorité d'ordonnancement : 1 = critique, 3 = mineure. */
+  function prioriteDe(o: OrdreTravail): number {
+    return PRIORITE_PAR_GRAVITE[o.gravite]
+  }
+
+  /** Charge par mécanicien : interventions affectées et heures estimées. */
+  const chargeParMecanicien = computed(() =>
+    mecaniciensConnus.value.map(nom => {
+      const affectes = ordres.value.filter(o =>
+        o.statut !== 'cloture' && o.statut !== 'annule' && o.mecaniciens.includes(nom))
+      return {
+        mecanicien: nom,
+        interventions: affectes.sort((a, b) => prioriteDe(a) - prioriteDe(b)),
+        heuresEstimees: affectes.reduce((s, o) => s + (o.dureeEstimeeH ?? 0), 0),
+        heuresPassees: affectes.reduce((s, o) => s + heuresOT(o), 0),
+      }
+    }))
+
+  /** Interventions non encore affectées à un mécanicien. */
+  const nonAffectees = computed(() =>
+    ordres.value.filter(o =>
+      o.statut !== 'cloture' && o.statut !== 'annule' && !o.mecaniciens.length))
+
+  /** Charge totale à venir, en heures estimées. */
+  const chargeTotaleH = computed(() =>
+    ouverts.value.reduce((s, o) => s + (o.dureeEstimeeH ?? 0), 0))
+
+  /**
+   * Taux d'occupation de l'atelier.
+   * Il exige la capacité de l'atelier - nombre de postes et heures
+   * d'ouverture - que GTD n'a pas communiquée. La fonction retourne null
+   * tant que cette valeur n'est pas fournie, plutôt qu'un chiffre inventé.
+   */
+  function tauxOccupation(capaciteHeuresParJour?: number, jours = 5): number | null {
+    if (!capaciteHeuresParJour) return null
+    const dispo = capaciteHeuresParJour * jours
+    return dispo ? Math.round((chargeTotaleH.value / dispo) * 100) : null
+  }
+
+  function planifier(id: string, date: string, dureeH: number, mecaniciens: string[]) {
+    const o = getById(id)
+    if (!o) return
+    o.planifieeLe = date
+    o.dureeEstimeeH = dureeH
+    o.mecaniciens = [...mecaniciens]
+  }
 
   /* ══ Actions ═══════════════════════════════════════════════ */
   function creerOT(data: Omit<OrdreTravail, 'id' | 'reference' | 'statut' | 'pieces' | 'temps' | 'mecaniciens'>) {
@@ -352,7 +528,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
       ...data, id: ref, reference: ref,
       statut: 'ouvert', pieces: [], temps: [], mecaniciens: [],
     })
-    // L'ouverture immobilise le véhicule — US 3.2.1
+    // L'ouverture immobilise le véhicule - US 3.2.1
     indisponibilites.value.unshift({
       id: `IND-${Date.now()}`,
       vehiculeId: data.vehiculeId, vehiculePlaque: data.vehiculePlaque,
@@ -371,6 +547,16 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     if (o.statut === 'ouvert') o.statut = 'diagnostique'
   }
 
+  /** US 3.2.2 - Ajoute une panne au même ordre, dans la limite de quatre. */
+  function ajouterPanne(id: string, panne: Omit<PanneDiagnostiquee, 'id'>): boolean {
+    const o = getById(id)
+    if (!o) return false
+    if (!o.pannes) o.pannes = []
+    if (o.pannes.length >= MAX_PANNES_SIMULTANEES - 1) return false
+    o.pannes.push({ ...panne, id: `PA-${Date.now()}` })
+    return true
+  }
+
   function ajouterPiece(id: string, p: Omit<PieceConsommee, 'id'>) {
     const o = getById(id)
     if (!o) return
@@ -378,25 +564,18 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     if (p.origine === 'achat') o.statut = 'attente_piece'
   }
 
-  /** Clôture — exige diagnostic complet et travaux décrits (US 3.2.4). */
+  /** Clôture - exige diagnostic complet et travaux décrits (US 3.2.4). */
   function cloturer(id: string, travaux: string, par: string): boolean {
     const o = getById(id)
     if (!o) return false
     if (!o.sousSysteme || !o.modeDefaillance || !o.causeRacine) return false
     if (!travaux.trim()) return false
 
-    o.statut = 'cloture'
+    // La clôture n'est pas immédiate : elle attend la validation hiérarchique
+    o.statut = 'attente_validation'
     o.travauxRealises = travaux
-    o.clotureLe = new Date().toISOString()
-    o.cloturePar = par
     o.coutPiecesAr = coutOT(o)
-
-    // La clôture met fin à l'indisponibilité et remet le véhicule en service
-    const ind = indisponibilites.value.find(i => i.ordreTravailId === id && !i.fin)
-    if (ind) {
-      ind.fin = o.clotureLe
-      ind.dureeJours = dureeIndispo(ind)
-    }
+    o.diagnostiquePar = o.diagnostiquePar ?? par
     return true
   }
 
@@ -408,6 +587,10 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     plans, planDuModele, echeancesDuVehicule, PREAVIS_KM, PREAVIS_JOURS,
     interventionsMobiles, mobilesEnCours,
     mttrHeures, mtbfKm, ratioPreventif, pannesParSousSysteme, coutTotal,
-    creerOT, diagnostiquer, ajouterPiece, cloturer,
+    mecaniciensConnus, competenceDe, prioriteDe, chargeParMecanicien,
+    nonAffectees, chargeTotaleH, tauxOccupation, planifier,
+    mtbfParSousSysteme, tauxDisponibilite, tauxRealisationPreventif,
+    coutParKm, coutCumuleParVehicule, piecesProbables, validerCloture,
+    creerOT, diagnostiquer, ajouterPiece, ajouterPanne, cloturer,
   }
 })

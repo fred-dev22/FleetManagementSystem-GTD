@@ -36,7 +36,7 @@
             </div>
             <div class="flex flex-col gap-1">
               <label :class="F.fieldLabel">Voyage</label>
-              <span class="text-sm font-mono text-foreground">{{ item.voyageRef ?? '—' }}</span>
+              <span class="text-sm font-mono text-foreground">{{ item.voyageRef ?? '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
               <label :class="F.fieldLabel">Tracteur</label>
@@ -44,7 +44,7 @@
             </div>
             <div class="flex flex-col gap-1">
               <label :class="F.fieldLabel">Citerne</label>
-              <span class="text-sm font-mono text-foreground">{{ item.citernePlaque ?? '—' }}</span>
+              <span class="text-sm font-mono text-foreground">{{ item.citernePlaque ?? '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
               <label :class="F.fieldLabel">Chauffeur</label>
@@ -100,7 +100,7 @@
                   <td v-for="r in item.releves" :key="r.pause" class="py-1.5 text-center">
                     <span v-if="r.resultats[p.code] === 'conforme'" class="text-success text-xs">✓</span>
                     <span v-else-if="r.resultats[p.code] === 'anomalie'" class="text-danger text-xs font-bold">0</span>
-                    <span v-else class="text-gray-300 text-xs">—</span>
+                    <span v-else class="text-gray-300 text-xs">-</span>
                   </td>
                 </tr>
               </tbody>
@@ -115,7 +115,7 @@
         <FormSection title="Détail des pauses" :recaps="[`${item.releves.length}`]" :default-open="false">
           <div v-for="r in item.releves" :key="r.pause" class="border-b border-border/60 py-2.5">
             <div class="flex items-baseline justify-between">
-              <span class="text-xs font-medium text-foreground">Pause {{ r.pause }} — {{ r.lieu ?? 'lieu non renseigné' }}</span>
+              <span class="text-xs font-medium text-foreground">Pause {{ r.pause }} - {{ r.lieu ?? 'lieu non renseigné' }}</span>
               <span class="text-[11px] text-muted-foreground">{{ fmtDateTime(r.horodatage) }}</span>
             </div>
             <p v-if="r.commentaire" class="text-[11px] text-muted-foreground mt-1">{{ r.commentaire }}</p>
@@ -128,7 +128,7 @@
 </template>
 
 <script setup lang="ts">
-/** US 2.3.1 — Fiche d'une checklist sur route. */
+/** US 2.3.1 - Fiche d'une checklist sur route. */
 import { computed } from 'vue'
 import { AlertTriangle } from 'lucide-vue-next'
 import CardModalShell from '../shared/CardModalShell.vue'

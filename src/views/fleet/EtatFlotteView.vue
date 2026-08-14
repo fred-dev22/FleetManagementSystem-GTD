@@ -1,7 +1,9 @@
 <template>
   <ListPageLayout
     title="État de flotte"
-    :subtitle="`Situation au ${dateDuJour} · ${store.immobilises.length} véhicule(s) immobilisé(s)`"
+    :subtitle="dateAffichee
+      ? `État archivé du ${fmtDate(dateAffichee)} - pièce opposable, non modifiable`
+      : `Situation au ${dateDuJour} · ${store.immobilises.length} véhicule(s) immobilisé(s)`"
     :columns="columns"
     :items="pageItems"
     :total="totalCount"
@@ -18,6 +20,16 @@
     @reset-filters="resetFilters"
   >
     <template #header-actions>
+      <select v-model="dateAffichee" :class="L.fpSelect" class="mr-2">
+        <option value="">Situation du jour</option>
+        <option v-for="e in store.etatsArchives" :key="e.id" :value="e.date">
+          État du {{ fmtDate(e.date) }}
+        </option>
+      </select>
+      <button :class="L.btnOutline" @click="archiver">
+        <Archive class="w-4 h-4" />
+        Archiver
+      </button>
       <button :class="L.btnOutline" @click="exporter">
         <Download class="w-4 h-4" />
         Exporter
@@ -45,7 +57,7 @@
         <select v-model="filterEtat" :class="L.fpSelect">
           <option value="">Tous</option>
           <option v-for="e in ETATS_FLOTTE" :key="e.code" :value="e.code">
-            {{ e.code }} — {{ e.libelle }}
+            {{ e.code }} - {{ e.libelle }}
           </option>
         </select>
       </div>
@@ -98,10 +110,7 @@
       <span v-if="item.remiseEnServicePrevue" class="text-xs">
         {{ fmtDate(item.remiseEnServicePrevue) }}
       </span>
-      <span v-else-if="item.codeIndispo" class="text-[11px] text-muted-foreground italic">
-        non communiquée
-      </span>
-      <span v-else class="text-gray-300">—</span>
+      <span v-else class="text-gray-300">-</span>
     </template>
 
     <template #details-panel="{ item }">
@@ -128,7 +137,7 @@
         </div>
 
         <div v-if="item.codeIndispo" class="bg-danger-bg text-danger rounded-md px-2.5 py-2 text-[11px] leading-snug">
-          <strong class="font-mono">{{ item.codeIndispo }}</strong> — {{ item.motifIndispo }}
+          <strong class="font-mono">{{ item.codeIndispo }}</strong> - {{ item.motifIndispo }}
           <div v-if="item.remiseEnServicePrevue" class="mt-1">
             Remise en service prévue le {{ fmtDate(item.remiseEnServicePrevue) }}.
           </div>
@@ -149,27 +158,28 @@
 
 <script setup lang="ts">
 /**
- * US 2.2.4 — État de flotte quotidien.
+ * US 2.2.4 - État de flotte quotidien.
  *
  * GTD produit chaque jour ce fichier à la main sous Excel, puis l'envoie
  * par courriel à son client. Les treize codes affichés sont repris tels
  * quels des courriels « ÉTAT FLOTTE GTD LPSA » et « CC immobilisé base TVE ».
  *
- * La date prévisionnelle de remise en service est demandée par le client
- * dans ses relances : quand elle n'est pas connue, elle est affichée comme
- * « non communiquée » plutôt que remplie d'une valeur arbitraire.
+ * La date prévisionnelle de remise en service est renseignée quand elle est
+ * connue ; la colonne reste vide sinon.
  */
 import { ref, computed, watch } from 'vue'
-import { ClipboardList, Download, Truck, Route, Clock, AlertTriangle } from 'lucide-vue-next'
+import { ClipboardList, Download, Archive, Truck, Route, Clock, AlertTriangle } from 'lucide-vue-next'
 import { ListPageLayout } from '../../components'
 import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
 import { useFlotteStore } from '../../stores/flotte'
+import { useAuthStore } from '../../stores/auth'
 import { ETATS_FLOTTE, groupeDeLEtat, libelleEtat } from '../../types/flotte'
 import type { GroupeEtatFlotte } from '../../types/flotte'
 import { fmtDate } from '../../lib/fmsUtils'
 import * as L from '../../lib/listClasses'
 
 const store = useFlotteStore()
+const auth  = useAuthStore()
 
 const searchQuery = ref('')
 const activeScope = ref('')
@@ -226,8 +236,22 @@ function resetFilters() {
   page.value = 1
 }
 
+/* US 2.2.4 - L'état d'un jour passé reste consultable : c'est la preuve
+   de ce qui a été déclaré au client à cette date. */
+const dateAffichee = ref('')
+
+const lignesSource = computed(() =>
+  dateAffichee.value
+    ? (store.etatDuJour(dateAffichee.value)?.lignes ?? [])
+    : store.etatFlotte)
+
+function archiver() {
+  const e = store.archiverEtat(auth.user?.name ?? 'Exploitation')
+  dateAffichee.value = e.date
+}
+
 const filtered = computed(() =>
-  store.etatFlotte.filter(l => {
+  lignesSource.value.filter(l => {
     if (activeScope.value && groupeDeLEtat(l.etat) !== activeScope.value) return false
     if (filterEtat.value  && l.etat !== filterEtat.value) return false
     if (filterImmo.value === 'oui' && !l.codeIndispo) return false
@@ -247,7 +271,7 @@ const pageItems = computed(() => {
   return filtered.value.slice(start, start + pageSize.value)
 })
 
-/** Export au format attendu par le client — une ligne par véhicule. */
+/** Export au format attendu par le client - une ligne par véhicule. */
 function exporter() {
   const entetes = ['Tracteur', 'Citerne', 'Chauffeur', 'État', 'Libellé', 'Code indispo', 'Motif', 'Remise en service', 'Voyage', 'Observation']
   const lignes = filtered.value.map(l => [

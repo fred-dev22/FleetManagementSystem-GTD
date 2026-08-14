@@ -86,7 +86,7 @@
         <div class="grid grid-cols-2 gap-2 text-xs">
           <div>
             <div class="text-muted-foreground text-[11px]">N°</div>
-            <span class="font-mono">{{ item.numero ?? '—' }}</span>
+            <span class="font-mono">{{ item.numero ?? '-' }}</span>
           </div>
           <div>
             <div class="text-muted-foreground text-[11px]">Statut</div>{{ LIB_STATUT[item.statut] ?? item.statut }}
@@ -96,7 +96,7 @@
           </div>
           <div>
             <div class="text-muted-foreground text-[11px]">Expiration</div>
-            {{ item.dateExpiration ? fmtDate(item.dateExpiration) : '—' }}
+            {{ item.dateExpiration ? fmtDate(item.dateExpiration) : '-' }}
           </div>
         </div>
 
@@ -292,7 +292,7 @@ const pageItems  = computed(() => {
 
 function openDetail(row: DocumentVehicule) { openModal(row) }
 
-/* Échéance documentaire — le préavis de 30 jours est la règle du cahier
+/* Échéance documentaire - le préavis de 30 jours est la règle du cahier
    des charges : « alertes programmées à J-30, escalade si non validés ». */
 const PREAVIS_JOURS = 30
 
@@ -306,8 +306,8 @@ function joursRestants(iso: string): number {
 
 function libelleEcheance(iso: string): string {
   const j = joursRestants(iso)
-  if (j < 0) return `Expiré depuis ${Math.abs(j)} jour(s) — régularisation requise`
-  if (j <= PREAVIS_JOURS) return `Expire dans ${j} jour(s) — à renouveler`
+  if (j < 0) return `Expiré depuis ${Math.abs(j)} jour(s) - régularisation requise`
+  if (j <= PREAVIS_JOURS) return `Expire dans ${j} jour(s) - à renouveler`
   return `Valide encore ${j} jour(s)`
 }
 

@@ -107,6 +107,74 @@
             <p class="text-[11px] text-muted-foreground mt-3">
               Diagnostiqué par {{ item.diagnostiquePar }} le {{ fmtDateTime(item.diagnostiqueLe) }}.
             </p>
+
+            <!-- US 3.2.2 - jusqu'à quatre pannes sur le même véhicule -->
+            <template v-if="item.pannes?.length">
+              <p class="text-[11px] font-semibold text-foreground mt-4 mb-1.5">
+                Pannes additionnelles relevées
+              </p>
+              <div v-for="pa in item.pannes" :key="pa.id"
+                class="rounded-md border border-border px-3 py-2 mb-1.5">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="min-w-0">
+                    <p class="text-xs font-medium text-foreground">
+                      {{ LIB_SOUS_SYSTEME[pa.sousSysteme] }} - {{ LIB_MODE_DEFAILLANCE[pa.modeDefaillance] }}
+                    </p>
+                    <p class="text-[11px] text-muted-foreground">{{ LIB_CAUSE_RACINE[pa.causeRacine] }}</p>
+                  </div>
+                  <span class="text-[10px] font-medium px-2 py-0.5 rounded-full shrink-0"
+                    :class="LIB_GRAVITE_OT[pa.gravite].cls">
+                    {{ LIB_GRAVITE_OT[pa.gravite].label }}
+                  </span>
+                </div>
+              </div>
+            </template>
+
+            <button v-if="peutAjouterPanne" :class="Lc.btnOutline" class="mt-2.5"
+              @click="ajoutPanneOuvert = !ajoutPanneOuvert">
+              <Plus class="w-3.5 h-3.5" />
+              Ajouter une panne
+            </button>
+            <p v-else class="text-[11px] text-muted-foreground mt-2">
+              Limite de {{ MAX_PANNES_SIMULTANEES }} pannes simultanées atteinte.
+            </p>
+
+            <div v-if="ajoutPanneOuvert" class="mt-3 p-3 rounded-lg bg-background border border-border">
+              <div class="grid grid-cols-2 gap-3 mb-2.5 max-sm:grid-cols-1">
+                <div :class="F.field">
+                  <label :class="F.fieldLabel">Sous-système</label>
+                  <select v-model="nouvellePanne.sousSysteme" :class="F.fieldSelect">
+                    <option value="">Choisir…</option>
+                    <option v-for="(lib, k) in LIB_SOUS_SYSTEME" :key="k" :value="k">{{ lib }}</option>
+                  </select>
+                </div>
+                <div :class="F.field">
+                  <label :class="F.fieldLabel">Mode de défaillance</label>
+                  <select v-model="nouvellePanne.modeDefaillance" :class="F.fieldSelect">
+                    <option value="">Choisir…</option>
+                    <option v-for="(lib, k) in LIB_MODE_DEFAILLANCE" :key="k" :value="k">{{ lib }}</option>
+                  </select>
+                </div>
+                <div :class="F.field">
+                  <label :class="F.fieldLabel">Cause racine</label>
+                  <select v-model="nouvellePanne.causeRacine" :class="F.fieldSelect">
+                    <option value="">Choisir…</option>
+                    <option v-for="(lib, k) in LIB_CAUSE_RACINE" :key="k" :value="k">{{ lib }}</option>
+                  </select>
+                </div>
+                <div :class="F.field">
+                  <label :class="F.fieldLabel">Gravité</label>
+                  <select v-model="nouvellePanne.gravite" :class="F.fieldSelect">
+                    <option value="mineure">Mineure</option>
+                    <option value="majeure">Majeure</option>
+                    <option value="critique">Critique</option>
+                  </select>
+                </div>
+              </div>
+              <button :class="Lc.btnPrimary" :disabled="!panneComplete" @click="ajouterPanne">
+                Enregistrer cette panne
+              </button>
+            </div>
           </template>
 
           <!-- Saisie du diagnostic -->
@@ -304,19 +372,34 @@
           </div>
 
           <!-- Le tarif horaire n'a pas été communiqué : on le signale plutôt que d'inventer -->
-          <div class="flex items-start gap-2.5 bg-background border border-border rounded-lg px-3.5 py-2.5 mb-3">
+          <!-- <div class="flex items-start gap-2.5 bg-background border border-border rounded-lg px-3.5 py-2.5 mb-3">
             <FileQuestion class="w-4 h-4 shrink-0 mt-px text-muted-foreground" />
             <p class="text-[11px] text-muted-foreground leading-relaxed">
               La main-d’œuvre interne n’est pas valorisée : le tarif horaire de l’atelier n’a pas été
               communiqué par GTD. Le coût affiché couvre les pièces et la sous-traitance.
             </p>
-          </div>
+          </div> -->
 
           <template v-if="item.statut === 'cloture'">
             <p class="text-[11px] text-muted-foreground">
               Clôturé par {{ item.cloturePar }} le {{ fmtDateTime(item.clotureLe) }}.
               Le véhicule a été remis en service à cette date.
             </p>
+          </template>
+
+          <!-- US 3.2.4 - validation hiérarchique avant clôture définitive -->
+          <template v-else-if="item.statut === 'attente_validation'">
+            <div class="flex items-start gap-2.5 bg-warning-bg text-warning rounded-lg px-3.5 py-2.5 mb-3">
+              <ShieldCheck class="w-4 h-4 shrink-0 mt-px" />
+              <p class="text-xs leading-relaxed">
+                Les travaux sont décrits et le diagnostic est complet. La clôture définitive exige
+                la <strong>validation du responsable maintenance</strong>. Le véhicule reste
+                immobilisé jusque-là.
+              </p>
+            </div>
+            <button :class="Lc.btnPrimary" @click="valider">
+              Valider et remettre en service
+            </button>
           </template>
 
           <template v-else>
@@ -335,7 +418,7 @@
             </div>
 
             <button :class="Lc.btnPrimary" :disabled="!peutCloturer" @click="cloturer">
-              Clôturer et remettre en service
+              Soumettre à validation
             </button>
           </template>
         </FormSection>
@@ -351,7 +434,7 @@
  * Même coquille et même langage visuel que la fiche véhicule.
  */
 import { ref, reactive, computed } from 'vue'
-import { AlertCircle, FileQuestion } from 'lucide-vue-next'
+import { AlertCircle, FileQuestion, ShieldCheck, Plus } from 'lucide-vue-next'
 import CardModalShell from '../shared/CardModalShell.vue'
 import FormSection    from '../ui/form-field/FormSection.vue'
 import { useMaintenanceStore } from '../../stores/maintenance'
@@ -359,10 +442,10 @@ import { useAuthStore } from '../../stores/auth'
 import {
   LIB_SOUS_SYSTEME, LIB_MODE_DEFAILLANCE, LIB_CAUSE_RACINE,
   LIB_STATUT_OT, LIB_ORIGINE_OT, LIB_TYPE_MAINTENANCE,
-  LIB_GRAVITE_OT, LIB_STATUT_ACHAT,
+  LIB_GRAVITE_OT, LIB_STATUT_ACHAT, MAX_PANNES_SIMULTANEES,
 } from '../../types/maintenance'
 import type {
-  OrdreTravail, SousSysteme, ModeDefaillance, CauseRacine,
+  OrdreTravail, SousSysteme, ModeDefaillance, CauseRacine, GraviteOT,
 } from '../../types/maintenance'
 import { fmtAr, fmtDate, fmtDateTime } from '../../lib/fmsUtils'
 import * as F  from '../../lib/formClasses'
@@ -409,6 +492,42 @@ function enregistrerDiagnostic() {
     modeDefaillance: diag.modeDefaillance as ModeDefaillance,
     causeRacine: diag.causeRacine as CauseRacine,
   }, auth.user?.name ?? 'Atelier')
+}
+
+/* ── US 3.2.2 - Pannes additionnelles sur le même véhicule ── */
+const ajoutPanneOuvert = ref(false)
+
+const nouvellePanne = reactive({
+  sousSysteme: '' as SousSysteme | '',
+  modeDefaillance: '' as ModeDefaillance | '',
+  causeRacine: '' as CauseRacine | '',
+  gravite: 'majeure' as GraviteOT,
+})
+
+const panneComplete = computed(() =>
+  !!nouvellePanne.sousSysteme && !!nouvellePanne.modeDefaillance && !!nouvellePanne.causeRacine)
+
+/** Le diagnostic principal compte pour une panne : la limite est donc de 4 au total. */
+const peutAjouterPanne = computed(() =>
+  (item.value.pannes?.length ?? 0) < MAX_PANNES_SIMULTANEES - 1)
+
+function ajouterPanne() {
+  if (!panneComplete.value) return
+  store.ajouterPanne(item.value.id, {
+    sousSysteme: nouvellePanne.sousSysteme as SousSysteme,
+    modeDefaillance: nouvellePanne.modeDefaillance as ModeDefaillance,
+    causeRacine: nouvellePanne.causeRacine as CauseRacine,
+    gravite: nouvellePanne.gravite,
+  })
+  nouvellePanne.sousSysteme = ''
+  nouvellePanne.modeDefaillance = ''
+  nouvellePanne.causeRacine = ''
+  ajoutPanneOuvert.value = false
+}
+
+/* ── US 3.2.4 - Validation hiérarchique ───────────────────── */
+function valider() {
+  store.validerCloture(item.value.id, auth.user?.name ?? 'Responsable', 'responsable maintenance')
 }
 
 /* ── Clôture ──────────────────────────────────────────────── */

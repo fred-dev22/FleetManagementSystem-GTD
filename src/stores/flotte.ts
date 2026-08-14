@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import type {
   EquipementEmbarque, TypeEquipement, LigneEtatFlotte, CodeEtatFlotte,
   ChecklistRoute, AuditConformite, AutorisationDepart, ResultatPoint,
-  PoliceAssurance, Sinistre,
+  PoliceAssurance, Sinistre, EtatFlotteArchive,
 } from '../types/flotte'
 import { POINTS_CHECKLIST_ROUTE, groupeDeLEtat } from '../types/flotte'
 
@@ -15,7 +15,7 @@ import { POINTS_CHECKLIST_ROUTE, groupeDeLEtat } from '../types/flotte'
  */
 export const useFlotteStore = defineStore('flotte', () => {
 
-  /* ══ US 2.1.6 — Équipements embarqués ══════════════════════ */
+  /* ══ US 2.1.6 - Équipements embarqués ══════════════════════ */
   const equipements = ref<EquipementEmbarque[]>([
     { id: 'EQ-001', vehiculeId: 'TRC-001', type: 'obc',          marque: 'Camtrack', numeroSerie: 'CT-88401', dateInstallation: '2023-05-12', plateforme: 'Camtrack Pro', etat: 'operationnel' },
     { id: 'EQ-002', vehiculeId: 'TRC-001', type: 'gps',          marque: 'Camtrack', numeroSerie: 'GP-11720', dateInstallation: '2023-05-12', plateforme: 'Camtrack Pro', etat: 'operationnel' },
@@ -38,7 +38,7 @@ export const useFlotteStore = defineStore('flotte', () => {
   const equipementsDuVehicule = (vehiculeId: string) =>
     equipements.value.filter(e => e.vehiculeId === vehiculeId)
 
-  /** Taux d'équipement par type — cible 100 % au cahier des charges. */
+  /** Taux d'équipement par type - cible 100 % au cahier des charges. */
   function tauxEquipement(type: TypeEquipement, nbVehicules: number): number {
     if (!nbVehicules) return 0
     const equipes = new Set(
@@ -58,11 +58,11 @@ export const useFlotteStore = defineStore('flotte', () => {
       .filter(e => e.tentativeDesactivation?.length)
       .flatMap(e => (e.tentativeDesactivation ?? []).map(t => ({ ...t, vehiculeId: e.vehiculeId, type: e.type }))))
 
-  /* ══ US 2.2.4 — État de flotte quotidien ═══════════════════ */
+  /* ══ US 2.2.4 - État de flotte quotidien ═══════════════════ */
   const etatFlotte = ref<LigneEtatFlotte[]>([
     { vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX', citernePlaque: 'MG-1100-TR',
       chauffeurNom: 'Thierry Randriamanga', etat: 'ATT-ADM',
-      codeIndispo: 'PNN', motifIndispo: 'Panne circuit d’air — dessiccateur',
+      codeIndispo: 'PNN', motifIndispo: 'Panne circuit d’air - dessiccateur',
       remiseEnServicePrevue: '2026-08-04', observation: 'En attente de la pièce commandée.' },
     { vehiculeId: 'TRC-002', vehiculePlaque: 'MG-5671-TX', citernePlaque: 'MG-1102-TR',
       chauffeurNom: 'Fiona Mungroo', etat: 'TR-LIV', voyageRef: 'VOY-2026-0151' },
@@ -70,7 +70,7 @@ export const useFlotteStore = defineStore('flotte', () => {
       chauffeurNom: 'Jean-Luc Ravelo', etat: 'DEP-PRV', voyageRef: 'VOY-2026-0152' },
     { vehiculeId: 'TRC-004', vehiculePlaque: 'MG-3356-TX',
       chauffeurNom: 'Hery Rasoanaivo', etat: 'ATT-ADM',
-      codeIndispo: 'VET', motifIndispo: 'Vetting expiré — audit programmé',
+      codeIndispo: 'VET', motifIndispo: 'Vetting expiré - audit programmé',
       remiseEnServicePrevue: '2026-08-08' },
     { vehiculeId: 'TRC-005', vehiculePlaque: 'MG-2201-TX',
       etat: 'ATT-CHG', observation: 'Présenté au dépôt GRT, en file de chargement.' },
@@ -97,7 +97,53 @@ export const useFlotteStore = defineStore('flotte', () => {
     if (l) l.etat = etat
   }
 
-  /* ══ US 2.3.1 — Checklists sur route ═══════════════════════ */
+  /* ══ US 2.2.4 - Historique des états produits ══════════════
+     L'état d'un jour donné reste consultable : c'est la preuve de
+     ce qui a été déclaré au client à cette date.
+     ══════════════════════════════════════════════════════════ */
+  const etatsArchives = ref<EtatFlotteArchive[]>([
+    { id: 'EF-2026-07-31', date: '2026-07-31', produitPar: 'Naina Rakotobe',
+      transmisLe: '2026-07-31T07:15:00Z',
+      lignes: [
+        { vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX', citernePlaque: 'MG-1100-TR',
+          chauffeurNom: 'Thierry Randriamanga', etat: 'ATT-ADM',
+          codeIndispo: 'PNN', motifIndispo: 'Panne circuit d’air - dessiccateur',
+          remiseEnServicePrevue: '2026-08-04' },
+        { vehiculeId: 'TRC-002', vehiculePlaque: 'MG-5671-TX', citernePlaque: 'MG-1102-TR',
+          chauffeurNom: 'Fiona Mungroo', etat: 'TR-CHG', voyageRef: 'VOY-2026-0151' },
+        { vehiculeId: 'TRC-004', vehiculePlaque: 'MG-3356-TX', etat: 'ATT-ADM',
+          codeIndispo: 'VET', motifIndispo: 'Vetting expiré', remiseEnServicePrevue: '2026-08-08' },
+      ] },
+    { id: 'EF-2026-07-30', date: '2026-07-30', produitPar: 'Naina Rakotobe',
+      transmisLe: '2026-07-30T07:05:00Z',
+      lignes: [
+        { vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX', citernePlaque: 'MG-1100-TR',
+          chauffeurNom: 'Thierry Randriamanga', etat: 'ATT-ADM',
+          codeIndispo: 'PNN', motifIndispo: 'Panne circuit d’air' },
+        { vehiculeId: 'TRC-002', vehiculePlaque: 'MG-5671-TX', chauffeurNom: 'Fiona Mungroo', etat: 'DEP-REA' },
+      ] },
+  ])
+
+  /** Fige l'état du jour : il devient une pièce opposable. */
+  function archiverEtat(par: string): EtatFlotteArchive {
+    const jour = new Date().toISOString().slice(0, 10)
+    const existant = etatsArchives.value.find(e => e.date === jour)
+    if (existant) {
+      existant.lignes = JSON.parse(JSON.stringify(etatFlotte.value))
+      existant.produitPar = par
+      return existant
+    }
+    const nouveau: EtatFlotteArchive = {
+      id: `EF-${jour}`, date: jour, produitPar: par,
+      lignes: JSON.parse(JSON.stringify(etatFlotte.value)),
+    }
+    etatsArchives.value.unshift(nouveau)
+    return nouveau
+  }
+
+  const etatDuJour = (date: string) => etatsArchives.value.find(e => e.date === date)
+
+  /* ══ US 2.3.1 - Checklists sur route ═══════════════════════ */
   const checklists = ref<ChecklistRoute[]>([
     {
       id: 'CKL-2026-0148', reference: 'CKL-2026-0148',
@@ -161,13 +207,14 @@ export const useFlotteStore = defineStore('flotte', () => {
   const checklistsAvecAnomalie = computed(() =>
     checklists.value.filter(c => anomaliesDe(c).length > 0))
 
-  /* ══ US 2.3.2 — Audits de conformité ═══════════════════════ */
+  /* ══ US 2.3.2 - Audits de conformité ═══════════════════════ */
   const audits = ref<AuditConformite[]>([
     {
       id: 'AUD-2026-0007', reference: 'AUD-2026-0007',
       vehiculeId: 'TRC-004', tracteurPlaque: 'MG-3356-TX', citernePlaque: 'MG-1104-TR',
       date: '2026-07-22', auditeur: 'Hery Ratsimba',
       conforme: false, contreVisiteLe: '2026-08-08',
+      rapportArchiveLe: '2026-07-22T16:30:00Z', rapportUrl: '/rapports/AUD-2026-0007.pdf',
       commentaire: 'Vetting expiré. Deux postes non conformes à corriger avant présentation.',
       resultats: [
         { code: '100.10', verdict: 'conforme' },
@@ -187,6 +234,7 @@ export const useFlotteStore = defineStore('flotte', () => {
       vehiculeId: 'TRC-001', tracteurPlaque: 'MG-7842-TX', citernePlaque: 'MG-1100-TR',
       date: '2026-05-14', auditeur: 'Hery Ratsimba',
       conforme: true,
+      rapportArchiveLe: '2026-05-14T17:00:00Z', rapportUrl: '/rapports/AUD-2026-0006.pdf',
       resultats: [
         { code: '100.10', verdict: 'conforme' }, { code: '100.20', verdict: 'conforme' },
         { code: '102.10', verdict: 'conforme' }, { code: '104.10', verdict: 'conforme' },
@@ -202,7 +250,7 @@ export const useFlotteStore = defineStore('flotte', () => {
 
   const auditsNonConformes = computed(() => audits.value.filter(a => !a.conforme))
 
-  /* ══ US 2.4.1 — Autorisations de départ ════════════════════ */
+  /* ══ US 2.4.1 - Autorisations de départ ════════════════════ */
   const autorisations = ref<AutorisationDepart[]>([
     {
       id: 'AUT-2026-0212', reference: 'AUT-2026-0212',
@@ -265,7 +313,7 @@ export const useFlotteStore = defineStore('flotte', () => {
   }
 
 
-  /* ══ US 2.7.3 — Assurances et sinistres ═══════════════════ */
+  /* ══ US 2.7.3 - Assurances et sinistres ═══════════════════ */
   const polices = ref<PoliceAssurance[]>([
     { id: 'POL-001', vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX',
       compagnie: 'ARO Madagascar', numeroPolice: 'ARO-2025-88401',
@@ -314,11 +362,11 @@ export const useFlotteStore = defineStore('flotte', () => {
     {
       id: 'SIN-2026-003', reference: 'SIN-2026-003',
       vehiculeId: 'TRC-003', vehiculePlaque: 'MG-4410-TX',
-      date: '2026-05-02T14:10:00Z', lieu: 'RN2, PK 155 — Ambatosenegaly',
+      date: '2026-05-02T14:10:00Z', lieu: 'RN2, PK 155 - Ambatosenegaly',
       circonstances: 'Accrochage latéral avec un véhicule léger lors d’un dépassement. Aucun blessé.',
       gravite: 'materiel_leger',
       chauffeurNom: 'Jean-Luc Ravelo',
-      tiersImpliques: 'Véhicule particulier, plaque 4471-TBA — constat amiable établi.',
+      tiersImpliques: 'Véhicule particulier, plaque 4471-TBA - constat amiable établi.',
       montantDommagesAr: 1_250_000,
       statutIndemnisation: 'regle', montantIndemniseAr: 1_250_000,
       policeId: 'POL-001',
@@ -356,7 +404,7 @@ export const useFlotteStore = defineStore('flotte', () => {
     sinistres.value.reduce((s, x) => s + (x.montantIndemniseAr ?? 0), 0))
 
   /**
-   * Accidents par million de kilomètres — indicateur du cahier des charges.
+   * Accidents par million de kilomètres - indicateur du cahier des charges.
    * Le kilométrage total de la flotte doit être fourni par l'appelant :
    * il est détenu par le référentiel véhicules, pas par ce store.
    */
@@ -368,6 +416,7 @@ export const useFlotteStore = defineStore('flotte', () => {
   return {
     equipements, equipementsDuVehicule, tauxEquipement, vehiculesNonCouverts, tentativesDesactivation,
     etatFlotte, etatParGroupe, immobilises, etatDuVehicule, changerEtat,
+    etatsArchives, archiverEtat, etatDuJour,
     checklists, checklistsDuVehicule, anomaliesDe, checklistsAvecAnomalie,
     audits, auditsDuVehicule, auditsNonConformes,
     autorisations, autorisationsEnAttente, peutPartir, decider,

@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════
-   MODULE 2 — compléments
+   MODULE 2 - compléments
    US 2.1.6 · 2.2.3 · 2.2.4 · 2.3.1 · 2.3.2 · 2.4.1
 
    Toutes les listes de ce fichier sont reprises des documents de GTD.
@@ -8,8 +8,8 @@
    ══════════════════════════════════════════════════════════════ */
 
 /* ══════════════════════════════════════════════════════════════
-   US 2.1.6 — Équipements embarqués
-   Source : cahier des charges ERP GTD, domaine Technologie —
+   US 2.1.6 - Équipements embarqués
+   Source : cahier des charges ERP GTD, domaine Technologie -
    « Disponibilité GPS / OBC / caméras : 100 % de conformité ».
    Checklist sur route v4, point « Caméra Dôme et vanne ».
    ══════════════════════════════════════════════════════════════ */
@@ -38,6 +38,30 @@ export type PlateformeTelematique =
 export const PLATEFORMES: PlateformeTelematique[] =
   ['Mzone', 'Camtrack Pro', 'Ym@ne', 'VSS', 'Ceiba', 'M-tec']
 
+/* ══════════════════════════════════════════════════════════════
+   US 2.5.2 - Zones de géorepérage
+   ══════════════════════════════════════════════════════════════ */
+export type NatureZone = 'site_desservi' | 'zone_interdite' | 'parking_autorise'
+
+export const LIB_NATURE_ZONE: Record<NatureZone, string> = {
+  site_desservi:    'Site à desservir',
+  zone_interdite:   'Zone interdite',
+  parking_autorise: 'Parking autorisé',
+}
+
+/**
+ * Rayon de validation d'un passage, en mètres.
+ * Paramétrable par site depuis l'écran Sites.
+ */
+export const RAYON_VALIDATION_M = 5_000
+
+/** Une zone interdite se détecte de plus près qu'un site à desservir. */
+export const RAYON_PAR_NATURE: Record<NatureZone, number> = {
+  site_desservi:    5_000,
+  zone_interdite:   2_000,
+  parking_autorise: 1_000,
+}
+
 export interface EquipementEmbarque {
   id: string
   vehiculeId: string
@@ -52,7 +76,7 @@ export interface EquipementEmbarque {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   US 2.2.4 — États de flotte
+   US 2.2.4 - États de flotte
    Source : courriels « ÉTAT FLOTTE GTD LPSA », « CC RESTANT SUR
    BASE TNR », « CC immobilisé base TVE ». Treize codes.
    ══════════════════════════════════════════════════════════════ */
@@ -108,17 +132,30 @@ export interface LigneEtatFlotte {
   /** Renseigné seulement si le véhicule est immobilisé */
   codeIndispo?: string
   motifIndispo?: string
-  /** Date prévisionnelle de remise en service — demandée par le client
+  /** Date prévisionnelle de remise en service - demandée par le client
    *  dans ses relances. Absente si l'échéance n'est pas connue. */
   remiseEnServicePrevue?: string
   voyageRef?: string
   observation?: string
 }
 
+/**
+ * US 2.2.4 - L'état produit un jour donné reste consultable ensuite.
+ * Il constitue la preuve de ce qui a été déclaré au client ce jour-là.
+ */
+export interface EtatFlotteArchive {
+  id: string
+  date: string
+  produitPar: string
+  lignes: LigneEtatFlotte[]
+  /** Renseigné si l'état a effectivement été transmis au client */
+  transmisLe?: string
+}
+
 /* ══════════════════════════════════════════════════════════════
-   US 2.3.1 — Checklist sur route
+   US 2.3.1 - Checklist sur route
    Source : formulaire « Checklist sur Route » version 4,
-   mise à jour du 30/10/2024 — 16 points, jusqu'à 11 pauses.
+   mise à jour du 30/10/2024 - 16 points, jusqu'à 11 pauses.
    ══════════════════════════════════════════════════════════════ */
 export interface PointChecklistRoute {
   code: string
@@ -129,18 +166,18 @@ export interface PointChecklistRoute {
 export const POINTS_CHECKLIST_ROUTE: PointChecklistRoute[] = [
   { code: 'FRS', libelle: 'Frein de service' },
   { code: 'FST', libelle: 'Frein de stationnement' },
-  { code: 'FLX', libelle: 'Flexible — fuite d’air, branchement' },
+  { code: 'FLX', libelle: 'Flexible - fuite d’air, branchement' },
   { code: 'DIR', libelle: 'Direction' },
   { code: 'KLX', libelle: 'Klaxon' },
   { code: 'ESG', libelle: 'Essuie-glace' },
   { code: 'RET', libelle: 'Rétroviseur' },
-  { code: 'SEC', libelle: 'Matériel de secours — réflecteur, panneau' },
+  { code: 'SEC', libelle: 'Matériel de secours - réflecteur, panneau' },
   { code: 'ECL', libelle: 'Éclairage et signalisation' },
-  { code: 'PNE', libelle: 'Pneumatiques — clous, gonflage' },
+  { code: 'PNE', libelle: 'Pneumatiques - clous, gonflage' },
   { code: 'SUS', libelle: 'Suspension' },
   { code: 'CHA', libelle: 'Cadre de châssis' },
-  { code: 'ATT', libelle: 'Dispositif d’attelage — sellette, cadenas, chaîne' },
-  { code: 'EXT', libelle: 'Extincteurs — expiration, plomb, goupille, pression' },
+  { code: 'ATT', libelle: 'Dispositif d’attelage - sellette, cadenas, chaîne' },
+  { code: 'EXT', libelle: 'Extincteurs - expiration, plomb, goupille, pression' },
   { code: 'CAL', libelle: 'Cales' },
   { code: 'CAM', libelle: 'Caméra dôme et vanne' },
 ]
@@ -177,9 +214,9 @@ export interface ChecklistRoute {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   US 2.3.2 — Audit de conformité et vetting
+   US 2.3.2 - Audit de conformité et vetting
    Source : classeur « base gestion véhicule et maintenance »,
-   feuille base véhicule — postes codés.
+   feuille base véhicule - postes codés.
    ══════════════════════════════════════════════════════════════ */
 export interface PosteAudit {
   code: string
@@ -198,7 +235,7 @@ export const POSTES_AUDIT: PosteAudit[] = [
   { code: '100.20',   categorie: 'Type et réglementation',   libelle: 'Conformité réglementaire du transport de matières dangereuses' },
   { code: '102.10',   categorie: 'Poids et dimensions',      libelle: 'PTAC et PTRA' },
   { code: '102.20',   categorie: 'Poids et dimensions',      libelle: 'Dimensions hors tout' },
-  { code: '104.10',   categorie: 'Identification',           libelle: 'Frappe à froid du châssis — 17 caractères' },
+  { code: '104.10',   categorie: 'Identification',           libelle: 'Frappe à froid du châssis - 17 caractères' },
   { code: '104.20',   categorie: 'Identification',           libelle: 'Concordance des plaques et de la carte grise' },
   { code: '106.10',   categorie: 'Ordinateur de bord',       libelle: 'Boîtier embarqué et enregistrement des données' },
   { code: '108.10',   categorie: 'Signalisation MD',         libelle: 'Panneaux orange et plaques-étiquettes' },
@@ -243,10 +280,14 @@ export interface AuditConformite {
   /** Conditionne l'aptitude à charger */
   conforme: boolean
   commentaire?: string
+  /** US 2.3.2 - Le rapport est archivé et reste consultable : c'est la
+   *  preuve à présenter lors d'un audit ou d'un vetting. */
+  rapportArchiveLe?: string
+  rapportUrl?: string
 }
 
 /* ══════════════════════════════════════════════════════════════
-   US 2.4.1 — Autorisation de départ
+   US 2.4.1 - Autorisation de départ
    Source : projet Control Room, phase 5 h – 6 h.
    ══════════════════════════════════════════════════════════════ */
 export type ControleDepart =
@@ -289,9 +330,9 @@ export interface AutorisationDepart {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   US 2.7.3 — Assurances et sinistres
+   US 2.7.3 - Assurances et sinistres
    Source : cahier des charges ERP GTD, domaine Infractions &
-   discipline — « accidents par million de km, tendre vers 0 ».
+   discipline - « accidents par million de km, tendre vers 0 ».
    ══════════════════════════════════════════════════════════════ */
 
 export type StatutPolice = 'active' | 'expiree' | 'resiliee'

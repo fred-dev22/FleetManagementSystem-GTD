@@ -190,6 +190,12 @@
       <p class="text-sm">Aucun ordre de travail</p>
     </template>
 
+    <DeclarationPanneModal
+      v-if="creationOuverte"
+      @close="creationOuverte = false"
+      @created="(id: string) => { creationOuverte = false; selectedId = id }"
+    />
+
     <OrdreTravailCard
       v-if="selectedId !== null"
       :ordre="store.getById(selectedId)!"
@@ -211,7 +217,8 @@ import { useRouter } from 'vue-router'
 import { Wrench, Plus, Clock, PackageSearch, ShieldCheck, Coins } from 'lucide-vue-next'
 import { ListPageLayout } from '../../components'
 import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
-import OrdreTravailCard from '../../components/fleet/OrdreTravailCard.vue'
+import OrdreTravailCard from '../../components/maintenance/OrdreTravailCard.vue'
+import DeclarationPanneModal from '../../components/maintenance/DeclarationPanneModal.vue'
 import { useMaintenanceStore } from '../../stores/maintenance'
 import {
   LIB_SOUS_SYSTEME, LIB_MODE_DEFAILLANCE, LIB_STATUT_OT,

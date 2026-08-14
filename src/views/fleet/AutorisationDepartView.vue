@@ -55,7 +55,7 @@
         <span v-for="c in item.controles" :key="c.controle"
           class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
           :class="c.conforme ? 'bg-success-bg text-success' : 'bg-danger-bg text-danger'"
-          :title="`${LIB_CONTROLE_DEPART[c.controle]} — ${c.conforme ? 'conforme' : 'non conforme'}`">
+          :title="`${LIB_CONTROLE_DEPART[c.controle]} - ${c.conforme ? 'conforme' : 'non conforme'}`">
           {{ c.conforme ? '✓' : '✗' }}
         </span>
       </div>
@@ -133,7 +133,7 @@
 
 <script setup lang="ts">
 /**
- * US 2.4.1 — Autorisation de départ.
+ * US 2.4.1 - Autorisation de départ.
  *
  * Le Control Room contrôle chaque départ entre 5 h et 6 h. L'autorisation
  * exige quatre validations simultanées ; aucun voyage ne peut être créé

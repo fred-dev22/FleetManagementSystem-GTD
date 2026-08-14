@@ -19,22 +19,22 @@ const router = createRouter({
     // ── Onboarding ───────────────────────────────────────────────
     { path: '/onboarding', name: 'onboarding', component: () => import('../views/OnboardingWizard.vue') },
 
-    // ── MODULE 1 : Personnel — Congés ────────────────────────────
+    // ── MODULE 1 : Personnel - Congés ────────────────────────────
     { path: '/hr/absences',          name: 'hr-absences',      component: () => import('../views/absences/AbsenceListView.vue'),    meta: { requiresAuth: true, layout: 'dashboard' } },
     { path: '/hr/absences/balances', name: 'hr-leave-balances', component: () => import('../views/absences/LeaveBalancesView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
 
-    // ── MODULE 1 : Personnel — Employés ─────────────────────────
+    // ── MODULE 1 : Personnel - Employés ─────────────────────────
     { path: '/hr/employees',     name: 'hr-employees',      component: () => import('../views/employees/EmployeeListView.vue'),  meta: { requiresAuth: true, layout: 'dashboard' } },
     { path: '/hr/employees/:id', name: 'hr-employee-detail', component: () => import('../views/employees/EmployeeDetailView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
 
-    // ── MODULE 1 : Personnel — Structure ────────────────────────
+    // ── MODULE 1 : Personnel - Structure ────────────────────────
     { path: '/hr/entities',          name: 'hr-entities',      component: () => import('../views/entities/EntityListView.vue'),   meta: { requiresAuth: true, layout: 'dashboard' } },
     { path: '/hr/entities/new',      name: 'hr-entity-create',  component: () => import('../views/entities/EntityFormView.vue'),   meta: { requiresAuth: true, layout: 'dashboard' } },
     { path: '/hr/entities/:id/edit', name: 'hr-entity-edit',    component: () => import('../views/entities/EntityFormView.vue'),   meta: { requiresAuth: true, layout: 'dashboard' } },
     { path: '/hr/entities/:id',      name: 'hr-entity-detail',  component: () => import('../views/entities/EntityDetailView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
     { path: '/hr/org-chart',         name: 'hr-org-chart',       component: () => import('../views/rh/OrgChartView.vue'),          meta: { requiresAuth: true, layout: 'dashboard' } },
 
-    // ── MODULE 1 : Personnel — RH ────────────────────────────────
+    // ── MODULE 1 : Personnel - RH ────────────────────────────────
     { path: '/hr/missions',           name: 'hr-missions',   component: () => import('../views/missions/MissionListView.vue'),  meta: { requiresAuth: true, layout: 'dashboard' } },
     { path: '/hr/expenses',           name: 'hr-expenses',   component: () => import('../views/expenses/ExpenseListView.vue'),  meta: { requiresAuth: true, layout: 'dashboard' } },
     { path: '/hr/contracts', name: 'hr-contracts', component: () => import('../views/placeholders/PlaceholderView.vue'), meta: { requiresAuth: true, title: 'Gestion des Contrats' } },
@@ -49,6 +49,16 @@ const router = createRouter({
     { path: '/hr/config/perdiems',     name: 'hr-config-perdiems',     component: () => import('../views/configuration/PerdiemView.vue'),               meta: { requiresAuth: true, layout: 'dashboard' } },
 
     // ── MODULE 2 : Véhicules ─────────────────────────────────────
+    /* ══ MODULE MAINTENANCE ══════════════════════════════════ */
+    { path: '/maintenance',                  name: 'maintenance-dashboard',        component: () => import('../views/maintenance/MaintenanceDashboardView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
+    { path: '/maintenance/ordres',           name: 'maintenance-ordres',           component: () => import('../views/maintenance/MaintenanceListView.vue'),      meta: { requiresAuth: true, layout: 'dashboard' } },
+    { path: '/maintenance/fiabilite',        name: 'maintenance-fiabilite',        component: () => import('../views/maintenance/FiabiliteView.vue'),            meta: { requiresAuth: true, layout: 'dashboard' } },
+    { path: '/maintenance/atelier',          name: 'maintenance-atelier',          component: () => import('../views/maintenance/AtelierView.vue'),              meta: { requiresAuth: true, layout: 'dashboard' } },
+    { path: '/maintenance/echeances',        name: 'maintenance-echeances',        component: () => import('../views/maintenance/EcheancesView.vue'),            meta: { requiresAuth: true, layout: 'dashboard' } },
+    { path: '/maintenance/equipe-mobile',    name: 'maintenance-equipe-mobile',    component: () => import('../views/maintenance/EquipeMobileView.vue'),         meta: { requiresAuth: true, layout: 'dashboard' } },
+    { path: '/maintenance/indisponibilites', name: 'maintenance-indisponibilites', component: () => import('../views/maintenance/IndisponibilitesView.vue'),     meta: { requiresAuth: true, layout: 'dashboard' } },
+    { path: '/maintenance/plans',            name: 'maintenance-plans',            component: () => import('../views/maintenance/PlansEntretienView.vue'),       meta: { requiresAuth: true, layout: 'dashboard' } },
+
     { path: '/fleet/vehicules', name: 'fleet-vehicules', component: () => import('../views/fleet/VehiculeListView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
 
     // ── MODULE 2 : Conducteurs ────────────────────────────────────
@@ -68,7 +78,7 @@ const router = createRouter({
     // ── MODULE 2 : Documents ─────────────────────────────────────
     { path: '/fleet/documents', name: 'fleet-documents', component: () => import('../views/fleet/DocumentsVehiculeView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
 
-    // ── MODULE 3 : FMS — voyages, conformité, carburant, documents ──
+    // ── MODULE 3 : FMS - voyages, conformité, carburant, documents ──
     { path: '/fleet/voyages',        name: 'fleet-voyages',        component: () => import('../views/fleet/VoyageListView.vue'),      meta: { requiresAuth: true, layout: 'dashboard' } },
     { path: '/fleet/voyages/:id',    name: 'fleet-voyage-detail',  component: () => import('../views/fleet/VoyageDetailView.vue'),    meta: { requiresAuth: true, layout: 'dashboard' } },
     { path: '/fleet/ecarts',         name: 'fleet-ecarts',         component: () => import('../views/fleet/EcartListView.vue'),       meta: { requiresAuth: true, layout: 'dashboard' } },
@@ -80,9 +90,6 @@ const router = createRouter({
     { path: '/fleet/registres', name: 'fleet-registres', component: () => import('../views/fleet/RegistresView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
     { path: '/fleet/assurances', name: 'fleet-assurances', component: () => import('../views/fleet/AssurancesView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
     { path: '/fleet/autorisations', name: 'fleet-autorisations', component: () => import('../views/fleet/AutorisationDepartView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
-    { path: '/fleet/equipe-mobile', name: 'fleet-equipe-mobile', component: () => import('../views/fleet/EquipeMobileView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
-    { path: '/fleet/maintenance-dashboard', name: 'fleet-maintenance-dashboard', component: () => import('../views/fleet/MaintenanceDashboardView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
-    { path: '/fleet/maintenance', name: 'fleet-maintenance', component: () => import('../views/fleet/MaintenanceListView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
     { path: '/fleet/carburant',      name: 'fleet-carburant',      component: () => import('../views/fleet/CarburantView.vue'),       meta: { requiresAuth: true, layout: 'dashboard' } },
     { path: '/fleet/conducteurs/:id',name: 'fleet-conducteur-detail', component: () => import('../views/fleet/ConducteurDetailView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
     

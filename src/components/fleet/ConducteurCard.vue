@@ -71,24 +71,7 @@
         </FormSection>
 
         <!-- Permis & Visite médicale -->
-        <!-- ═══════════════════════════════════════════════════════
-             Le cahier des charges demande « scoring conducteur » et
-             « pondération selon infractions » sans définir ni les
-             familles ni les coefficients. On n'invente donc pas de
-             barème : on affiche le score et on signale ce qui manque.
-             ═══════════════════════════════════════════════════════ -->
-        <FormSection title="Barème du score" :recaps="['à définir']">
-          <div class="flex items-start gap-2.5 bg-warning-bg text-warning rounded-lg px-3.5 py-2.5">
-            <AlertCircle class="w-4 h-4 shrink-0 mt-px" />
-            <p class="text-xs leading-relaxed">
-              Le cahier des charges prévoit une <strong>pondération du score selon les infractions</strong>
-              et des <strong>seuils déclenchant un accompagnement</strong>, sans en préciser les valeurs.
-              Le barème reste à arrêter par la direction de GTD.
-            </p>
-          </div>
-        </FormSection>
-
-        <!-- ═══ Exploitation ═══ -->
+                <!-- ═══ Exploitation ═══ -->
         <FormSection
           v-if="score"
           title="Exploitation"
@@ -164,23 +147,7 @@
 
         <!-- ═══ Prime ═══ -->
 
-        <!-- La note de priorisation demande d'afficher les primes,
-             mais aucune grille ni condition n'a été communiquée. -->
-        <FormSection title="Prime de la période" :recaps="['grille non communiquée']" :default-open="false">
-          <div class="flex items-start gap-2.5 bg-background border border-border rounded-lg px-3.5 py-3">
-            <FileQuestion class="w-4 h-4 shrink-0 mt-px text-muted-foreground" />
-            <div>
-              <p class="text-xs font-medium text-foreground">Grille non communiquée</p>
-              <p class="text-[11px] text-muted-foreground leading-relaxed mt-1">
-                À fournir par la direction : les paliers, les montants, et les conditions rendant
-                un conducteur inéligible. Le versement passera par le circuit de validation
-                du module Administration.
-              </p>
-            </div>
-          </div>
-        </FormSection>
-
-        <FormSection title="Permis & Réglementaire">
+                <FormSection title="Permis & Réglementaire">
           <div v-if="profil" class="grid grid-cols-2 gap-x-6 gap-y-4">
             <div class="flex flex-col gap-1">
               <label :class="cls.label">N° Permis</label>
@@ -252,7 +219,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ShieldAlert, AlertCircle, FileQuestion } from 'lucide-vue-next'
+import { ShieldAlert } from 'lucide-vue-next'
 import CardModalShell from '../shared/CardModalShell.vue'
 import FormSection    from '../ui/form-field/FormSection.vue'
 import type { ConducteurProfil } from '../../types'

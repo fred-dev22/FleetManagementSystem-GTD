@@ -67,7 +67,7 @@
     </template>
 
     <template #cell-examen="{ item }">
-      <span class="text-xs">{{ item.type ? LIB_EXAMEN[item.type] : '—' }}</span>
+      <span class="text-xs">{{ item.type ? LIB_EXAMEN[item.type] : '-' }}</span>
     </template>
 
     <template #cell-dateExamen="{ item }">
@@ -79,7 +79,7 @@
         class="text-xs font-medium px-2 py-0.5 rounded-full">{{ LIB_APTITUDE[item.aptitude].label }}</span>
       <span v-else-if="item.positif === false" class="text-xs font-medium px-2 py-0.5 rounded-full bg-success-bg text-success">Négatif</span>
       <span v-else-if="item.positif === true" class="text-xs font-medium px-2 py-0.5 rounded-full bg-danger-bg text-danger">Positif</span>
-      <span v-else class="text-gray-300">—</span>
+      <span v-else class="text-gray-300">-</span>
     </template>
 
     <template #cell-validite="{ item }">
@@ -87,7 +87,7 @@
         :class="+new Date(item.valableJusquau) < Date.now() ? 'text-danger font-medium' : ''">
         {{ fmtDate(item.valableJusquau) }}
       </span>
-      <span v-else class="text-gray-300">—</span>
+      <span v-else class="text-gray-300">-</span>
       <div v-if="item.valableJusquau && +new Date(item.valableJusquau) < Date.now()"
         class="text-[11px] text-danger">Affectation bloquée</div>
     </template>
@@ -99,7 +99,7 @@
     </template>
 
     <template #cell-categorie="{ item }">
-      <span class="text-xs">{{ item.categorie ? LIB_CATEGORIE_REMONTEE[item.categorie] : '—' }}</span>
+      <span class="text-xs">{{ item.categorie ? LIB_CATEGORIE_REMONTEE[item.categorie] : '-' }}</span>
     </template>
 
     <template #cell-objet="{ item }">
@@ -108,7 +108,7 @@
 
     <template #cell-delai="{ item }">
       <span class="text-xs" :class="(item.delaiH ?? 0) > 24 ? 'text-danger font-medium' : ''">
-        {{ item.delaiH != null ? item.delaiH + ' h' : '—' }}
+        {{ item.delaiH != null ? item.delaiH + ' h' : '-' }}
       </span>
     </template>
 
@@ -156,7 +156,7 @@
     </template>
 
     <template #cell-nature="{ item }">
-      <span class="text-xs">{{ item.nature ? LIB_NATURE_NCR[item.nature] : '—' }}</span>
+      <span class="text-xs">{{ item.nature ? LIB_NATURE_NCR[item.nature] : '-' }}</span>
     </template>
 
     <template #cell-gravite="{ item }">
@@ -188,7 +188,7 @@
         <div class="grid grid-cols-2 gap-2 text-xs">
           <div><div class="text-muted-foreground text-[11px]">Date</div>{{ fmtDate(item.date) }}</div>
           <div><div class="text-muted-foreground text-[11px]">Valable jusqu’au</div>{{ fmtDate(item.valableJusquau) }}</div>
-          <div class="col-span-2"><div class="text-muted-foreground text-[11px]">Praticien</div>{{ item.praticien ?? '—' }}</div>
+          <div class="col-span-2"><div class="text-muted-foreground text-[11px]">Praticien</div>{{ item.praticien ?? '-' }}</div>
         </div>
         <div v-if="item.restrictions" class="bg-warning-bg text-warning rounded-md px-2.5 py-2 text-[11px]">
           {{ item.restrictions }}
@@ -258,10 +258,10 @@
         </div>
         <div class="text-xs text-foreground leading-relaxed">{{ item.description }}</div>
         <div class="flex flex-col gap-2 text-xs">
-          <div><div class="text-muted-foreground text-[11px]">Cause immédiate</div>{{ item.causeImmediate ?? '—' }}</div>
-          <div><div class="text-muted-foreground text-[11px]">Cause profonde</div>{{ item.causeProfonde ?? '—' }}</div>
-          <div><div class="text-muted-foreground text-[11px]">Action corrective</div>{{ item.actionCorrective ?? '—' }}</div>
-          <div><div class="text-muted-foreground text-[11px]">Responsable</div>{{ item.responsable ?? '—' }}</div>
+          <div><div class="text-muted-foreground text-[11px]">Cause immédiate</div>{{ item.causeImmediate ?? '-' }}</div>
+          <div><div class="text-muted-foreground text-[11px]">Cause profonde</div>{{ item.causeProfonde ?? '-' }}</div>
+          <div><div class="text-muted-foreground text-[11px]">Action corrective</div>{{ item.actionCorrective ?? '-' }}</div>
+          <div><div class="text-muted-foreground text-[11px]">Responsable</div>{{ item.responsable ?? '-' }}</div>
         </div>
         <button v-if="item.statut !== 'close'" :class="L.btnOutline" class="w-full justify-center"
           @click="item.id && store.cloturerNCR(item.id)">
@@ -279,7 +279,7 @@
 
 <script setup lang="ts">
 /**
- * Registres opérationnels — quatre registres réunis sous une seule coquille.
+ * Registres opérationnels - quatre registres réunis sous une seule coquille.
  * Même modèle d'affichage que toutes les autres listes de l'application :
  * ListPageLayout, indicateurs au-dessus, filtres, panneau d'aperçu à droite.
  */
@@ -361,7 +361,7 @@ const scopeOptions = [
 ]
 
 const sousTitre = computed(() =>
-  vue.value === 'medical'   ? `${store.visitesExpirees.length} visite(s) médicale(s) expirée(s) — affectation bloquée`
+  vue.value === 'medical'   ? `${store.visitesExpirees.length} visite(s) médicale(s) expirée(s) - affectation bloquée`
   : vue.value === 'remontees' ? `Remontée sous 24 h : ${store.tauxRemonteeSous24h} % · clôture : ${store.tauxClotureRemontees} %`
   : vue.value === 'safe'      ? 'Un rejet interdit l’opération de chargement ou de déchargement'
   : `Taux de clôture des non-conformités : ${store.tauxClotureNCR} %`)
