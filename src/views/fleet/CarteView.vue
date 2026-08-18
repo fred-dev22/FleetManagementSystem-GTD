@@ -315,8 +315,8 @@ function statusLabel(s?: string) {
 
 // ── Données tracteurs ──────────────────────────────────────────────
 const tracteurs = computed(() =>
-  vehiculesStore.vehicules.filter(
-    t => t.typeVehicule === 'tracteur' && t.statutAdmin !== 'archive' && t.position,
+  vehiculesStore.auParc.filter(
+    t => t.typeVehicule === 'tracteur' && t.position,
   )
 )
 

@@ -507,4 +507,20 @@ export interface ParametresExploitation {
   trhMinH: number            // repos hebdomadaire : 24 h
   plafondHebdoH: number      // 56 h
   plafondBihebdoH: number    // 90 h
+
+  /* ── Seuils d'alerte ─────────────────────────────────────────
+     Ces trois seuils gouvernent le déclenchement des alertes. Ils
+     étaient figés dans le code et ne pouvaient pas être ajustés
+     par l'exploitation ; ils sont désormais ici, modifiables sans
+     intervention technique depuis Flotte → Configuration → Paramètres.
+     ────────────────────────────────────────────────────────────── */
+
+  /** US 3.1.2 - Préavis d'alerte préventive, en kilomètres avant l'échéance */
+  preavisEntretienKm: number
+  /** US 3.1.2 - Préavis d'alerte préventive, en jours avant l'échéance */
+  preavisEntretienJours: number
+  /** US 2.5.2 - Rayon en deçà duquel un camion est réputé être passé par un site */
+  rayonValidationPassageM: number
+  /** US 2.7.1 - Préavis avant expiration d'un permis, d'un vetting ou d'une pièce */
+  preavisDocumentaireJours: number
 }

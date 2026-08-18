@@ -143,7 +143,7 @@ const scopeOptions = [
 
 /** Échéances calculées pour tous les tracteurs dont le kilométrage est connu. */
 const echeances = computed<EcheanceEntretien[]>(() =>
-  vehicules.vehicules
+  vehicules.auParc
     .filter(v => v.typeVehicule === 'tracteur' && v.kilometrage != null)
     .flatMap(v => store.echeancesDuVehicule(v.id, v.plaque, v.modele, v.kilometrage ?? 0, {}))
     .sort((a, b) => (a.kmRestants ?? 0) - (b.kmRestants ?? 0)))

@@ -8,7 +8,7 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 mb-3.5">
+    <div class="grid grid-cols-2 sm:grid-cols-6 gap-2.5 mb-3.5">
       <div v-for="k in kpis" :key="k.label"
         class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3">
         <p class="text-xl font-bold leading-none" :class="k.cls">{{ k.value }}</p>
@@ -143,12 +143,20 @@
       <div :class="L.card">
         <div :class="L.cardHeader">
           <h2 :class="L.cardTitle"><CalendarOff class="w-4 h-4 text-primary" /> Jours perdus par cause</h2>
+          <span v-if="store.coutTotalImmobilisations != null" class="text-[11px] font-semibold text-danger">
+            {{ fmtAr(store.coutTotalImmobilisations) }}
+          </span>
         </div>
         <div class="flex flex-col gap-2.5">
           <div v-for="(jours, famille) in store.joursPerdusParFamille" :key="famille">
             <div class="flex items-baseline justify-between mb-1">
               <span class="text-xs text-foreground">{{ LIB_FAMILLE_INDISPO[famille as FamilleIndispo] }}</span>
-              <span class="text-xs font-semibold">{{ jours }} j</span>
+              <span class="flex items-baseline gap-2">
+                <span v-if="store.coutParFamille" class="text-[11px] text-danger">
+                  {{ fmtAr(store.coutParFamille[famille as string] ?? 0) }}
+                </span>
+                <span class="text-xs font-semibold">{{ jours }} j</span>
+              </span>
             </div>
             <div class="h-2 rounded-full bg-gray-100 overflow-hidden">
               <div class="h-full rounded-full" :class="CLS_FAMILLE[famille as FamilleIndispo]"
@@ -156,9 +164,16 @@
             </div>
           </div>
         </div>
-        <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
+
+        <p v-if="store.coutImmoRenseigne" class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
+          Les jours perdus sont valorisés au manque à gagner journalier paramétré. La famille
+          réglementaire est celle qui se corrige le plus vite : un vetting suivi ne coûte rien.
+        </p>
+        <p v-else class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
           Les jours perdus sont comptés mais non valorisés : le coût d’immobilisation journalier
-          n’a pas été communiqué par GTD.
+          n’est pas renseigné dans
+          <RouterLink :to="{ name: 'maintenance-parametres' }" class="underline">
+            Paramétrage → Paramètres de l’atelier</RouterLink>.
         </p>
       </div>
     </div>
@@ -169,7 +184,9 @@
     <div v-else-if="onglet === 'couts'" :class="L.card">
       <div :class="L.cardHeader">
         <h2 :class="L.cardTitle"><Coins class="w-4 h-4 text-primary" /> Coûts par ordre de travail</h2>
-        <span class="text-[11px] text-muted-foreground">pièces et sous-traitance</span>
+        <span class="text-[11px] text-muted-foreground">
+          {{ store.tarifRenseigne ? 'pièces, sous-traitance et main-d’œuvre' : 'pièces et sous-traitance' }}
+        </span>
       </div>
 
       <table :class="L.table">
@@ -178,7 +195,10 @@
           <th :class="L.th" class="cursor-default">Véhicule</th>
           <th :class="L.th" class="cursor-default">Sous-système</th>
           <th :class="L.th" class="cursor-default">Type</th>
-          <th :class="L.th" class="cursor-default">Coût</th>
+          <th :class="L.th" class="cursor-default">Pièces</th>
+          <th :class="L.th" class="cursor-default">Sous-traitance</th>
+          <th :class="L.th" class="cursor-default">Main-d’œuvre</th>
+          <th :class="L.th" class="cursor-default">Coût complet</th>
         </tr></thead>
         <tbody>
           <tr v-for="o in ordresParCout" :key="o.id" :class="L.rowHover">
@@ -193,6 +213,19 @@
                 {{ LIB_TYPE_MAINTENANCE[o.typeMaintenance] }}
               </span>
             </td>
+            <td :class="L.td">
+              <span class="text-xs">{{ store.coutPieces(o) ? fmtAr(store.coutPieces(o)) : '-' }}</span>
+            </td>
+            <td :class="L.td">
+              <span class="text-xs">{{ store.coutSousTraitance(o) ? fmtAr(store.coutSousTraitance(o)) : '-' }}</span>
+            </td>
+            <td :class="L.td">
+              <span v-if="store.coutMainOeuvre(o) != null" class="text-xs">
+                {{ fmtAr(store.coutMainOeuvre(o)!) }}
+                <span class="text-[10px] text-muted-foreground">({{ store.heuresOT(o) }} h)</span>
+              </span>
+              <span v-else class="text-[11px] text-warning">{{ store.heuresOT(o) }} h non valorisées</span>
+            </td>
             <td :class="L.td"><span class="text-xs font-semibold">{{ fmtAr(store.coutOT(o)) }}</span></td>
           </tr>
         </tbody>
@@ -204,7 +237,8 @@
           <th :class="L.th" class="cursor-default">Véhicule</th>
           <th :class="L.th" class="cursor-default">Interventions</th>
           <th :class="L.th" class="cursor-default">Jours immobilisé</th>
-          <th :class="L.th" class="cursor-default">Coût cumulé</th>
+          <th :class="L.th" class="cursor-default">Coût immobilisation</th>
+          <th :class="L.th" class="cursor-default">Coût réparations</th>
           <th :class="L.th" class="cursor-default">Coût au km</th>
         </tr></thead>
         <tbody>
@@ -216,6 +250,10 @@
                 {{ v.joursImmo }} j
               </span>
             </td>
+            <td :class="L.td">
+              <span v-if="v.coutImmo != null" class="text-xs text-danger font-medium">{{ fmtAr(v.coutImmo) }}</span>
+              <span v-else class="text-gray-300">-</span>
+            </td>
             <td :class="L.td"><span class="text-xs font-semibold">{{ fmtAr(v.cout) }}</span></td>
             <td :class="L.td">
               <span class="text-xs">{{ coutKm(v.vehiculeId) != null ? fmtAr(coutKm(v.vehiculeId)!) + ' / km' : '-' }}</span>
@@ -224,12 +262,25 @@
         </tbody>
       </table>
 
-      <div class="flex items-start gap-2.5 bg-background border border-border rounded-lg px-3.5 py-2.5 mt-3">
+      <!-- Le coût complet n'est atteint que si le tarif horaire est connu -->
+      <div v-if="store.tarifRenseigne"
+        class="flex items-start gap-2.5 bg-success-bg border border-success/20 rounded-lg px-3.5 py-2.5 mt-3">
+        <Coins class="w-4 h-4 shrink-0 mt-px text-success" />
+        <p class="text-[11px] text-success leading-relaxed">
+          Le coût est complet : pièces, sous-traitance et main-d’œuvre interne.
+          La main-d’œuvre représente {{ fmtAr(store.coutMainOeuvreTotal ?? 0) }}
+          sur {{ fmtAr(store.coutTotal) }}, soit {{ partMainOeuvre }} % du total.
+          Le coût au kilomètre est calculé sur le kilométrage réel de chaque véhicule.
+        </p>
+      </div>
+      <div v-else class="flex items-start gap-2.5 bg-background border border-border rounded-lg px-3.5 py-2.5 mt-3">
         <FileQuestion class="w-4 h-4 shrink-0 mt-px text-muted-foreground" />
         <p class="text-[11px] text-muted-foreground leading-relaxed">
-          Le coût au kilomètre et le coût moyen par sous-système ne sont pas produits : ils supposent
-          le tarif horaire de la main-d’œuvre interne, que GTD n’a pas communiqué. Seules les pièces
-          et la sous-traitance sont valorisées.
+          Le coût affiché est partiel : il couvre les pièces et la sous-traitance, mais pas la
+          main-d’œuvre interne. Les {{ heuresNonValorisees }} h déjà enregistrées par les
+          mécaniciens attendent un tarif horaire, à renseigner dans
+          <RouterLink :to="{ name: 'maintenance-parametres' }" class="underline">
+            Paramétrage → Paramètres de l’atelier</RouterLink>.
         </p>
       </div>
     </div>
@@ -241,10 +292,12 @@
  * Tableau de bord maintenance - US 3.5.3, avec les échéances (3.1.2),
  * la fiabilité (3.5.1) et les coûts (3.5.2).
  *
- * Deux valeurs manquent et sont signalées à l'écran plutôt qu'inventées :
- * le tarif horaire de l'atelier et le coût d'immobilisation journalier.
+ * Le tarif horaire de l'atelier et le coût d'immobilisation journalier se
+ * paramètrent désormais dans Paramétrage → Paramètres de l'atelier. Tant
+ * qu'ils sont vides, le coût reste partiel et l'écran dit pourquoi.
  */
 import { ref, computed } from 'vue'
+import { RouterLink } from 'vue-router'
 import {
   Gauge, AlertTriangle, CalendarOff, Coins, FileQuestion,
 } from 'lucide-vue-next'
@@ -268,12 +321,23 @@ const CLS_FAMILLE: Record<FamilleIndispo, string> = {
   humaine:        'bg-primary',
 }
 
+/** Heures déjà pointées par les mécaniciens et qui attendent un tarif. */
+const heuresNonValorisees = computed(() =>
+  store.ordres.reduce((s, o) => s + store.heuresOT(o), 0))
+
+/** Part de la main-d'œuvre dans le coût total, quand elle est valorisée. */
+const partMainOeuvre = computed(() => {
+  const mo = store.coutMainOeuvreTotal
+  if (mo == null || !store.coutTotal) return 0
+  return Math.round((mo / store.coutTotal) * 100)
+})
+
 
 /* ── Indicateurs exigés par les user stories 3.3.1 et 3.5.2 ── */
 const vehicules = useVehiculesStore()
 
 const tauxDispo = computed(() =>
-  store.tauxDisponibilite(vehicules.vehicules.filter(v => v.statutAdmin !== 'archive').length))
+  store.tauxDisponibilite(vehicules.auParc.length))
 
 /** Coût au kilomètre d'un véhicule, à partir de son kilométrage réel. */
 function coutKm(vehiculeId: string): number | null {
@@ -305,6 +369,10 @@ const kpis = computed(() => [
   { label: 'Ordres ouverts',  value: String(store.ouverts.length),
     cls: 'text-foreground', cible: '' },
   { label: 'Coût pièces',     value: fmtAr(store.coutTotal),
-    cls: 'text-foreground', cible: '' },
+    cls: 'text-foreground', cible: store.tarifRenseigne ? 'main-d’œuvre incluse' : 'hors main-d’œuvre' },
+  { label: 'Coût immobilisations',
+    value: store.coutTotalImmobilisations != null ? fmtAr(store.coutTotalImmobilisations) : '-',
+    cls: store.coutTotalImmobilisations != null ? 'text-danger' : 'text-gray-300',
+    cible: store.coutImmoRenseigne ? '' : 'coût journalier à renseigner' },
 ])
 </script>

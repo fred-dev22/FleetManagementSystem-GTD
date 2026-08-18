@@ -1,9 +1,7 @@
 <template>
   <ListPageLayout
     title="État de flotte"
-    :subtitle="dateAffichee
-      ? `État archivé du ${fmtDate(dateAffichee)} - pièce opposable, non modifiable`
-      : `Situation au ${dateDuJour} · ${store.immobilises.length} véhicule(s) immobilisé(s)`"
+    :subtitle="sousTitre"
     :columns="columns"
     :items="pageItems"
     :total="totalCount"
@@ -22,13 +20,24 @@
     <template #header-actions>
       <select v-model="dateAffichee" :class="L.fpSelect" class="mr-2">
         <option value="">Situation du jour</option>
-        <option v-for="e in store.etatsArchives" :key="e.id" :value="e.date">
-          État du {{ fmtDate(e.date) }}
+        <!-- Un jour rectifié compte plusieurs versions : le sélecteur
+             liste les jours, la version faisant foi est la plus récente. -->
+        <option v-for="j in store.joursArchives" :key="j" :value="j">
+          État du {{ fmtDate(j) }}
+          <template v-if="(store.etatDuJour(j)?.version ?? 1) > 1">
+            (v{{ store.etatDuJour(j)!.version }})
+          </template>
         </option>
       </select>
       <button :class="L.btnOutline" @click="archiver">
         <Archive class="w-4 h-4" />
         Archiver
+      </button>
+      <button v-if="etatConsulte && !etatConsulte.transmisLe" :class="L.btnOutline"
+        title="Marquer l’état comme transmis au client : son contenu sera figé"
+        @click="marquerTransmis">
+        <Send class="w-4 h-4" />
+        Marquer transmis
       </button>
       <button :class="L.btnOutline" @click="exporter">
         <Download class="w-4 h-4" />
@@ -37,6 +46,33 @@
     </template>
 
     <template #above-table>
+      <!-- US 2.2.4 - la nature de la pièce consultée, et ce qui la rend opposable -->
+      <div v-if="etatConsulte"
+        class="flex items-start gap-2.5 rounded-lg px-3.5 py-2.5 mb-3.5"
+        :class="etatConsulte.rectifieDe ? 'bg-warning-bg text-warning' : 'bg-gray-100 text-gray-600'">
+        <FileCheck2 class="w-4 h-4 shrink-0 mt-px" />
+        <div class="text-xs leading-relaxed">
+          <template v-if="etatConsulte.rectifieDe">
+            <strong>Rectificatif, version {{ etatConsulte.version }}.</strong>
+            Il corrige l’état {{ etatConsulte.rectifieDe }} sans l’effacer :
+            la version initiale reste consultable et opposable pour la période
+            où elle a fait foi. Motif de la rectification : {{ etatConsulte.motifRectification }}.
+          </template>
+          <template v-else>
+            <strong>Pièce opposable, non modifiable.</strong>
+            Produit par {{ etatConsulte.produitPar }}.
+          </template>
+          <template v-if="etatConsulte.transmisLe">
+            Transmis au client le {{ fmtDate(etatConsulte.transmisLe.slice(0, 10)) }} :
+            son contenu est figé. Une correction ne l’écrase pas, elle produit un rectificatif.
+          </template>
+          <template v-else>
+            Non encore transmis au client : tant qu’il ne l’est pas, cet état reste un brouillon
+            et se régénère librement.
+          </template>
+        </div>
+      </div>
+
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-3.5">
         <div v-for="k in kpis" :key="k.label"
           class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 flex items-center gap-3">
@@ -154,6 +190,40 @@
       <p class="text-sm">Aucun véhicule</p>
     </template>
   </ListPageLayout>
+
+  <!-- ══ US 2.2.4 - Rectification d'un état transmis ═══════════
+       Un état transmis ne s'écrase pas. La correction passe par ici,
+       elle exige un motif et laisse les deux versions consultables. -->
+  <Teleport to="body">
+    <div v-if="demandeRectification"
+      class="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-4"
+      @click.self="demandeRectification = ''">
+      <div class="bg-card rounded-lg border border-border shadow-lg w-full max-w-lg p-4">
+        <h3 class="text-sm font-semibold text-foreground mb-2">État déjà transmis</h3>
+        <p class="text-xs text-muted-foreground leading-relaxed">{{ demandeRectification }}</p>
+
+        <div class="flex flex-col gap-1 mt-3.5">
+          <label class="text-xs font-medium text-foreground">
+            Motif de la rectification <span class="text-danger">*</span>
+          </label>
+          <textarea v-model="motifRectification" rows="3"
+            class="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            placeholder="Ex. : le code d’indisponibilité de MG-3356-TX était VET, il aurait dû être MTN." />
+        </div>
+
+        <p v-if="erreurRectification" class="text-[11px] text-danger flex items-start gap-1.5 mt-2">
+          <AlertCircle class="w-3.5 h-3.5 shrink-0 mt-px" /> {{ erreurRectification }}
+        </p>
+
+        <div class="flex justify-end gap-2 mt-4">
+          <button :class="L.btnOutline" @click="demandeRectification = ''">Annuler</button>
+          <button :class="L.btnPrimary" @click="confirmerRectification">
+            Produire le rectificatif
+          </button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -168,7 +238,10 @@
  * connue ; la colonne reste vide sinon.
  */
 import { ref, computed, watch } from 'vue'
-import { ClipboardList, Download, Archive, Truck, Route, Clock, AlertTriangle } from 'lucide-vue-next'
+import {
+  ClipboardList, Download, Archive, Truck, Route, Clock, AlertTriangle,
+  FileCheck2, Send, AlertCircle,
+} from 'lucide-vue-next'
 import { ListPageLayout } from '../../components'
 import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
 import { useFlotteStore } from '../../stores/flotte'
@@ -245,9 +318,58 @@ const lignesSource = computed(() =>
     ? (store.etatDuJour(dateAffichee.value)?.lignes ?? [])
     : store.etatFlotte)
 
+/** État actuellement consulté, ou null quand on regarde la situation vive. */
+const etatConsulte = computed(() =>
+  dateAffichee.value ? store.etatDuJour(dateAffichee.value) ?? null : null)
+
+const sousTitre = computed(() => {
+  const e = etatConsulte.value
+  if (!e) return `Situation au ${dateDuJour} · ${store.immobilises.length} véhicule(s) immobilisé(s)`
+  const nature = e.rectifieDe
+    ? `rectificatif v${e.version}`
+    : 'pièce opposable, non modifiable'
+  return `État archivé du ${fmtDate(e.date)} - ${nature}`
+})
+
+/**
+ * Archive l'état du jour.
+ * Un état déjà transmis ne s'écrase pas : le store refuse et demande un
+ * motif de rectification, que l'exploitant saisit avant de recommencer.
+ */
 function archiver() {
-  const e = store.archiverEtat(auth.user?.name ?? 'Exploitation')
-  dateAffichee.value = e.date
+  const res = store.archiverEtat(auth.user?.name ?? 'Exploitation')
+  if ('erreur' in res) {
+    demandeRectification.value = res.erreur
+    return
+  }
+  dateAffichee.value = res.etat.date
+}
+
+const demandeRectification = ref('')
+const motifRectification   = ref('')
+const erreurRectification  = ref('')
+
+function confirmerRectification() {
+  erreurRectification.value = ''
+  if (!motifRectification.value.trim()) {
+    erreurRectification.value = 'Le motif de la rectification est obligatoire.'
+    return
+  }
+  const res = store.archiverEtat(auth.user?.name ?? 'Exploitation', motifRectification.value)
+  if ('erreur' in res) {
+    erreurRectification.value = res.erreur
+    return
+  }
+  dateAffichee.value = res.etat.date
+  demandeRectification.value = ''
+  motifRectification.value = ''
+}
+
+/** Marque l'état consulté comme transmis : à partir de là, il est figé. */
+function marquerTransmis() {
+  if (!etatConsulte.value) return
+  const res = store.marquerTransmis(etatConsulte.value.id)
+  if ('erreur' in res) erreurRectification.value = res.erreur
 }
 
 const filtered = computed(() =>

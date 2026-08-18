@@ -182,7 +182,7 @@
         <div :class="L.card">
           <div :class="L.cardHeader">
             <h2 :class="L.cardTitle"><FileText class="w-4 h-4 text-primary" /> Pièces du dossier</h2>
-            <span class="text-[11px] text-muted-foreground">Alerte automatique 30 jours avant échéance</span>
+            <span class="text-[11px] text-muted-foreground">Alerte automatique {{ PREAVIS_JOURS }} jours avant échéance</span>
           </div>
 
           <div v-if="!documents.length" class="text-xs text-muted-foreground py-3">
@@ -460,6 +460,7 @@ import { useCarburantStore } from '../../stores/carburant'
 import { useDocumentsVehiculesStore } from '../../stores/documentsVehicules'
 import { useConduceteursProfilesStore } from '../../stores/conducteursProfiles'
 import { useVoyagesStore } from '../../stores/voyages'
+import { useConfigurationStore } from '../../stores/configuration'
 import { useAbsenceStore } from '../../stores/absences'
 import { fmtAr, fmtL, fmtDate, fmtDateTime } from '../../lib/fmsUtils'
 import * as L from '../../lib/listClasses'
@@ -508,7 +509,8 @@ function naviguer(delta: number) {
    Le store de documents est unifié véhicule + conducteur : on filtre
    sur l'entité conducteur. Règle du cahier des charges : alerte à J-30.
    ═══════════════════════════════════════════════════════════════ */
-const PREAVIS_JOURS = 30
+const configStore = useConfigurationStore()
+const PREAVIS_JOURS = computed(() => configStore.parametres.preavisDocumentaireJours)
 
 /* Le référentiel documentaire indexe les pièces par identifiant de PROFIL
    conducteur (CP-00x), pas par identifiant d'employé (emp-0xx). On passe
@@ -528,7 +530,7 @@ function libelleEcheance(iso?: string): string {
   const j = joursRestants(iso)
   if (j === null) return 'sans échéance'
   if (j < 0) return `expiré depuis ${Math.abs(j)} j`
-  if (j <= PREAVIS_JOURS) return `dans ${j} j`
+  if (j <= PREAVIS_JOURS.value) return `dans ${j} j`
   return `dans ${j} j`
 }
 
@@ -536,7 +538,7 @@ function clsEcheance(iso?: string): string {
   const j = joursRestants(iso)
   if (j === null) return 'text-muted-foreground'
   if (j < 0) return 'text-danger'
-  if (j <= PREAVIS_JOURS) return 'text-warning'
+  if (j <= PREAVIS_JOURS.value) return 'text-warning'
   return 'text-success'
 }
 
@@ -556,7 +558,7 @@ const docsExpires = computed(() =>
 const docsProches = computed(() =>
   documents.value.filter(d => {
     const j = joursRestants(d.dateExpiration)
-    return j !== null && j >= 0 && j <= PREAVIS_JOURS
+    return j !== null && j >= 0 && j <= PREAVIS_JOURS.value
   }).length)
 
 /** Pastille rouge sur l'onglet : expirés + proches de l'échéance. */
@@ -580,7 +582,7 @@ function clsFormation(iso?: string): { label: string; cls: string } {
   const j = joursRestants(iso)
   if (j === null) return { label: 'Acquise',  cls: 'bg-success-bg text-success' }
   if (j < 0)      return { label: 'Expirée',  cls: 'bg-danger-bg text-danger'   }
-  if (j <= PREAVIS_JOURS) return { label: 'À renouveler', cls: 'bg-warning-bg text-warning' }
+  if (j <= PREAVIS_JOURS.value) return { label: 'À renouveler', cls: 'bg-warning-bg text-warning' }
   return { label: 'Valide', cls: 'bg-success-bg text-success' }
 }
 
@@ -590,7 +592,7 @@ const formationsExpirees = computed(() =>
 const formationsProches = computed(() =>
   formations.value.filter(f => {
     const j = joursRestants(f.dateExpiration)
-    return j !== null && j >= 0 && j <= PREAVIS_JOURS
+    return j !== null && j >= 0 && j <= PREAVIS_JOURS.value
   }).length)
 
 const formationsAlerte = computed(() => formationsExpirees.value + formationsProches.value)

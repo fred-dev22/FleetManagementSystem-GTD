@@ -1,11 +1,60 @@
 import { defineStore } from 'pinia'
 import type { DocumentVehicule } from '../types/index'
+import type { CodeIndispo } from '../types/maintenance'
+import { useConfigurationStore } from './configuration'
 
 interface DocumentsVehiculesState {
   documents: DocumentVehicule[]
 }
 
 const TODAY = '2026-07-08'
+
+/* ══════════════════════════════════════════════════════════════
+   US 2.7.1 - Pièces réglementaires et codes d'indisponibilité
+   ══════════════════════════════════════════════════════════════
+   « Une pièce expirée bascule le véhicule en indisponibilité
+   réglementaire avec le code correspondant - BRM, MDT, APV, VET,
+   CTV - et bloque l'affectation à un voyage. »
+
+   Le lien entre le type de pièce et le code manquait : les documents
+   étaient suivis, les codes existaient, mais rien ne les reliait. Sans
+   ce pont, une pièce expirée déclenchait une alerte sans aucune
+   conséquence sur l'exploitation.
+
+   Les libellés sont ceux employés par GTD. Les variantes rencontrées
+   dans les données historiques sont ramenées au même code : « Visite
+   technique » et « Visite Madauto » désignent le même contrôle.
+   ══════════════════════════════════════════════════════════════ */
+
+export interface PieceReglementaire {
+  /** Libellé exact du type de document */
+  type: string
+  /** Code d'indisponibilité déclenché à l'expiration */
+  code: CodeIndispo
+  /** Une pièce non bloquante alerte sans interdire l'affectation */
+  bloquante: boolean
+}
+
+export const PIECES_REGLEMENTAIRES: PieceReglementaire[] = [
+  { type: 'Barémage',            code: 'BRM', bloquante: true },
+  { type: 'Visite Madauto',      code: 'MDT', bloquante: true },
+  { type: 'Visite technique',    code: 'MDT', bloquante: true },
+  { type: 'Certificat APAVE',    code: 'APV', bloquante: true },
+  { type: 'Vetting',             code: 'VET', bloquante: true },
+  { type: 'Contre-visite',       code: 'CTV', bloquante: true },
+  { type: 'Assurance',           code: 'APV', bloquante: true },
+  /* La carte grise et la vignette sont suivies et alertées, mais leur
+     expiration n'immobilise pas : elle se régularise sans passer au
+     garage, et GTD ne leur a attribué aucun code d'indisponibilité. */
+  { type: 'Carte grise',         code: 'APV', bloquante: false },
+  { type: 'Vignette',            code: 'APV', bloquante: false },
+]
+
+/** Règle applicable à un type de document, ou null s'il n'est pas suivi. */
+export function regleDe(type: string): PieceReglementaire | null {
+  const t = type.trim().toLowerCase()
+  return PIECES_REGLEMENTAIRES.find(p => p.type.toLowerCase() === t) ?? null
+}
 
 export const useDocumentsVehiculesStore = defineStore('documentsVehicules', {
   state: (): DocumentsVehiculesState => ({
@@ -21,6 +70,21 @@ export const useDocumentsVehiculesStore = defineStore('documentsVehicules', {
       { id: 'doc-012', entityId: 'TRC-004', entityType: 'vehicule', type: 'Assurance',         dateEmission: '2025-06-01', dateExpiration: '2026-06-10', statut: 'archive', alerteEnvoyee: true,  createdAt: '2024-01-01T00:00:00Z' },
       { id: 'doc-013', entityId: 'TRC-004', entityType: 'vehicule', type: 'Carte grise',      dateEmission: '2025-01-01', dateExpiration: '2028-01-01', statut: 'valide',  alerteEnvoyee: false, createdAt: '2024-01-01T00:00:00Z' },
       { id: 'doc-015', entityId: 'TRC-005', entityType: 'vehicule', type: 'Vignette',          dateEmission: '2026-01-01', dateExpiration: '2026-07-22', statut: 'valide',  alerteEnvoyee: false, createdAt: '2024-01-01T00:00:00Z' },
+
+      /* ── Pièces réglementaires nommées par l'US 2.7.1 ──────────
+         Barémage, visite Madauto, certificat APAVE, vetting et
+         contre-visite étaient absents des données : la règle de blocage
+         n'était donc démontrable sur aucun véhicule.
+
+         TRC-004 porte un vetting expiré, ce que l'état de flotte du
+         31/07 déclarait déjà au client sous le code VET sans qu'aucune
+         pièce ne le justifie dans le système. */
+      { id: 'doc-030', entityId: 'TRC-004', entityType: 'vehicule', type: 'Vetting',            numero: 'VET-2025-0412', dateEmission: '2025-06-25', dateExpiration: '2026-06-25', statut: 'archive', alerteEnvoyee: true,  createdAt: '2025-06-25T08:00:00Z' },
+      { id: 'doc-031', entityId: 'TRC-004', entityType: 'vehicule', type: 'Barémage',           numero: 'BRM-2024-0188', dateEmission: '2024-09-12', dateExpiration: '2027-09-12', statut: 'valide',  alerteEnvoyee: false, createdAt: '2024-09-12T08:00:00Z' },
+      { id: 'doc-032', entityId: 'TRC-001', entityType: 'vehicule', type: 'Vetting',            numero: 'VET-2026-0501', dateEmission: '2026-01-20', dateExpiration: '2027-01-20', statut: 'valide',  alerteEnvoyee: false, createdAt: '2026-01-20T08:00:00Z' },
+      { id: 'doc-033', entityId: 'TRC-001', entityType: 'vehicule', type: 'Certificat APAVE',   numero: 'APV-2025-1140', dateEmission: '2025-11-08', dateExpiration: '2026-11-08', statut: 'valide',  alerteEnvoyee: false, createdAt: '2025-11-08T08:00:00Z' },
+      { id: 'doc-034', entityId: 'TRC-002', entityType: 'vehicule', type: 'Vetting',            numero: 'VET-2025-0388', dateEmission: '2025-07-15', dateExpiration: '2026-07-15', statut: 'valide',  alerteEnvoyee: true,  createdAt: '2025-07-15T08:00:00Z' },
+      { id: 'doc-035', entityId: 'TRC-003', entityType: 'vehicule', type: 'Contre-visite',      numero: 'CTV-2026-0067', dateEmission: '2026-05-30', dateExpiration: '2026-06-30', statut: 'archive', alerteEnvoyee: true,  createdAt: '2026-05-30T08:00:00Z' },
       // ── Remorques ──────────────────────────────────────────────
       { id: 'doc-008', entityId: 'REM-001', entityType: 'vehicule', type: 'Carte grise',      dateEmission: '2024-03-01', dateExpiration: '2027-02-28', statut: 'valide',  alerteEnvoyee: false, createdAt: '2024-01-01T00:00:00Z' },
       { id: 'doc-009', entityId: 'REM-001', entityType: 'vehicule', type: 'Assurance',         dateEmission: '2026-01-01', dateExpiration: '2026-06-15', statut: 'archive', alerteEnvoyee: true,  createdAt: '2024-01-01T00:00:00Z' },
@@ -63,14 +127,18 @@ export const useDocumentsVehiculesStore = defineStore('documentsVehicules', {
       (conducteurId: string): DocumentVehicule[] =>
         state.documents.filter(d => d.entityId === conducteurId && d.entityType === 'conducteur'),
 
+    /* Le préavis n'est plus figé à 30 jours : il vient des paramètres
+       d'exploitation, où le seuil documentaire est ajustable. Le nom du
+       getter est conservé pour ne pas casser ses appelants. */
     documentsExpiresSous30Jours: (state): DocumentVehicule[] => {
+      const preavis = useConfigurationStore().parametres.preavisDocumentaireJours
       const today = new Date(TODAY)
-      const in30 = new Date(TODAY)
-      in30.setDate(in30.getDate() + 30)
+      const limite = new Date(TODAY)
+      limite.setDate(limite.getDate() + preavis)
       return state.documents.filter(d => {
         if (!d.dateExpiration) return false
         const exp = new Date(d.dateExpiration)
-        return exp >= today && exp <= in30
+        return exp >= today && exp <= limite
       })
     },
 
@@ -81,6 +149,50 @@ export const useDocumentsVehiculesStore = defineStore('documentsVehicules', {
 
     countAlertes(): number {
       return this.documentsExpires.length + this.documentsExpiresSous30Jours.length
+    },
+
+    /* ══ US 2.7.1 - Conséquence d'une pièce expirée ═══════════ */
+
+    /**
+     * Pièces expirées et bloquantes d'une entité, véhicule ou conducteur.
+     * Une pièce archivée reste comptée : c'est bien son expiration qui
+     * l'a fait archiver, et le véhicule n'est pas en règle pour autant.
+     */
+    piecesBloquantes: (state) => (entityId: string): DocumentVehicule[] => {
+      const today = new Date(TODAY)
+      return state.documents.filter(d => {
+        if (d.entityId !== entityId) return false
+        if (!d.dateExpiration || new Date(d.dateExpiration) >= today) return false
+        return regleDe(d.type)?.bloquante ?? false
+      })
+    },
+
+    /**
+     * Codes d'indisponibilité réglementaire actifs sur un véhicule.
+     * Le statut du camion n'est jamais saisi à la main : il se déduit de
+     * ses pièces. Un véhicule qui porte au moins un code ne peut pas
+     * partir en voyage.
+     */
+    codesReglementaires(): (entityId: string) => { code: CodeIndispo; type: string; expireLe: string }[] {
+      return (entityId: string) => this.piecesBloquantes(entityId).map(d => ({
+        code: regleDe(d.type)!.code,
+        type: d.type,
+        expireLe: d.dateExpiration!,
+      }))
+    },
+
+    /** Motif de refus d'affectation, ou null si l'entité est en règle. */
+    motifBlocage(): (entityId: string) => string | null {
+      return (entityId: string) => {
+        const pieces = this.piecesBloquantes(entityId)
+        if (!pieces.length) return null
+        const detail = pieces
+          .map(d => `${d.type} (${regleDe(d.type)!.code}), expiré le ${d.dateExpiration}`)
+          .join(' · ')
+        return pieces.length === 1
+          ? `Pièce expirée : ${detail}.`
+          : `${pieces.length} pièces expirées : ${detail}.`
+      }
     },
   },
 

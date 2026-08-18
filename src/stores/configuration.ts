@@ -80,10 +80,38 @@ export const useConfigurationStore = defineStore('configuration', () => {
     trhMinH: 24,
     plafondHebdoH: 56,
     plafondBihebdoH: 90,
+
+    /* Seuils d'alerte - les valeurs reprises ci-dessous sont celles qui
+       étaient auparavant figées dans le code. Elles servent de point de
+       départ ; l'exploitation les ajuste depuis l'écran Paramètres. */
+    preavisEntretienKm: 1_000,
+    preavisEntretienJours: 15,
+    rayonValidationPassageM: 5_000,
+    preavisDocumentaireJours: 30,
   })
 
   function majParametres(data: Partial<ParametresExploitation>) {
     Object.assign(parametres.value, data)
+  }
+
+  /**
+   * Bornes de saisie des seuils d'alerte.
+   * Un rayon de validation trop court manque des passages réels ; trop long,
+   * il valide un site que le camion n'a fait que longer. Un préavis nul
+   * revient à supprimer l'alerte. Ces bornes empêchent les deux erreurs.
+   */
+  const BORNES_SEUILS = {
+    preavisEntretienKm:       { min: 100,  max: 10_000, unite: 'km' },
+    preavisEntretienJours:    { min: 1,    max: 90,     unite: 'jours' },
+    rayonValidationPassageM:  { min: 200,  max: 20_000, unite: 'm' },
+    preavisDocumentaireJours: { min: 1,    max: 180,    unite: 'jours' },
+  } as const
+
+  /** Un seuil hors bornes est signalé plutôt que refusé en silence. */
+  function seuilHorsBornes(cle: keyof typeof BORNES_SEUILS): boolean {
+    const v = parametres.value[cle]
+    const b = BORNES_SEUILS[cle]
+    return v == null || v < b.min || v > b.max
   }
 
   /* ══ US 2.8.2 — Détection des règles systématiquement ignorées ══
@@ -117,6 +145,6 @@ export const useConfigurationStore = defineStore('configuration', () => {
     SEUIL_IGNOREE_PCT, MIN_DECLENCHEMENTS, reglesIgnorees,
     typesEcart, typesActifs, parCategorie,
     getTypeEcart, getParCode, creerTypeEcart, majTypeEcart, basculerActif,
-    parametres, majParametres,
+    parametres, majParametres, BORNES_SEUILS, seuilHorsBornes,
   }
 })

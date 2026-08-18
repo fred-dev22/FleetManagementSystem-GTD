@@ -20,6 +20,62 @@
       </div>
     </div>
 
+    <!-- ═══ Taux d'occupation - US 3.4.1[4] ═══════════════════
+         Le cinquième critère de la user story. Il rapporte la charge
+         estimée à la capacité de l'atelier, désormais paramétrée.
+         ═══════════════════════════════════════════════════════ -->
+    <div v-if="store.capaciteRenseignee" :class="L.card" class="mb-3.5">
+      <div :class="L.cardHeader">
+        <h2 :class="L.cardTitle"><Gauge class="w-4 h-4 text-primary" /> Taux d’occupation</h2>
+        <span class="text-[11px] text-muted-foreground">
+          {{ cap.postes }} poste(s) × {{ cap.heuresParJour }} h ×
+          {{ cap.joursOuvresParSemaine }} j = {{ store.capaciteHeuresParSemaine }} h par semaine
+        </span>
+      </div>
+
+      <div class="flex items-baseline gap-2 mb-2">
+        <span class="text-2xl font-bold leading-none" :class="clsOccupation">
+          {{ store.tauxOccupationSemaine }} %
+        </span>
+        <span class="text-xs text-muted-foreground">
+          {{ store.chargeTotaleH }} h de charge pour {{ store.capaciteHeuresParSemaine }} h ouvrables
+        </span>
+      </div>
+
+      <!-- Au-delà de 100 %, la barre sature et le dépassement est écrit -->
+      <div class="h-2.5 rounded-full bg-gray-100 overflow-hidden">
+        <div class="h-full rounded-full transition-all" :class="clsBarreOccupation"
+          :style="{ width: Math.min(100, store.tauxOccupationSemaine ?? 0) + '%' }" />
+      </div>
+
+      <p class="text-[11px] mt-2.5 leading-relaxed"
+        :class="(store.tauxOccupationSemaine ?? 0) > 100 ? 'text-danger' : 'text-muted-foreground'">
+        <template v-if="(store.tauxOccupationSemaine ?? 0) > 100">
+          L’atelier est saturé : {{ store.joursPourAbsorberCharge }} jour(s) ouvré(s) sont
+          nécessaires pour absorber la charge en attente. L’exploitation ne peut pas compter
+          sur une remise en service dans la semaine.
+        </template>
+        <template v-else>
+          La charge tient dans la semaine ouvrée :
+          {{ store.joursPourAbsorberCharge }} jour(s) ouvré(s) suffisent à l’absorber.
+        </template>
+      </p>
+    </div>
+
+    <div v-else class="flex items-start gap-2.5 bg-warning-bg text-warning rounded-lg px-3.5 py-2.5 mb-3.5">
+      <FileQuestion class="w-4 h-4 shrink-0 mt-px" />
+      <div>
+        <p class="text-xs font-medium">Taux d’occupation non calculé</p>
+        <p class="text-[11px] leading-relaxed mt-0.5">
+          La charge est connue - {{ store.chargeTotaleH }} h estimées - mais pas la capacité.
+          Renseignez le nombre de postes de travail du garage et ses heures d’ouverture dans
+          <RouterLink :to="{ name: 'maintenance-parametres' }" class="underline font-medium">
+            Paramétrage → Paramètres de l’atelier
+          </RouterLink>.
+        </p>
+      </div>
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-3.5 items-start">
 
       <!-- ═══ Charge par mécanicien - US 3.4.1[0] ═══ -->
@@ -187,16 +243,18 @@
 /**
  * US 3.4.1 - Planifier la charge de l'atelier.
  *
- * Quatre des cinq critères sont satisfaits sans information supplémentaire :
- * les compétences sont nommées dans la user story et se déduisent du
- * diagnostic ISO ; la priorité se déduit de la gravité déjà saisie.
+ * Quatre des cinq critères étaient satisfaits sans information
+ * supplémentaire : les compétences sont nommées dans la user story et se
+ * déduisent du diagnostic ISO ; la priorité se déduit de la gravité.
  *
- * Le taux d'occupation n'est pas affiché : son calcul suppose la capacité
- * de l'atelier, absente des documents transmis.
+ * Le cinquième - le taux d'occupation - supposait la capacité de l'atelier.
+ * Elle se saisit désormais dans Paramétrage → Paramètres de l'atelier, et
+ * l'indicateur apparaît dès qu'elle est renseignée.
  */
 import { computed } from 'vue'
+import { RouterLink } from 'vue-router'
 import {
-  Users, Wrench, AlertTriangle, CalendarClock,
+  Users, Wrench, AlertTriangle, CalendarClock, Gauge, FileQuestion,
 } from 'lucide-vue-next'
 import { useMaintenanceStore } from '../../stores/maintenance'
 import { LIB_SOUS_SYSTEME, LIB_GRAVITE_OT, LIB_COMPETENCE } from '../../types/maintenance'
@@ -205,6 +263,24 @@ import { fmtDate } from '../../lib/fmsUtils'
 import * as L from '../../lib/listClasses'
 
 const store = useMaintenanceStore()
+
+const cap = computed(() => store.parametresAtelier.capacite)
+
+/* Un atelier chargé à 70 % est sain ; au-delà de 90 % il n'absorbe plus
+   d'imprévu ; au-delà de 100 % il reporte mécaniquement des sorties. */
+const clsOccupation = computed(() => {
+  const t = store.tauxOccupationSemaine ?? 0
+  if (t > 100) return 'text-danger'
+  if (t > 90)  return 'text-warning'
+  return 'text-success'
+})
+
+const clsBarreOccupation = computed(() => {
+  const t = store.tauxOccupationSemaine ?? 0
+  if (t > 100) return 'bg-danger'
+  if (t > 90)  return 'bg-warning'
+  return 'bg-success'
+})
 
 const CLS_PRIORITE: Record<number, string> = {
   1: 'bg-danger',
@@ -247,5 +323,11 @@ const kpis = computed(() => [
     cls: 'text-foreground', note: '' },
   { label: 'Non affectées', value: String(store.nonAffectees.length),
     cls: store.nonAffectees.length ? 'text-warning' : 'text-success', note: '' },
+  { label: 'Taux d’occupation',
+    value: store.tauxOccupationSemaine != null ? store.tauxOccupationSemaine + ' %' : '-',
+    cls: store.tauxOccupationSemaine != null ? clsOccupation.value : 'text-gray-300',
+    note: store.capaciteRenseignee
+      ? `sur ${store.capaciteHeuresParSemaine} h ouvrables`
+      : 'capacité à renseigner' },
 ])
 </script>

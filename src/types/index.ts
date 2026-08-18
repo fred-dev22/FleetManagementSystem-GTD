@@ -401,6 +401,42 @@ export type TypeAlerteGeozone = 'entree' | 'sortie' | 'entree_sortie'
 
 // Statuts UCODIS : actif | affecte | en_reparation | hors_service | vendu | archive
 export type StatutAdminVehicule       = 'actif' | 'affecte' | 'en_reparation' | 'hors_service' | 'vendu' | 'archive' | 'en_service'
+
+/* ══════════════════════════════════════════════════════════════
+   Sortie du parc - US 2.1.5
+   ══════════════════════════════════════════════════════════════
+   Le cahier UCODIS demande la gestion du véhicule « depuis
+   l'acquisition jusqu'à la mise hors service ». L'archivage n'est
+   donc pas un statut de plus : c'est la clôture du cycle de vie,
+   datée et motivée. Le véhicule quitte la liste courante mais reste
+   consultable - son historique d'interventions, ses documents et
+   ses sinistres restent opposables après sa sortie.
+   ══════════════════════════════════════════════════════════════ */
+
+export type MotifSortieVehicule =
+  | 'vendu' | 'reforme' | 'accidente' | 'fin_leasing' | 'vol' | 'autre'
+
+export const LIB_MOTIF_SORTIE: Record<MotifSortieVehicule, string> = {
+  vendu:       'Vendu',
+  reforme:     'Réformé - fin de vie technique',
+  accidente:   'Accidenté - épave',
+  fin_leasing: 'Fin de contrat de leasing',
+  vol:         'Volé ou déclaré perdu',
+  autre:       'Autre motif',
+}
+
+export interface SortieParc {
+  motif:       MotifSortieVehicule
+  /** Date effective de sortie, AAAA-MM-JJ */
+  date:        string
+  /** Qui a prononcé la sortie - la traçabilité est opposable */
+  par:         string
+  commentaire?: string
+  /** Kilométrage figé au moment de la sortie, il ne bougera plus */
+  kilometrageSortie?: number
+  /** Horodatage de l'enregistrement, distinct de la date de sortie */
+  enregistreLe: string
+}
 export type StatutOperationnelVehicule = 'en_mouvement' | 'allume_immobile' | 'arrete' | 'signal_perdu'
 
 export interface HistoriquePlaque {
@@ -460,6 +496,8 @@ export interface Vehicule {
   photos?:             string[]
   historiquePlayque?:  HistoriquePlaque[]
   historiquePlaques?:  HistoriquePlaque[]
+  /** US 2.1.5 - renseigné uniquement quand statutAdmin vaut 'archive' */
+  sortie?:             SortieParc
   createdAt:           string
 }
 

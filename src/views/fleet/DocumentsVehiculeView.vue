@@ -21,7 +21,7 @@
         </div>
         <div v-if="store.documentsExpiresSous30Jours.length" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-warning-bg border border-warning/20 text-warning text-sm font-medium">
           <Clock class="w-4 h-4" />
-          {{ store.documentsExpiresSous30Jours.length }} expiration(s) dans 30 jours
+          {{ store.documentsExpiresSous30Jours.length }} expiration(s) dans {{ PREAVIS_JOURS }} jours
         </div>
       </div>
 
@@ -100,7 +100,7 @@
           </div>
         </div>
 
-        <!-- Échéance : le seuil de 30 jours vient de la règle documentaire du client -->
+        <!-- Échéance : le seuil vient des paramètres d'exploitation, plus du code -->
         <div v-if="item.dateExpiration" class="rounded-md px-2.5 py-2 text-[11px] leading-snug"
           :class="clsEcheance(item.dateExpiration)">
           {{ libelleEcheance(item.dateExpiration) }}
@@ -218,6 +218,7 @@ import { ref, computed, reactive, watch } from 'vue'
 import { Plus, AlertTriangle, Clock, X } from 'lucide-vue-next'
 import { ListPageLayout } from '../../components'
 import { useDocumentsVehiculesStore } from '../../stores/documentsVehicules'
+import { useConfigurationStore } from '../../stores/configuration'
 import type { DocumentVehicule } from '../../types'
 import { fmtDate } from '../../lib/fmsUtils'
 import * as L from '../../lib/listClasses'
@@ -259,7 +260,7 @@ const kpis = computed(() => {
     { label: 'Total',              value: all.length,                                      color: 'text-gray-800' },
     { label: 'Valides',            value: valid,                                            color: 'text-success'  },
     { label: 'Expirés',            value: store.documentsExpires.length,                   color: 'text-danger'   },
-    { label: 'Expirent < 30 j',   value: store.documentsExpiresSous30Jours.length,        color: 'text-warning'  },
+    { label: `Expirent < ${PREAVIS_JOURS.value} j`,   value: store.documentsExpiresSous30Jours.length,        color: 'text-warning'  },
   ]
 })
 
@@ -292,9 +293,11 @@ const pageItems  = computed(() => {
 
 function openDetail(row: DocumentVehicule) { openModal(row) }
 
-/* Échéance documentaire - le préavis de 30 jours est la règle du cahier
-   des charges : « alertes programmées à J-30, escalade si non validés ». */
-const PREAVIS_JOURS = 30
+/* Échéance documentaire - le cahier des charges retient J-30, mais le
+   préavis se règle désormais dans Configuration → Paramètres → Seuils
+   d'alerte plutôt que d'être figé ici. */
+const configStore = useConfigurationStore()
+const PREAVIS_JOURS = computed(() => configStore.parametres.preavisDocumentaireJours)
 
 const LIB_STATUT: Record<string, string> = {
   depose: 'Déposé', valide: 'Validé', refuse: 'Refusé', archive: 'Archivé',
@@ -307,14 +310,14 @@ function joursRestants(iso: string): number {
 function libelleEcheance(iso: string): string {
   const j = joursRestants(iso)
   if (j < 0) return `Expiré depuis ${Math.abs(j)} jour(s) - régularisation requise`
-  if (j <= PREAVIS_JOURS) return `Expire dans ${j} jour(s) - à renouveler`
+  if (j <= PREAVIS_JOURS.value) return `Expire dans ${j} jour(s) - à renouveler`
   return `Valide encore ${j} jour(s)`
 }
 
 function clsEcheance(iso: string): string {
   const j = joursRestants(iso)
   if (j < 0) return 'bg-danger-bg text-danger'
-  if (j <= PREAVIS_JOURS) return 'bg-warning-bg text-warning'
+  if (j <= PREAVIS_JOURS.value) return 'bg-warning-bg text-warning'
   return 'bg-success-bg text-success'
 }
 

@@ -51,7 +51,11 @@ export const LIB_NATURE_ZONE: Record<NatureZone, string> = {
 
 /**
  * Rayon de validation d'un passage, en mètres.
- * Paramétrable par site depuis l'écran Sites.
+ *
+ * Cette valeur n'est plus qu'un repli : le rayon effectif vient des
+ * paramètres d'exploitation - Flotte → Configuration → Paramètres →
+ * Seuils d'alerte - où l'exploitation l'ajuste sans intervention
+ * technique, et d'un rayon propre au site quand celui-ci en porte un.
  */
 export const RAYON_VALIDATION_M = 5_000
 
@@ -143,6 +147,17 @@ export interface LigneEtatFlotte {
  * US 2.2.4 - L'état produit un jour donné reste consultable ensuite.
  * Il constitue la preuve de ce qui a été déclaré au client ce jour-là.
  */
+/**
+ * État de flotte figé pour un jour donné - US 2.2.4.
+ *
+ * L'écran annonce « pièce opposable, non modifiable ». Cette promesse
+ * n'engage à rien tant qu'un nouvel archivage peut écraser le contenu
+ * d'un état déjà transmis au client. Une fois transmis, un état ne se
+ * modifie donc plus : une correction produit un rectificatif, qui porte
+ * son propre numéro de version et référence l'état qu'il corrige.
+ * C'est la pratique de toute pièce opposable : on ne récrit pas, on
+ * rectifie, et les deux versions restent consultables.
+ */
 export interface EtatFlotteArchive {
   id: string
   date: string
@@ -150,6 +165,12 @@ export interface EtatFlotteArchive {
   lignes: LigneEtatFlotte[]
   /** Renseigné si l'état a effectivement été transmis au client */
   transmisLe?: string
+  /** 1 pour l'état initial, incrémenté à chaque rectificatif */
+  version: number
+  /** Identifiant de la version corrigée, pour un rectificatif */
+  rectifieDe?: string
+  /** Pourquoi une rectification a été nécessaire */
+  motifRectification?: string
 }
 
 /* ══════════════════════════════════════════════════════════════

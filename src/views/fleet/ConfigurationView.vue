@@ -251,6 +251,102 @@
           </div>
         </div>
       </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           Seuils d'alerte - US 3.1.2, 2.5.2, 2.7.1
+           Ces trois seuils gouvernent le déclenchement des alertes.
+           Ils étaient figés dans le code : l'exploitation devait passer
+           par un développeur pour ajuster un préavis. Ils sont ici.
+           ═══════════════════════════════════════════════════════ -->
+      <div :class="L.card" class="lg:col-span-2">
+        <div :class="L.cardHeader">
+          <h2 :class="L.cardTitle"><BellRing class="w-4 h-4 text-primary" /> Seuils d’alerte</h2>
+          <span class="text-[11px] text-muted-foreground">
+            ajustables sans intervention technique
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+          <!-- Préavis d'alerte préventive -->
+          <div class="flex flex-col gap-2">
+            <p class="text-xs font-semibold text-foreground">Préavis d’entretien préventif</p>
+            <div class="grid grid-cols-2 gap-2">
+              <div :class="F.field">
+                <label :class="F.fieldLabel">Kilomètres avant</label>
+                <input v-model.number="p.preavisEntretienKm" type="number" min="0"
+                  :class="[F.fieldInput, configStore.seuilHorsBornes('preavisEntretienKm') ? F.inputError : '']" />
+              </div>
+              <div :class="F.field">
+                <label :class="F.fieldLabel">Jours avant</label>
+                <input v-model.number="p.preavisEntretienJours" type="number" min="0"
+                  :class="[F.fieldInput, configStore.seuilHorsBornes('preavisEntretienJours') ? F.inputError : '']" />
+              </div>
+            </div>
+            <p class="text-[11px] text-muted-foreground leading-relaxed">
+              Combien de kilomètres ou de jours avant l’échéance le garage est prévenu.
+              Ce délai doit couvrir l’approvisionnement des pièces : un préavis plus court
+              que le délai fournisseur garantit l’immobilisation.
+            </p>
+            <p v-if="configStore.seuilHorsBornes('preavisEntretienKm')" :class="F.fieldError">
+              <AlertCircle class="w-3 h-3" />
+              Attendu entre {{ B.preavisEntretienKm.min }} et
+              {{ B.preavisEntretienKm.max.toLocaleString('fr-FR') }} km.
+            </p>
+          </div>
+
+          <!-- Rayon de validation d'un passage -->
+          <div class="flex flex-col gap-2">
+            <p class="text-xs font-semibold text-foreground">Rayon de validation d’un passage</p>
+            <div :class="F.field">
+              <label :class="F.fieldLabel">Distance au site (m)</label>
+              <input v-model.number="p.rayonValidationPassageM" type="number" min="0" step="100"
+                :class="[F.fieldInput, configStore.seuilHorsBornes('rayonValidationPassageM') ? F.inputError : '']" />
+            </div>
+            <p class="text-[11px] text-muted-foreground leading-relaxed">
+              À quelle distance d’un site le camion est réputé y être passé. Trop court, des
+              passages réels sont manqués ; trop long, un site simplement longé est validé.
+              La valeur doit rester cohérente avec la précision d’un relevé télématique
+              en zone rurale.
+            </p>
+            <p v-if="configStore.seuilHorsBornes('rayonValidationPassageM')" :class="F.fieldError">
+              <AlertCircle class="w-3 h-3" />
+              Attendu entre {{ B.rayonValidationPassageM.min }} et
+              {{ B.rayonValidationPassageM.max.toLocaleString('fr-FR') }} m.
+            </p>
+          </div>
+
+          <!-- Préavis d'échéance documentaire -->
+          <div class="flex flex-col gap-2">
+            <p class="text-xs font-semibold text-foreground">Préavis d’échéance documentaire</p>
+            <div :class="F.field">
+              <label :class="F.fieldLabel">Jours avant expiration</label>
+              <input v-model.number="p.preavisDocumentaireJours" type="number" min="0"
+                :class="[F.fieldInput, configStore.seuilHorsBornes('preavisDocumentaireJours') ? F.inputError : '']" />
+            </div>
+            <p class="text-[11px] text-muted-foreground leading-relaxed">
+              Combien de jours avant l’expiration d’un permis, d’un vetting, d’une assurance
+              ou d’une visite médicale l’alerte est émise. Le cahier des charges retient J-30 ;
+              ce délai s’applique aux documents véhicule et conducteur.
+            </p>
+            <p v-if="configStore.seuilHorsBornes('preavisDocumentaireJours')" :class="F.fieldError">
+              <AlertCircle class="w-3 h-3" />
+              Attendu entre {{ B.preavisDocumentaireJours.min }} et
+              {{ B.preavisDocumentaireJours.max }} jours.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-start gap-2.5 bg-info-bg text-info rounded-lg px-3.5 py-2.5 mt-3.5">
+          <Info class="w-4 h-4 shrink-0 mt-px" />
+          <p class="text-[11px] leading-relaxed">
+            Une modification s’applique immédiatement à tous les écrans qui en dépendent :
+            les échéances préventives, la détection des passages sur site et les alertes
+            documentaires du véhicule comme du conducteur. Aucun de ces seuils n’est
+            recopié ailleurs dans le code.
+          </p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -262,7 +358,7 @@
  * réglages dispersés dans chaque écran.
  */
 import { ref, computed } from 'vue'
-import { Info, Route, Clock, SlidersHorizontal, Wrench } from 'lucide-vue-next'
+import { Info, Route, Clock, SlidersHorizontal, Wrench, BellRing, AlertCircle } from 'lucide-vue-next'
 import FleetMap from '../../components/fleet/FleetMap.vue'
 import { useTrajetsStore } from '../../stores/trajets'
 import { useConfigurationStore } from '../../stores/configuration'
@@ -300,4 +396,7 @@ const marqueursTrajet = computed<MapMarker[]>(() =>
     : [])
 
 const p = configStore.parametres
+
+/** Bornes de saisie, affichées dans les messages d'erreur des seuils. */
+const B = configStore.BORNES_SEUILS
 </script>

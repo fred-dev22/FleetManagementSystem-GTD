@@ -272,7 +272,7 @@ const CLS_FAMILLE: Record<FamilleIndispo, string> = {
 
 /* ── Échéances calculées pour les tracteurs du parc ────────── */
 const echeances = computed<EcheanceEntretien[]>(() =>
-  vehicules.vehicules
+  vehicules.auParc
     .filter(v => v.typeVehicule === 'tracteur' && v.kilometrage != null)
     .flatMap(v => store.echeancesDuVehicule(
       v.id, v.plaque, v.modele, v.kilometrage ?? 0,

@@ -122,13 +122,14 @@
           <div class="grid grid-cols-2 gap-x-6 gap-y-4">
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Statut administratif</label>
-              <select v-if="isEditMode" v-model="form.statutAdmin" :class="cls.fieldInput">
+              <!-- « Archivé » ne figure plus ici : une sortie du parc exige un
+                   motif et une date, elle passe par le bouton dédié en bas de fiche. -->
+              <select v-if="isEditMode && !estSorti" v-model="form.statutAdmin" :class="cls.fieldInput">
                 <option value="actif">Actif</option>
                 <option value="affecte">Affecté</option>
                 <option value="en_reparation">En réparation</option>
                 <option value="hors_service">Hors service</option>
                 <option value="vendu">Vendu</option>
-                <option value="archive">Archivé</option>
               </select>
               <span v-else>
                 <span :class="statutClass(vehicule.statutAdmin)" class="text-xs font-medium px-2 py-0.5 rounded-full">
@@ -266,9 +267,112 @@
           </template>
         </FormSection>
 
+        <!-- ══ US 2.1.5 - Sortie du parc ══════════════════════════
+             L'archivage clôt le cycle de vie demandé par le cahier
+             UCODIS : « de l'acquisition à la mise hors service ». Il
+             porte un motif, une date et un auteur, et reste réversible. -->
+        <FormSection title="Cycle de vie">
+          <div v-if="estSorti && item.sortie" class="flex flex-col gap-3">
+            <div class="bg-gray-100 rounded-lg px-3.5 py-3">
+              <p class="text-sm font-semibold text-gray-700">
+                {{ LIB_MOTIF_SORTIE[item.sortie.motif] }}
+              </p>
+              <p class="text-xs text-gray-500 mt-1">
+                Sorti du parc le {{ fmtDate(item.sortie.date) }}, par {{ item.sortie.par }}.
+                <template v-if="item.sortie.kilometrageSortie">
+                  Compteur figé à {{ item.sortie.kilometrageSortie.toLocaleString('fr-FR') }} km.
+                </template>
+              </p>
+              <p v-if="item.sortie.commentaire" class="text-xs text-gray-500 mt-1.5 leading-relaxed">
+                {{ item.sortie.commentaire }}
+              </p>
+            </div>
+            <p class="text-[11px] text-muted-foreground leading-relaxed">
+              Ce véhicule n’apparaît plus dans le parc courant ni dans les affectations.
+              Son historique reste consultable et sa plaque demeure réservée.
+            </p>
+            <button :class="cls.btnOutline" class="self-start" @click="reintegrer">
+              <Undo2 class="w-4 h-4" /> Réintégrer au parc
+            </button>
+          </div>
+
+          <div v-else class="flex flex-col gap-2">
+            <p class="text-xs text-muted-foreground leading-relaxed">
+              Sortir un véhicule du parc l’exclut des listes courantes, des affectations et des
+              indicateurs de disponibilité, sans rien supprimer de son historique.
+            </p>
+            <p v-if="obstacle" class="text-[11px] text-warning flex items-start gap-1.5">
+              <AlertCircle class="w-3.5 h-3.5 shrink-0 mt-px" /> {{ obstacle }}
+            </p>
+            <button :class="cls.btnOutline" class="self-start" :disabled="!!obstacle"
+              @click="sortieOuverte = true">
+              <Archive class="w-4 h-4" /> Sortir du parc
+            </button>
+          </div>
+        </FormSection>
+
       </div>
     </template>
   </CardModalShell>
+
+  <!-- ══ Formulaire de sortie ═══════════════════════════════════ -->
+  <Teleport to="body">
+    <div v-if="sortieOuverte" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-4"
+      @click.self="sortieOuverte = false">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div class="bg-primary px-5 py-3.5 flex items-center justify-between">
+          <h3 class="text-white font-semibold">Sortir {{ item.plaque }} du parc</h3>
+          <button class="text-white/80 hover:text-white" @click="sortieOuverte = false">
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+
+        <div class="p-5 flex flex-col gap-3.5">
+          <div class="flex flex-col gap-1">
+            <label :class="cls.fieldLabel">Motif de sortie *</label>
+            <select v-model="formSortie.motif" :class="cls.fieldInput">
+              <option v-for="(lib, m) in LIB_MOTIF_SORTIE" :key="m" :value="m">{{ lib }}</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3.5">
+            <div class="flex flex-col gap-1">
+              <label :class="cls.fieldLabel">Date de sortie *</label>
+              <input v-model="formSortie.date" type="date" :class="cls.fieldInput" />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label :class="cls.fieldLabel">Kilométrage à la sortie</label>
+              <input v-model.number="formSortie.kilometrageSortie" type="number"
+                :class="cls.fieldInput" :placeholder="String(item.kilometrage ?? '')" />
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label :class="cls.fieldLabel">Prononcée par *</label>
+            <input v-model="formSortie.par" type="text" :class="cls.fieldInput"
+              placeholder="Responsable flotte, Direction technique…" />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label :class="cls.fieldLabel">Commentaire</label>
+            <textarea v-model="formSortie.commentaire" rows="3" :class="cls.fieldInput"
+              placeholder="Circonstances de la sortie, référence de l’acte de vente…" />
+          </div>
+
+          <p v-if="erreurSortie" class="text-xs text-danger flex items-start gap-1.5">
+            <AlertCircle class="w-3.5 h-3.5 shrink-0 mt-px" /> {{ erreurSortie }}
+          </p>
+        </div>
+
+        <div class="px-5 py-3.5 bg-gray-50 border-t flex justify-end gap-3">
+          <button :class="cls.btnOutline" @click="sortieOuverte = false">Annuler</button>
+          <button :class="cls.btnPrimary" :disabled="!sortieValide" @click="confirmerSortie">
+            Sortir du parc
+          </button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -280,8 +384,12 @@ import { useFlotteStore } from '../../stores/flotte'
 import { useMaintenanceStore } from '../../stores/maintenance'
 import { LIB_EQUIPEMENT, LIB_ETAT_EQUIPEMENT } from '../../types/flotte'
 import { LIB_SOUS_SYSTEME, LIB_MODE_DEFAILLANCE } from '../../types/maintenance'
-import { fmtAr } from '../../lib/fmsUtils'
-import type { Vehicule, StatutAdminVehicule, StatutOperationnelVehicule } from '../../types'
+import { Archive, AlertCircle, Undo2, X } from 'lucide-vue-next'
+import { fmtAr, fmtDate } from '../../lib/fmsUtils'
+import type {
+  Vehicule, StatutAdminVehicule, StatutOperationnelVehicule, MotifSortieVehicule,
+} from '../../types'
+import { LIB_MOTIF_SORTIE } from '../../types'
 
 const props = defineProps<{ vehicule: Vehicule }>()
 const emit  = defineEmits<{ close: [] }>()
@@ -327,6 +435,56 @@ const isDirty = computed(() =>
 const cls = {
   fieldLabel: 'text-xs font-semibold text-muted-foreground uppercase tracking-wide',
   fieldInput: 'border border-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 w-full',
+  btnPrimary: 'inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer border-0 bg-primary text-white hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed',
+  btnOutline: 'inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer bg-card text-foreground border border-border hover:bg-background disabled:opacity-40 disabled:cursor-not-allowed',
+}
+
+/* ══ US 2.1.5 - Sortie du parc ══════════════════════════════ */
+
+const estSorti = computed(() => item.value.statutAdmin === 'archive')
+
+/** Ce qui empêche la sortie, calculé par le store et affiché tel quel. */
+const obstacle = computed(() => estSorti.value ? null : store.obstacleSortie(item.value.id))
+
+const sortieOuverte = ref(false)
+const erreurSortie  = ref('')
+
+const formSortie = reactive<{
+  motif: MotifSortieVehicule
+  date: string
+  par: string
+  commentaire: string
+  kilometrageSortie: number | null
+}>({
+  motif: 'vendu',
+  date: new Date().toISOString().slice(0, 10),
+  par: '',
+  commentaire: '',
+  kilometrageSortie: null,
+})
+
+const sortieValide = computed(() =>
+  !!formSortie.motif && !!formSortie.date && !!formSortie.par.trim())
+
+function confirmerSortie() {
+  erreurSortie.value = ''
+  const res = store.archiver(item.value.id, {
+    motif: formSortie.motif,
+    date: formSortie.date,
+    par: formSortie.par.trim(),
+    commentaire: formSortie.commentaire.trim() || undefined,
+    kilometrageSortie: formSortie.kilometrageSortie ?? undefined,
+  })
+  if ('erreur' in res) {
+    erreurSortie.value = res.erreur
+    return
+  }
+  sortieOuverte.value = false
+}
+
+function reintegrer() {
+  const res = store.reintegrer(item.value.id)
+  if ('erreur' in res) erreurSortie.value = res.erreur
 }
 
 function handleSave() {

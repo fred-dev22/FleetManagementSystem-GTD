@@ -215,6 +215,7 @@ import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
 import SinistreCard from '../../components/fleet/SinistreCard.vue'
 import { useFlotteStore } from '../../stores/flotte'
 import { useVehiculesStore } from '../../stores/vehicules'
+import { useConfigurationStore } from '../../stores/configuration'
 import { LIB_GRAVITE_SINISTRE, LIB_INDEMNISATION, LIB_STATUT_POLICE } from '../../types/flotte'
 import type { GraviteSinistre, StatutIndemnisation, StatutPolice } from '../../types/flotte'
 import { fmtAr, fmtDate } from '../../lib/fmsUtils'
@@ -279,7 +280,7 @@ const sousTitre = computed(() =>
 
 /* ── Kilométrage total, détenu par le référentiel véhicules ── */
 const kmTotalFlotte = computed(() =>
-  vehicules.vehicules.reduce((s, v) => s + (v.kilometrage ?? 0), 0))
+  vehicules.auParc.reduce((s, v) => s + (v.kilometrage ?? 0), 0))
 
 const accidentsParMKm = computed(() => store.accidentsParMillionKm(kmTotalFlotte.value))
 
@@ -334,7 +335,10 @@ const totalText = computed(() =>
   vue.value === 'sinistres' ? `${totalCount.value} sinistre(s)` : `${totalCount.value} police(s)`)
 
 /* ── Échéance des polices, même règle que les documents ────── */
-const PREAVIS_JOURS = 30
+/* Le préavis d'échéance documentaire n'est plus figé ici : il vient des
+   paramètres d'exploitation, ajustables sans intervention technique. */
+const configStore = useConfigurationStore()
+const PREAVIS_JOURS = computed(() => configStore.parametres.preavisDocumentaireJours)
 
 function joursRestants(iso: string): number {
   return Math.ceil((+new Date(iso) - Date.now()) / 86_400_000)
@@ -343,14 +347,14 @@ function joursRestants(iso: string): number {
 function libelleEcheance(iso: string): string {
   const j = joursRestants(iso)
   if (j < 0) return `expirée depuis ${Math.abs(j)} j`
-  if (j <= PREAVIS_JOURS) return `dans ${j} j - à renouveler`
+  if (j <= PREAVIS_JOURS.value) return `dans ${j} j - à renouveler`
   return `dans ${j} j`
 }
 
 function clsEcheance(iso: string): string {
   const j = joursRestants(iso)
   if (j < 0) return 'text-danger font-medium'
-  if (j <= PREAVIS_JOURS) return 'text-warning'
+  if (j <= PREAVIS_JOURS.value) return 'text-warning'
   return 'text-muted-foreground'
 }
 

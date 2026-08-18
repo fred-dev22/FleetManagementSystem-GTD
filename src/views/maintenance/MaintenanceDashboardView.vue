@@ -192,7 +192,7 @@ const CLS_STATUT: Record<StatutOT, string> = {
 
 /** Échéances dépassées, calculées depuis les plans d'entretien. */
 const echeancesDepassees = computed(() =>
-  vehicules.vehicules
+  vehicules.auParc
     .filter(v => v.typeVehicule === 'tracteur' && v.kilometrage != null)
     .flatMap(v => store.echeancesDuVehicule(v.id, v.plaque, v.modele, v.kilometrage ?? 0, {}))
     .filter(e => e.statut === 'depassee').length)

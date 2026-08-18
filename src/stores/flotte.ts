@@ -103,7 +103,7 @@ export const useFlotteStore = defineStore('flotte', () => {
      ══════════════════════════════════════════════════════════ */
   const etatsArchives = ref<EtatFlotteArchive[]>([
     { id: 'EF-2026-07-31', date: '2026-07-31', produitPar: 'Naina Rakotobe',
-      transmisLe: '2026-07-31T07:15:00Z',
+      transmisLe: '2026-07-31T07:15:00Z', version: 1,
       lignes: [
         { vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX', citernePlaque: 'MG-1100-TR',
           chauffeurNom: 'Thierry Randriamanga', etat: 'ATT-ADM',
@@ -115,7 +115,7 @@ export const useFlotteStore = defineStore('flotte', () => {
           codeIndispo: 'VET', motifIndispo: 'Vetting expiré', remiseEnServicePrevue: '2026-08-08' },
       ] },
     { id: 'EF-2026-07-30', date: '2026-07-30', produitPar: 'Naina Rakotobe',
-      transmisLe: '2026-07-30T07:05:00Z',
+      transmisLe: '2026-07-30T07:05:00Z', version: 1,
       lignes: [
         { vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX', citernePlaque: 'MG-1100-TR',
           chauffeurNom: 'Thierry Randriamanga', etat: 'ATT-ADM',
@@ -124,24 +124,88 @@ export const useFlotteStore = defineStore('flotte', () => {
       ] },
   ])
 
-  /** Fige l'état du jour : il devient une pièce opposable. */
-  function archiverEtat(par: string): EtatFlotteArchive {
+  /* ── Immuabilité d'une pièce opposable ───────────────────────
+     L'ancienne version écrasait silencieusement l'état d'un jour déjà
+     archivé. Un état transmis au client pouvait donc changer de contenu
+     après coup, sans trace : « non modifiable » était affiché à l'écran
+     sans être vrai dans le code. Trois règles corrigent cela.
+     ────────────────────────────────────────────────────────────── */
+
+  /** Toutes les versions d'un jour, de la plus récente à la plus ancienne. */
+  const versionsDuJour = (date: string) =>
+    etatsArchives.value
+      .filter(e => e.date === date)
+      .sort((a, b) => b.version - a.version)
+
+  /** Version faisant foi pour un jour : la plus récente. */
+  const etatDuJour = (date: string) => versionsDuJour(date)[0]
+
+  /** Un état transmis ne se modifie plus. */
+  const estFige = (e: EtatFlotteArchive) => !!e.transmisLe
+
+  /**
+   * Fige l'état du jour. Il devient une pièce opposable.
+   *
+   * Règle 1 : tant que l'état du jour n'a pas été transmis, il reste un
+   * brouillon et se régénère librement.
+   * Règle 2 : une fois transmis, il ne bouge plus. Une correction exige
+   * un motif et produit un rectificatif versionné.
+   * Règle 3 : les deux versions restent consultables. On ne récrit pas
+   * l'histoire, on la complète.
+   */
+  function archiverEtat(par: string, motifRectification?: string):
+    { etat: EtatFlotteArchive } | { erreur: string } {
     const jour = new Date().toISOString().slice(0, 10)
-    const existant = etatsArchives.value.find(e => e.date === jour)
-    if (existant) {
-      existant.lignes = JSON.parse(JSON.stringify(etatFlotte.value))
-      existant.produitPar = par
-      return existant
+    const courant = etatDuJour(jour)
+    const lignes = JSON.parse(JSON.stringify(etatFlotte.value))
+
+    /* Brouillon du jour : régénération simple, rien n'a été transmis. */
+    if (courant && !estFige(courant)) {
+      courant.lignes = lignes
+      courant.produitPar = par
+      return { etat: courant }
     }
+
+    /* État déjà transmis : seul un rectificatif motivé peut le suivre. */
+    if (courant && estFige(courant)) {
+      if (!motifRectification?.trim()) {
+        return {
+          erreur: `L'état du ${jour} a été transmis au client le `
+            + `${new Date(courant.transmisLe!).toLocaleDateString('fr-FR')}. `
+            + `Il ne peut plus être modifié. Pour le corriger, produisez un `
+            + `rectificatif en indiquant le motif de la correction.`,
+        }
+      }
+      const rectificatif: EtatFlotteArchive = {
+        id: `EF-${jour}-v${courant.version + 1}`,
+        date: jour, produitPar: par, lignes,
+        version: courant.version + 1,
+        rectifieDe: courant.id,
+        motifRectification: motifRectification.trim(),
+      }
+      etatsArchives.value.unshift(rectificatif)
+      return { etat: rectificatif }
+    }
+
     const nouveau: EtatFlotteArchive = {
-      id: `EF-${jour}`, date: jour, produitPar: par,
-      lignes: JSON.parse(JSON.stringify(etatFlotte.value)),
+      id: `EF-${jour}`, date: jour, produitPar: par, lignes, version: 1,
     }
     etatsArchives.value.unshift(nouveau)
-    return nouveau
+    return { etat: nouveau }
   }
 
-  const etatDuJour = (date: string) => etatsArchives.value.find(e => e.date === date)
+  /** Marque un état comme transmis. À partir de là, il est figé. */
+  function marquerTransmis(id: string): { ok: true } | { erreur: string } {
+    const e = etatsArchives.value.find(x => x.id === id)
+    if (!e) return { erreur: 'État introuvable.' }
+    if (e.transmisLe) return { erreur: 'Cet état a déjà été transmis.' }
+    e.transmisLe = new Date().toISOString()
+    return { ok: true }
+  }
+
+  /** Dates distinctes disponibles, la plus récente en tête. */
+  const joursArchives = computed(() =>
+    [...new Set(etatsArchives.value.map(e => e.date))].sort((a, b) => b.localeCompare(a)))
 
   /* ══ US 2.3.1 - Checklists sur route ═══════════════════════ */
   const checklists = ref<ChecklistRoute[]>([
@@ -416,7 +480,8 @@ export const useFlotteStore = defineStore('flotte', () => {
   return {
     equipements, equipementsDuVehicule, tauxEquipement, vehiculesNonCouverts, tentativesDesactivation,
     etatFlotte, etatParGroupe, immobilises, etatDuVehicule, changerEtat,
-    etatsArchives, archiverEtat, etatDuJour,
+    etatsArchives, archiverEtat, etatDuJour, versionsDuJour, joursArchives,
+    estFige, marquerTransmis,
     checklists, checklistsDuVehicule, anomaliesDe, checklistsAvecAnomalie,
     audits, auditsDuVehicule, auditsNonConformes,
     autorisations, autorisationsEnAttente, peutPartir, decider,

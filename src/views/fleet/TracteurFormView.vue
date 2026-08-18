@@ -278,7 +278,7 @@ function goBack() {
   if (isEdit.value && tracteurId.value) {
     router.push({ name: 'tracteur-detail', params: { id: tracteurId.value } })
   } else {
-    router.push({ name: 'fleet' })
+    router.push({ name: 'fleet-dashboard' })
   }
 }
 </script>

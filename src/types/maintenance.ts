@@ -261,6 +261,62 @@ export const LIB_COMPETENCE: Record<CompetenceAtelier, string> = {
   pneumatique: 'Pneumatique',
 }
 
+/* ══════════════════════════════════════════════════════════════
+   Paramètres de l'atelier
+   ══════════════════════════════════════════════════════════════
+   Trois valeurs manquaient au démarrage et bloquaient autant
+   d'indicateurs. Elles ne sont pas inventées : elles sont saisies
+   par l'exploitation depuis Maintenance → Paramétrage → Atelier.
+   Tant qu'elles valent null, les indicateurs qu'elles gouvernent
+   restent masqués et la raison est affichée à l'écran.
+     1. capacité de l'atelier      → taux d'occupation
+     2. tarif horaire main-d'œuvre → coût complet d'une intervention
+     3. coût d'immobilisation/jour → valorisation des jours perdus
+   ══════════════════════════════════════════════════════════════ */
+
+/** Capacité de l'atelier : postes de travail et heures d'ouverture. */
+export interface CapaciteAtelier {
+  /** Garage concerné - Andoharanofotsy pour GTD */
+  site: string
+  /** Nombre de postes de travail pouvant accueillir un camion en parallèle */
+  postes: number | null
+  /** Heures d'ouverture par jour */
+  heuresParJour: number | null
+  /** Jours ouvrés par semaine - du lundi au samedi = 6 */
+  joursOuvresParSemaine: number | null
+}
+
+/**
+ * Tarif horaire de la main-d'œuvre interne, en ariary.
+ * Un tarif unique suffit ; s'il varie selon la spécialité, les quatre
+ * compétences de l'atelier peuvent être renseignées séparément.
+ */
+export interface TarifMainOeuvre {
+  /** Tarif appliqué à défaut de tarif par spécialité */
+  tarifUniqueAr: number | null
+  /** Tarif par spécialité, quand il diffère du tarif unique */
+  parCompetence: Partial<Record<CompetenceAtelier, number>>
+}
+
+/**
+ * Manque à gagner d'une journée d'immobilisation, en ariary.
+ * Une moyenne suffit ; si elle diffère selon le type de véhicule,
+ * tracteur et citerne sont distingués.
+ */
+export interface CoutImmobilisation {
+  /** Moyenne tous véhicules confondus */
+  moyenJourAr: number | null
+  /** Par type de véhicule, quand la moyenne ne suffit pas */
+  tracteurJourAr: number | null
+  citerneJourAr: number | null
+}
+
+export interface ParametresAtelier {
+  capacite: CapaciteAtelier
+  mainOeuvre: TarifMainOeuvre
+  immobilisation: CoutImmobilisation
+}
+
 /**
  * Compétence déduite du sous-système concerné : elle n'a pas à être saisie,
  * le diagnostic ISO 14224 la détermine.

@@ -25,11 +25,17 @@
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Plaque *</label>
-              <input v-model="form.plaque" placeholder="MG-0000-TX" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+              <input v-model="form.plaque" placeholder="MG-0000-TX"
+                class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                :class="plaqueEnDouble ? 'border-danger bg-danger-bg/40' : 'border-gray-200'" />
+              <p v-if="plaqueEnDouble" class="text-[11px] text-danger mt-1">Plaque déjà attribuée</p>
             </div>
             <div>
               <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">VIN</label>
-              <input v-model="form.vin" placeholder="VIN 17 caractères" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+              <input v-model="form.vin" placeholder="VIN 17 caractères"
+                class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                :class="vinEnDouble ? 'border-danger bg-danger-bg/40' : 'border-gray-200'" />
+              <p v-if="vinEnDouble" class="text-[11px] text-danger mt-1">Châssis déjà enregistré</p>
             </div>
             <div>
               <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Marque</label>
@@ -101,14 +107,21 @@
         </div>
 
         <!-- Footer -->
-        <div class="px-6 py-4 bg-gray-50 border-t flex justify-end gap-3">
-          <button class="px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors" @click="emit('close')">
-            Annuler
-          </button>
-          <button :disabled="!form.plaque" @click="submit"
-            class="px-5 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-dark transition-colors disabled:opacity-40">
-            Créer le véhicule
-          </button>
+        <div class="px-6 py-4 bg-gray-50 border-t">
+          <!-- US 2.1.1 - le refus est motivé, jamais silencieux -->
+          <div v-if="erreur" class="flex items-start gap-2 mb-3 text-danger">
+            <AlertCircle class="w-4 h-4 shrink-0 mt-px" />
+            <p class="text-xs leading-relaxed">{{ erreur }}</p>
+          </div>
+          <div class="flex justify-end gap-3">
+            <button class="px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors" @click="emit('close')">
+              Annuler
+            </button>
+            <button :disabled="!peutCreer" @click="submit"
+              class="px-5 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-dark transition-colors disabled:opacity-40">
+              Créer le véhicule
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -116,8 +129,19 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue'
-import { X } from 'lucide-vue-next'
+/**
+ * US 2.1.1 - Création d'un véhicule.
+ *
+ * L'unicité de la plaque et du châssis est contrôlée ici comme elle
+ * l'était déjà à l'import : les deux chemins appellent les mêmes
+ * fonctions du store. Auparavant seul l'import refusait un doublon,
+ * ce qui permettait de saisir à la main ce que l'import rejetait.
+ *
+ * Le doublon est signalé pendant la frappe, pas seulement à la
+ * validation : l'utilisateur corrige avant d'avoir rempli le reste.
+ */
+import { reactive, computed, ref } from 'vue'
+import { X, AlertCircle } from 'lucide-vue-next'
 import { useVehiculesStore } from '../../stores/vehicules'
 import type { Vehicule } from '../../types'
 
@@ -129,9 +153,26 @@ const form = reactive<Partial<Vehicule>>({
   statutAdmin: 'actif',
 })
 
+const erreur = ref('')
+
+const plaqueEnDouble = computed(() =>
+  !!form.plaque?.trim() && store.plaqueExiste(form.plaque))
+
+const vinEnDouble = computed(() =>
+  !!form.vin?.trim() && store.vinExiste(form.vin))
+
+const peutCreer = computed(() =>
+  !!form.plaque?.trim() && !!form.typeVehicule && !plaqueEnDouble.value && !vinEnDouble.value)
+
 function submit() {
+  erreur.value = ''
   if (!form.plaque || !form.typeVehicule) return
-  store.create(form as Omit<Vehicule, 'id' | 'createdAt'>)
+
+  const res = store.create(form as Omit<Vehicule, 'id' | 'createdAt'>)
+  if ('erreur' in res) {
+    erreur.value = res.erreur
+    return
+  }
   emit('close')
 }
 </script>

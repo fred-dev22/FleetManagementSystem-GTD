@@ -221,6 +221,9 @@ const transformees = computed<LigneImport[]>(() =>
     else if (!plaque) motif = 'Plaque manquante'
     else if (!litres) motif = 'Litres manquants'
     else if (!vehicules.vehicules.some(v => v.plaque === plaque)) motif = 'Véhicule inconnu'
+    /* Un plein daté après la sortie du parc est une erreur de saisie :
+       le motif le dit, plutôt que de laisser croire à un véhicule inconnu. */
+    else if (vehicules.archives.some(v => v.plaque === plaque)) motif = 'Véhicule sorti du parc'
 
     return {
       date, plaque, litres,
@@ -243,7 +246,7 @@ function importer() {
   let n = 0
 
   lignesValides.value.forEach(l => {
-    const veh = vehicules.vehicules.find(v => v.plaque === l.plaque)
+    const veh = vehicules.auParc.find(v => v.plaque === l.plaque)
     if (!veh) return
     const bons = l.bons ?? (Math.round(l.litres / litresParBon) || undefined)
 

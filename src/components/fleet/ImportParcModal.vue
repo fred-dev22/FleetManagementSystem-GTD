@@ -253,10 +253,10 @@ const transformees = computed<LigneImport[]>(() => {
     let motif = ''
     if (!plaque) motif = 'Plaque manquante'
     else if (plaquesVues.has(plaque)) motif = 'Plaque en double dans le fichier'
-    else if (store.vehicules.some(v => v.plaque === plaque)) motif = 'Plaque déjà présente au parc'
+    else if (store.plaqueExiste(plaque)) motif = 'Plaque déjà présente au parc'
     else if (!type) motif = `Type non reconnu : « ${val('typeVehicule') || 'vide'} »`
     else if (vin && vinsVus.has(vin)) motif = 'VIN en double dans le fichier'
-    else if (vin && store.vehicules.some(v => v.vin === vin)) motif = 'VIN déjà présent au parc'
+    else if (vin && store.vinExiste(vin)) motif = 'VIN déjà présent au parc'
     else if (dpmc && Number.isNaN(+new Date(dpmc))) motif = `Date de mise en circulation invalide : « ${dpmc} »`
 
     if (!motif) {
@@ -290,7 +290,7 @@ const bilanControles = computed(() => [
 function importer() {
   let n = 0
   lignesValides.value.forEach(l => {
-    store.create({
+    const res = store.create({
       plaque: l.plaque,
       typeVehicule: l.typeVehicule as never,
       vin: l.vin || undefined,
@@ -302,7 +302,9 @@ function importer() {
       kilometrage: l.kilometrage || undefined,
       statutAdmin: 'actif',
     } as never)
-    n++
+    /* create contrôle à nouveau l'unicité : une ligne validée à l'écran
+       mais refusée ici ne doit pas être comptée comme importée. */
+    if (!('erreur' in res)) n++
   })
 
   rapport.value = {

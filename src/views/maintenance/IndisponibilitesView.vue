@@ -1,7 +1,7 @@
 <template>
   <ListPageLayout
     title="Immobilisations"
-    :subtitle="`${store.indisposEnCours.length} véhicule(s) immobilisé(s) · ${totalJours} jour(s) perdus sur la période`"
+    :subtitle="sousTitre"
     :columns="columns"
     :items="pageItems"
     :total="totalCount"
@@ -55,6 +55,13 @@
       </span>
     </template>
 
+    <template #cell-cout="{ item }">
+      <span v-if="store.coutIndispo(item) != null" class="text-xs font-semibold text-danger">
+        {{ fmtAr(store.coutIndispo(item)!) }}
+      </span>
+      <span v-else class="text-gray-300">-</span>
+    </template>
+
     <template #cell-ot="{ item }">
       <span v-if="item.ordreTravailId" class="font-mono text-[11px] text-primary">{{ item.ordreTravailId }}</span>
       <span v-else class="text-gray-300">-</span>
@@ -81,9 +88,19 @@
           {{ item.commentaire }}
         </p>
 
-        <div class="bg-background border border-border rounded-md px-2.5 py-2 text-[11px] text-muted-foreground leading-snug">
+        <!-- Le coût réel de l'immobilisation, dès que le manque à gagner
+             journalier est paramétré. C'est l'argument à présenter au client. -->
+        <div v-if="store.coutIndispo(item) != null" class="bg-danger-bg rounded-md px-2.5 py-2">
+          <p class="text-base font-bold leading-none text-danger">{{ fmtAr(store.coutIndispo(item)!) }}</p>
+          <p class="text-[11px] text-danger/80 mt-1 leading-snug">
+            {{ store.dureeIndispo(item) }} jour(s) × {{ fmtAr(store.coutJournalierDe(item)!) }} de manque
+            à gagner. Cette immobilisation relève de la famille
+            {{ LIB_FAMILLE_INDISPO[item.famille].toLowerCase() }}.
+          </p>
+        </div>
+        <div v-else class="bg-background border border-border rounded-md px-2.5 py-2 text-[11px] text-muted-foreground leading-snug">
           Les jours perdus sont comptés mais non valorisés : le coût d’immobilisation journalier
-          n’a pas été communiqué par GTD.
+          n’est pas renseigné dans Paramétrage → Paramètres de l’atelier.
         </div>
       </div>
     </template>
@@ -107,7 +124,7 @@ import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
 import { useMaintenanceStore } from '../../stores/maintenance'
 import { LIB_FAMILLE_INDISPO, libelleDuCode } from '../../types/maintenance'
 import type { FamilleIndispo } from '../../types/maintenance'
-import { fmtDate } from '../../lib/fmsUtils'
+import { fmtDate, fmtAr } from '../../lib/fmsUtils'
 import * as L from '../../lib/listClasses'
 
 const store = useMaintenanceStore()
@@ -137,20 +154,33 @@ const scopeOptions = [
 const totalJours = computed(() =>
   Object.values(store.joursPerdusParFamille).reduce((s, v) => s + (v as number), 0))
 
+/** Le sous-titre chiffre le manque à gagner dès que le coût journalier existe. */
+const sousTitre = computed(() => {
+  const base = `${store.indisposEnCours.length} véhicule(s) immobilisé(s) · ${totalJours.value} jour(s) perdus sur la période`
+  return store.coutTotalImmobilisations != null
+    ? `${base} · ${fmtAr(store.coutTotalImmobilisations)} de manque à gagner`
+    : base
+})
+
 const kpis = computed(() => [
   { label: 'En cours',                 value: String(store.indisposEnCours.length), cls: 'text-danger' },
   { label: 'Jours techniques',         value: String(store.joursPerdusParFamille.technique ?? 0), cls: 'text-foreground' },
   { label: 'Jours réglementaires',     value: String(store.joursPerdusParFamille.reglementaire ?? 0), cls: 'text-foreground' },
-  { label: 'Ratio humain / technique', value: store.ratioHumainTechnique != null ? String(store.ratioHumainTechnique) : '-', cls: 'text-foreground' },
+  { label: store.coutImmoRenseigne ? 'Coût des jours perdus' : 'Ratio humain / technique',
+    value: store.coutImmoRenseigne
+      ? fmtAr(store.coutTotalImmobilisations ?? 0)
+      : (store.ratioHumainTechnique != null ? String(store.ratioHumainTechnique) : '-'),
+    cls: store.coutImmoRenseigne ? 'text-danger' : 'text-foreground' },
 ])
 
 const columns = computed<ListColumn[]>(() => [
-  { key: 'vehicule', label: 'Véhicule',         sortable: true, width: 150 },
-  { key: 'code',     label: 'Motif',            width: 230 },
-  { key: 'famille',  label: 'Famille',          sortable: true, width: 150 },
-  { key: 'periode',  label: 'Période',          sortable: true, width: 175 },
-  { key: 'duree',    label: 'Durée',            width: 110 },
-  { key: 'ot',       label: 'Ordre de travail', width: 160 },
+  { key: 'vehicule', label: 'Véhicule',         sortable: true, width: 140 },
+  { key: 'code',     label: 'Motif',            width: 220 },
+  { key: 'famille',  label: 'Famille',          sortable: true, width: 130 },
+  { key: 'periode',  label: 'Période',          sortable: true, width: 165 },
+  { key: 'duree',    label: 'Durée',            width: 90 },
+  { key: 'cout',     label: 'Coût',             width: 130 },
+  { key: 'ot',       label: 'Ordre de travail', width: 150 },
 ])
 
 watch([activeScope, searchQuery, pageSize], () => { page.value = 1 })

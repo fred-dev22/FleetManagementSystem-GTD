@@ -238,11 +238,14 @@ function checkBlockage() {
       return
     }
   }
+  /* US 2.7.1 - le contrôle portait sur la seule assurance. Il porte
+     désormais sur toutes les pièces réglementaires bloquantes : barémage,
+     visite Madauto, certificat APAVE, vetting et contre-visite. Le motif
+     nomme la pièce et son code, pour que l'exploitant sache quoi régulariser. */
   if (newAff.tracteurId) {
-    const docs = docsStore.getDocsByVehicule(newAff.tracteurId)
-    const assurance = docs.find(d => d.type === 'Assurance')
-    if (assurance?.dateExpiration && new Date(assurance.dateExpiration) < new Date()) {
-      alerteBlockage.value = `Blocage : assurance du tracteur ${newAff.tracteurPlaque} expirée.`
+    const motif = docsStore.motifBlocage(newAff.tracteurId)
+    if (motif) {
+      alerteBlockage.value = `Blocage : ${newAff.tracteurPlaque} en indisponibilité réglementaire. ${motif}`
     }
   }
 }

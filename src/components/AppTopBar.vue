@@ -197,7 +197,9 @@ function switchLanguage(lang: 'fr' | 'en') {
 
 function goToProfile() {
   activeDropdown.value = null
-  router.push({ name: 'profile' })
+  /* La route 'profile' n'existe pas : le routeur expose 'hr-profile' et
+     'employee-profile'. Le côté est déterminé par le rôle. */
+  router.push({ name: auth.isHRSide ? 'hr-profile' : 'employee-profile' })
 }
 
 async function openSearch() {

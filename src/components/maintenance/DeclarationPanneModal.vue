@@ -177,7 +177,7 @@ const form = reactive({
 })
 
 const vehiculesDisponibles = computed(() =>
-  vehicules.vehicules.filter(v => v.statutAdmin !== 'archive'))
+  vehicules.auParc)
 
 const vehiculeChoisi = computed(() =>
   vehicules.vehicules.find(v => v.id === form.vehiculeId))

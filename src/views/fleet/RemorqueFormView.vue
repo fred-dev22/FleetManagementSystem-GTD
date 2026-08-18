@@ -312,7 +312,7 @@ function goBack() {
   if (isEdit.value && remorqueId.value) {
     router.push({ name: 'fleet-remorque-detail', params: { id: remorqueId.value } })
   } else {
-    router.push({ name: 'fleet' })
+    router.push({ name: 'fleet-dashboard' })
   }
 }
 </script>

@@ -25,6 +25,14 @@
                 {{ v.plaque }} - {{ v.marque }} {{ v.modele }}
               </option>
             </select>
+            <!-- Un véhicule absent de la liste doit s'expliquer, sinon
+                 l'exploitant croit à un bug plutôt qu'à une règle. -->
+            <p v-if="vehiculesEcartes.length" class="text-[11px] text-warning mt-1 leading-relaxed">
+              {{ vehiculesEcartes.length }} véhicule(s) écarté(s) pour pièce réglementaire expirée :
+              <span v-for="(v, i) in vehiculesEcartes" :key="v.plaque">
+                {{ i ? ' · ' : '' }}{{ v.plaque }} ({{ v.codes }})
+              </span>
+            </p>
           </div>
 
           <!-- Chauffeur : déduit, jamais saisi -->
@@ -133,6 +141,7 @@ import { useVehiculesStore } from '../../stores/vehicules'
 import { useAffectationsChauffeursStore } from '../../stores/affectationsChauffeurs'
 import { useAttelagesStore } from '../../stores/attelages'
 import { useTrajetsStore } from '../../stores/trajets'
+import { useDocumentsVehiculesStore } from '../../stores/documentsVehicules'
 import { useRegistresStore } from '../../stores/registres'
 import { useScoresConducteursStore } from '../../stores/scoresConducteurs'
 import { useConduceteursProfilesStore } from '../../stores/conducteursProfiles'
@@ -149,6 +158,7 @@ const affectationsStore = useAffectationsChauffeursStore()
 const attelagesStore = useAttelagesStore()
 const trajetsStore = useTrajetsStore()
 const registresStore = useRegistresStore()
+const docsStore       = useDocumentsVehiculesStore()
 const scoresStore = useScoresConducteursStore()
 const conducteursStore = useConduceteursProfilesStore()
 
@@ -172,9 +182,24 @@ const form = reactive({
   trajetId: '',
 })
 
-/* Seuls les véhicules tracteurs en état d'être affectés */
+/* Seuls les véhicules en état d'être affectés.
+   UC-02, scénario alternatif : « Vetting expiré : le véhicule bascule en
+   indisponibilité réglementaire, code VET, et disparaît des véhicules
+   affectables. » Le véhicule est donc retiré de la liste, pas seulement
+   refusé à la validation : on ne propose pas un choix qu'on refusera. */
 const vehiculesDisponibles = computed(() =>
-  vehiculeStore.vehicules.filter(v => v.statutAdmin === 'actif' || v.statutAdmin === 'affecte'))
+  vehiculeStore.auParc.filter(v =>
+    (v.statutAdmin === 'actif' || v.statutAdmin === 'affecte')
+    && !docsStore.motifBlocage(v.id)))
+
+/** Véhicules écartés pour pièce expirée, listés pour que l'absence s'explique. */
+const vehiculesEcartes = computed(() =>
+  vehiculeStore.auParc
+    .filter(v => (v.statutAdmin === 'actif' || v.statutAdmin === 'affecte') && docsStore.motifBlocage(v.id))
+    .map(v => ({
+      plaque: v.plaque,
+      codes: docsStore.codesReglementaires(v.id).map(c => c.code).join(', '),
+    })))
 
 const vehicule = computed(() =>
   form.vehiculeId ? vehiculeStore.vehicules.find(v => v.id === form.vehiculeId) : undefined)
@@ -206,6 +231,24 @@ const blocages = computed(() => {
   }
   if (vehicule.value && vehicule.value.statutAdmin !== 'actif' && vehicule.value.statutAdmin !== 'affecte') {
     out.push(`Statut du véhicule incompatible : ${vehicule.value.statutAdmin}.`)
+  }
+
+  /* US 2.7.1 - une pièce réglementaire expirée bascule le véhicule en
+     indisponibilité réglementaire et bloque l'affectation à un voyage.
+     Le contrôle porte sur le tracteur et sur la remorque attelée : une
+     citerne dont le barémage a expiré interdit le chargement, quel que
+     soit l'état du tracteur qui la tire. */
+  if (vehicule.value) {
+    const motifVehicule = docsStore.motifBlocage(vehicule.value.id)
+    if (motifVehicule) {
+      out.push(`${vehicule.value.plaque} en indisponibilité réglementaire. ${motifVehicule}`)
+    }
+    if (vehicule.value.vehiculeLieId) {
+      const motifRemorque = docsStore.motifBlocage(vehicule.value.vehiculeLieId)
+      if (motifRemorque) {
+        out.push(`${vehicule.value.vehiculeLiePlaque} en indisponibilité réglementaire. ${motifRemorque}`)
+      }
+    }
   }
 
   const cid = affectation.value?.chauffeurId

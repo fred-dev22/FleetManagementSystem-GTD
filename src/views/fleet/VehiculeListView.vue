@@ -1,7 +1,7 @@
 <template>
   <ListPageLayout
     title="Véhicules"
-    :subtitle="`${store.vehicules.length} véhicule(s) ↔ tracteurs & remorques`"
+    :subtitle="sousTitre"
     :columns="columns"
     :items="pageItems"
     :total="totalCount"
@@ -30,6 +30,19 @@
     </template>
 
     <template #above-table>
+      <!-- US 2.1.5 - la sortie du parc est une clôture de cycle de vie,
+           pas un statut de plus : la vue le rappelle explicitement -->
+      <div v-if="vueArchives"
+        class="flex items-start gap-2.5 bg-gray-100 text-gray-600 rounded-lg px-3.5 py-2.5 mb-3.5">
+        <Archive class="w-4 h-4 shrink-0 mt-px" />
+        <p class="text-xs leading-relaxed">
+          Ces {{ store.archives.length }} véhicule(s) sont sortis du parc. Ils n’entrent plus
+          dans les affectations ni dans les indicateurs de disponibilité, mais leur historique
+          d’interventions, leurs documents et leurs sinistres restent consultables et opposables.
+          Leurs plaques demeurent réservées.
+        </p>
+      </div>
+
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-3.5">
         <div v-for="k in kpis" :key="k.label" class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 flex items-center gap-3">
           <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" :class="k.bg">
@@ -47,13 +60,13 @@
       <div>
         <label :class="L.fpFieldLabel">Statut</label>
         <select v-model="filterStatut" :class="L.fpSelect">
-          <option value="">Tous</option>
+          <option value="">Tous (parc courant)</option>
           <option value="actif">Actif</option>
           <option value="affecte">Affecté</option>
           <option value="en_reparation">En réparation</option>
           <option value="hors_service">Hors service</option>
           <option value="vendu">Vendu</option>
-          <option value="archive">Archivé</option>
+          <option value="archive">Archivés - sortis du parc</option>
         </select>
       </div>
       <div>
@@ -69,10 +82,25 @@
     </template>
 
     <!-- Colonnes -->
+    <!-- US 2.1.2 - la remorque attelée se lit sans ouvrir la fiche -->
     <template #cell-plaque="{ item }">
-      <button class="font-mono font-semibold text-foreground hover:text-primary hover:underline bg-transparent border-0 p-0 cursor-pointer" @click="openCard(item.id)">
-        {{ item.plaque }}
+      <button class="text-left bg-transparent border-0 p-0 cursor-pointer group" @click="openCard(item.id)">
+        <span class="font-mono font-semibold text-foreground group-hover:text-primary group-hover:underline block">
+          {{ item.plaque }}
+        </span>
+        <span v-if="item.vehiculeLiePlaque" class="font-mono text-[11px] text-primary flex items-center gap-1 mt-0.5">
+          <Link2 class="w-3 h-3" />{{ item.vehiculeLiePlaque }}
+        </span>
+        <span v-else-if="item.typeVehicule === 'tracteur'" class="text-[11px] text-gray-400 mt-0.5 block">
+          non attelé
+        </span>
       </button>
+    </template>
+
+    <template #cell-chauffeur="{ item }">
+      <span v-if="item.chauffeurNom" class="text-xs text-gray-600">{{ item.chauffeurNom }}</span>
+      <span v-else-if="item.typeVehicule === 'tracteur'" class="text-[11px] text-gray-400">non affecté</span>
+      <span v-else class="text-gray-300">-</span>
     </template>
 
     <template #cell-typeVehicule="{ item }">
@@ -93,9 +121,12 @@
       </span>
     </template>
 
-    <template #cell-lien="{ item }">
-      <span v-if="item.vehiculeLiePlaque" class="font-mono text-xs text-primary">{{ item.vehiculeLiePlaque }}</span>
-      <span v-else-if="item.chauffeurNom" class="text-xs text-gray-600">{{ item.chauffeurNom }}</span>
+    <!-- US 2.1.5 - visible uniquement dans la vue des véhicules sortis -->
+    <template #cell-sortie="{ item }">
+      <span v-if="item.sortie" class="text-xs">
+        <span class="text-foreground">{{ LIB_MOTIF_SORTIE[item.sortie.motif] }}</span>
+        <span class="text-muted-foreground text-[11px] block">{{ fmtDate(item.sortie.date) }}</span>
+      </span>
       <span v-else class="text-gray-300">-</span>
     </template>
 
@@ -129,13 +160,34 @@
             <div class="text-muted-foreground text-[11px]">Kilométrage</div>{{ item.kilometrage.toLocaleString('fr-FR') }} km
           </div>
         </div>
+        <!-- US 2.1.5 - la sortie porte son motif, sa date et son auteur -->
+        <div v-if="item.sortie" class="bg-gray-100 rounded-md px-2.5 py-2">
+          <p class="text-xs font-semibold text-gray-700">{{ LIB_MOTIF_SORTIE[item.sortie.motif] }}</p>
+          <p class="text-[11px] text-gray-500 mt-0.5">
+            Sorti le {{ fmtDate(item.sortie.date) }} par {{ item.sortie.par }}
+            <template v-if="item.sortie.kilometrageSortie">
+              · {{ item.sortie.kilometrageSortie.toLocaleString('fr-FR') }} km au compteur
+            </template>
+          </p>
+          <p v-if="item.sortie.commentaire" class="text-[11px] text-gray-500 mt-1 leading-snug">
+            {{ item.sortie.commentaire }}
+          </p>
+        </div>
+
         <button :class="L.btnPrimary" class="w-full justify-center" @click="openCard(item.id)">Ouvrir la fiche</button>
+
+        <button v-if="item.sortie" :class="L.btnOutline" class="w-full justify-center"
+          @click="reintegrer(item.id)">
+          <Undo2 class="w-4 h-4" /> Réintégrer au parc
+        </button>
       </div>
     </template>
 
     <template #empty>
-      <Truck class="w-8 h-8" />
-      <p class="text-sm">Aucun véhicule trouvé</p>
+      <component :is="vueArchives ? Archive : Truck" class="w-8 h-8" />
+      <p class="text-sm">
+        {{ vueArchives ? 'Aucun véhicule sorti du parc' : 'Aucun véhicule trouvé' }}
+      </p>
     </template>
 
     <ImportParcModal
@@ -151,7 +203,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { AlertTriangle, Plus, Truck, Upload, Wrench } from 'lucide-vue-next'
+import { AlertTriangle, Archive, Link2, Plus, Truck, Undo2, Upload } from 'lucide-vue-next'
 import { ListPageLayout } from '../../components'
 import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
 import VehiculeCard from '../../components/fleet/VehiculeCard.vue'
@@ -159,10 +211,18 @@ import ImportParcModal from '../../components/fleet/ImportParcModal.vue'
 import VehiculeFormModal from '../../components/fleet/VehiculeFormModal.vue'
 import { useVehiculesStore } from '../../stores/vehicules'
 import type { Vehicule, StatutAdminVehicule } from '../../types'
+import { LIB_MOTIF_SORTIE } from '../../types'
+import { fmtDate } from '../../lib/fmsUtils'
 import * as L from '../../lib/listClasses'
 
 const store    = useVehiculesStore()
 const showForm = ref(false)
+
+/* US 2.1.5 - un véhicule sorti du parc quitte la liste courante.
+   Le sélecteur Statut « Archivés » est le seul chemin qui les ramène :
+   sans cette bascule, un camion vendu resterait mêlé au parc actif et
+   fausserait chaque total affiché à l'écran. */
+const vueArchives = computed(() => filterStatut.value === 'archive')
 const selectedId   = ref<string | null>(null)
 const importOuvert = ref(false)
 
@@ -182,25 +242,40 @@ const scopeOptions = [
 ]
 
 const sites = computed(() => {
-  const s = new Set(store.vehicules.map(v => v.siteAffectation).filter(Boolean) as string[])
+  const s = new Set(store.auParc.map(v => v.siteAffectation).filter(Boolean) as string[])
   return [...s].sort()
 })
 
+/* Les indicateurs portent sur le parc courant : compter un camion vendu
+   dans le total du parc gonflerait la flotte d'un véhicule qui n'existe plus. */
 const kpis = computed(() => [
-  { label: 'Total',        value: store.vehicules.length,                                                                                      icon: Truck,         bg: 'bg-primary/10',    iconColor: 'text-primary'   },
-  { label: 'Tracteurs',   value: store.tracteurs.length,                                                                                       icon: Truck,         bg: 'bg-blue-50',       iconColor: 'text-blue-600'  },
-  { label: 'Remorques',   value: store.remorques.length,                                                                                       icon: Truck,         bg: 'bg-purple-50',     iconColor: 'text-purple-600' },
-  { label: 'Immobilisés', value: store.vehicules.filter(v => v.statutAdmin === 'hors_service' || v.statutAdmin === 'en_reparation').length,     icon: AlertTriangle, bg: 'bg-danger-bg',     iconColor: 'text-danger'    },
+  { label: 'Parc courant', value: store.auParc.length,   icon: Truck,         bg: 'bg-primary/10', iconColor: 'text-primary'    },
+  { label: 'Tracteurs',    value: store.tracteurs.length, icon: Truck,         bg: 'bg-blue-50',    iconColor: 'text-blue-600'   },
+  { label: 'Remorques',    value: store.remorques.length, icon: Truck,         bg: 'bg-purple-50',  iconColor: 'text-purple-600' },
+  { label: 'Immobilisés',  value: store.auParc.filter(v => v.statutAdmin === 'hors_service' || v.statutAdmin === 'en_reparation').length,
+    icon: AlertTriangle, bg: 'bg-danger-bg', iconColor: 'text-danger' },
 ])
 
-const columns = computed<ListColumn[]>(() => [
-  { key: 'plaque',       label: 'Plaque',          sortable: true, width: 130 },
-  { key: 'typeVehicule', label: 'Type',             width: 110 },
-  { key: 'marque',       label: 'Marque / Modèle', width: 200 },
-  { key: 'statutAdmin',  label: 'Statut',          sortable: true, width: 140 },
-  { key: 'lien',         label: 'Lié à',           width: 160 },
-  { key: 'site',         label: 'Site',             width: 150 },
-])
+const sousTitre = computed(() => {
+  const base = `${store.auParc.length} véhicule(s) au parc · tracteurs & remorques`
+  return store.archives.length ? `${base} · ${store.archives.length} sorti(s) du parc` : base
+})
+
+const columns = computed<ListColumn[]>(() => {
+  const base: ListColumn[] = [
+    { key: 'plaque',       label: 'Véhicule',        sortable: true, width: 150 },
+    { key: 'typeVehicule', label: 'Type',            width: 110 },
+    { key: 'marque',       label: 'Marque / Modèle', width: 190 },
+    { key: 'statutAdmin',  label: 'Statut',          sortable: true, width: 130 },
+  ]
+  /* La colonne Sortie remplace Chauffeur en vue archives : un véhicule
+     sorti n'a plus de chauffeur, mais il a un motif de sortie. */
+  return vueArchives.value
+    ? [...base, { key: 'sortie', label: 'Sortie du parc', width: 180 },
+                { key: 'site',   label: 'Dernier site',   width: 140 }]
+    : [...base, { key: 'chauffeur', label: 'Chauffeur', width: 170 },
+                { key: 'site',      label: 'Site',       width: 140 }]
+})
 
 watch([activeScope, filterStatut, filterSite, searchQuery, pageSize], () => { page.value = 1 })
 
@@ -214,6 +289,11 @@ function resetFilters() {
 
 const filtered = computed(() => {
   let rows = store.vehicules.filter(v => {
+    /* Le point du critère : hors sélection explicite de « Archivés »,
+       un véhicule sorti du parc n'apparaît nulle part. */
+    const estArchive = v.statutAdmin === 'archive'
+    if (vueArchives.value ? !estArchive : estArchive) return false
+
     if (activeScope.value  && v.typeVehicule !== activeScope.value)   return false
     if (filterStatut.value && v.statutAdmin  !== filterStatut.value)  return false
     if (filterSite.value   && v.siteAffectation !== filterSite.value) return false
@@ -240,6 +320,12 @@ const pageItems  = computed(() => {
 })
 
 function openCard(id: string) { selectedId.value = id }
+
+/** Réintègre un véhicule sorti par erreur - US 2.1.5. */
+function reintegrer(id: string) {
+  const res = store.reintegrer(id)
+  if ('erreur' in res) alert(res.erreur)
+}
 
 const STATUT_MAP: Record<StatutAdminVehicule, { label: string; cls: string }> = {
   en_service:    { label: 'En service',    cls: 'bg-success-bg text-success' },

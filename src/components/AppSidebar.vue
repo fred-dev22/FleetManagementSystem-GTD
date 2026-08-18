@@ -105,6 +105,7 @@
 
   <SidebarSection label="Paramétrage">
     <SidebarItem :icon="ClipboardList"  label="Plans d'entretien" :to="{ name: 'maintenance-plans' }" />
+    <SidebarItem :icon="Settings"       label="Paramètres atelier" :to="{ name: 'maintenance-parametres' }" />
   </SidebarSection>
 </template>
 
