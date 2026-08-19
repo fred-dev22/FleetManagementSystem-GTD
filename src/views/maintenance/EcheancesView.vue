@@ -3,6 +3,7 @@
     title="Échéances préventives"
     :subtitle="`${depassees} échéance(s) dépassée(s) · ${proches} proche(s) du seuil`"
     :columns="columns"
+    row-key="cle"
     :items="pageItems"
     :total="totalCount"
     :total-text="`${totalCount} échéance(s)`"
@@ -18,6 +19,20 @@
     @reset-filters="resetFilters"
   >
     <template #above-table>
+      <!-- Un plan provisoire produit de vraies alertes : le dire, sinon
+           l'exploitant prend une estimation pour une donnée constructeur. -->
+      <div v-if="modelesProvisoires.length"
+        class="flex items-start gap-2.5 bg-warning-bg text-warning rounded-lg px-3.5 py-2.5 mb-3.5">
+        <FileQuestion class="w-4 h-4 shrink-0 mt-px" />
+        <p class="text-xs leading-relaxed">
+          {{ modelesProvisoires.length }} plan(s) d’entretien sont provisoires :
+          {{ modelesProvisoires.join(' · ') }}. Leurs intervalles reprennent les usages
+          du segment, faute de carnet constructeur transmis. Les échéances qui en découlent
+          sont réelles et doivent être traitées, mais les intervalles restent à confirmer
+          par GTD dans Paramétrage → Plans d’entretien.
+        </p>
+      </div>
+
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-3.5">
         <div v-for="k in kpis" :key="k.label"
           class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3">
@@ -87,6 +102,11 @@
           class="bg-danger-bg text-danger rounded-md px-2.5 py-2 text-[11px] leading-snug">
           Échéance dépassée. Programmer l’intervention en priorité pour éviter une panne.
         </div>
+
+        <div v-if="planProvisoire(item.vehiculeId)"
+          class="bg-warning-bg text-warning rounded-md px-2.5 py-2 text-[11px] leading-snug">
+          Intervalle provisoire. {{ planProvisoire(item.vehiculeId)?.source }}
+        </div>
       </div>
     </template>
 
@@ -98,6 +118,8 @@
 </template>
 
 <script setup lang="ts">
+/* row-key="cle" : Une échéance n'a pas d'identifiant propre : elle se désigne par le couple
+   véhicule + opération, assemblé dans `cle`. */
 /**
  * US 3.1.2 - Échéances préventives.
  *
@@ -105,7 +127,7 @@
  * ou date, selon le plan d'entretien du constructeur.
  */
 import { ref, computed, watch } from 'vue'
-import { CalendarClock } from 'lucide-vue-next'
+import { CalendarClock, FileQuestion } from 'lucide-vue-next'
 import { ListPageLayout } from '../../components'
 import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
 import { useMaintenanceStore } from '../../stores/maintenance'
@@ -142,11 +164,34 @@ const scopeOptions = [
 ]
 
 /** Échéances calculées pour tous les tracteurs dont le kilométrage est connu. */
-const echeances = computed<EcheanceEntretien[]>(() =>
+/** Une échéance enrichie de sa clé de ligne. */
+type EcheanceListee = EcheanceEntretien & { cle: string }
+
+const echeances = computed<EcheanceListee[]>(() =>
   vehicules.auParc
     .filter(v => v.typeVehicule === 'tracteur' && v.kilometrage != null)
-    .flatMap(v => store.echeancesDuVehicule(v.id, v.plaque, v.modele, v.kilometrage ?? 0, {}))
-    .sort((a, b) => (a.kmRestants ?? 0) - (b.kmRestants ?? 0)))
+    .flatMap(v => {
+      const p = store.passagesDe(v.id)
+      return store.echeancesDuVehicule(v.id, v.plaque, v.modele, v.kilometrage ?? 0, p.km, p.dates)
+    })
+    .map(e => ({ ...e, cle: `${e.vehiculeId}-${e.operationId}` }))
+    .sort((a, b) => (a.kmRestants ?? Infinity) - (b.kmRestants ?? Infinity)))
+
+/** Plan appliqué à un véhicule, s'il est provisoire. */
+function planProvisoire(vehiculeId: string) {
+  const v = vehicules.getById(vehiculeId)
+  const plan = v?.modele ? store.planDuModele(v.modele) : undefined
+  return plan?.provisoire ? plan : null
+}
+
+/** Modèles du parc dont le plan reste à confirmer. */
+const modelesProvisoires = computed(() => {
+  const modeles = new Set(
+    vehicules.auParc
+      .filter(v => v.modele && store.planDuModele(v.modele)?.provisoire)
+      .map(v => `${v.marque ?? ''} ${v.modele}`.trim()))
+  return [...modeles]
+})
 
 const depassees = computed(() => echeances.value.filter(e => e.statut === 'depassee').length)
 const proches   = computed(() => echeances.value.filter(e => e.statut === 'proche').length)

@@ -3,6 +3,7 @@
     title="État de flotte"
     :subtitle="sousTitre"
     :columns="columns"
+    row-key="vehiculeId"
     :items="pageItems"
     :total="totalCount"
     :total-text="`${totalCount} véhicule(s)`"
@@ -227,6 +228,9 @@
 </template>
 
 <script setup lang="ts">
+/* row-key="vehiculeId" : LigneEtatFlotte n'a pas de champ id : sans clé explicite, toutes les lignes
+   sont indistinguables, la sélection porte sur le tableau entier et l'aperçu
+   affiche toujours le premier véhicule. */
 /**
  * US 2.2.4 - État de flotte quotidien.
  *

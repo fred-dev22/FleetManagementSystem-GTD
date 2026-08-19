@@ -376,7 +376,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import CardModalShell from '../shared/CardModalShell.vue'
 import FormSection    from '../ui/form-field/FormSection.vue'
 import { useVehiculesStore } from '../../stores/vehicules'
@@ -428,8 +428,32 @@ const isEditMode = ref(false)
 const saving     = ref(false)
 const form       = reactive({ ...props.vehicule })
 
+/**
+ * Resynchronise le brouillon quand le véhicule change en dehors du
+ * formulaire : sortie du parc, réintégration, attelage.
+ *
+ * Sans cela, archiver un véhicule laissait `form` sur l'ancien statut.
+ * La fiche se croyait modifiée, réclamait un enregistrement à la
+ * fermeture, et « Enregistrer » réécrivait l'ancien statut par-dessus
+ * l'archivage : le bouton semblait ne rien faire alors qu'il annulait
+ * silencieusement l'opération qui venait d'être confirmée.
+ *
+ * La resynchronisation est suspendue en mode édition, sinon la saisie
+ * en cours serait écrasée à chaque changement du store.
+ */
+watch(item, v => {
+  if (isEditMode.value) return
+  Object.assign(form, v)
+}, { deep: true })
+
+/**
+ * Hors mode édition, il n'y a rien à enregistrer : l'utilisateur n'a
+ * pas ouvert le formulaire. La garde de fermeture ne doit donc pas se
+ * déclencher, même si le brouillon diffère momentanément du store.
+ */
 const isDirty = computed(() =>
-  (Object.keys(form) as (keyof Vehicule)[]).some(k => (form as any)[k] !== (item.value as any)[k])
+  isEditMode.value
+  && (Object.keys(form) as (keyof Vehicule)[]).some(k => (form as any)[k] !== (item.value as any)[k])
 )
 
 const cls = {
@@ -480,11 +504,17 @@ function confirmerSortie() {
     return
   }
   sortieOuverte.value = false
+  /* Le mode édition est refermé avant la resynchronisation, sans quoi le
+     watch se met en pause et le brouillon reste sur l'ancien statut. */
+  isEditMode.value = false
+  Object.assign(form, item.value)
 }
 
 function reintegrer() {
   const res = store.reintegrer(item.value.id)
-  if ('erreur' in res) erreurSortie.value = res.erreur
+  if ('erreur' in res) { erreurSortie.value = res.erreur; return }
+  isEditMode.value = false
+  Object.assign(form, item.value)
 }
 
 function handleSave() {

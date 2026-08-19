@@ -253,7 +253,7 @@ import { useRoute } from 'vue-router'
 import { Fuel, Upload, Coins, Gauge, AlertTriangle, Ticket } from 'lucide-vue-next'
 import { ListPageLayout } from '../../components'
 import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
-import RechargeCard from '../../components/fleet/Rechargecard.vue'
+import RechargeCard from '../../components/fleet/RechargeCard.vue'
 import { useCarburantStore, LIB_CANAL } from '../../stores/carburant'
 import type { ControleVraisemblance, CanalRecharge, StatutRecharge } from '../../types/fms'
 

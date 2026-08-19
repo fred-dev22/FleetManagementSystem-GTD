@@ -274,8 +274,21 @@ export const LIB_COMPETENCE: Record<CompetenceAtelier, string> = {
      3. coût d'immobilisation/jour → valorisation des jours perdus
    ══════════════════════════════════════════════════════════════ */
 
+/**
+ * D'où vient une valeur de paramétrage.
+ *
+ * `simulation` : valeur de départ posée pour que les indicateurs soient
+ * démontrables. Elle produit de vrais calculs et doit donc être signalée
+ * partout où elle sert, sans quoi un chiffre simulé passerait pour une
+ * mesure. `client` : valeur saisie par GTD, elle fait foi.
+ */
+export type OrigineValeur = 'simulation' | 'client'
+
 /** Capacité de l'atelier : postes de travail et heures d'ouverture. */
 export interface CapaciteAtelier {
+  origine: OrigineValeur
+  /** D'où sort la valeur de simulation, pour que le client puisse la juger */
+  justification?: string
   /** Garage concerné - Andoharanofotsy pour GTD */
   site: string
   /** Nombre de postes de travail pouvant accueillir un camion en parallèle */
@@ -292,6 +305,8 @@ export interface CapaciteAtelier {
  * compétences de l'atelier peuvent être renseignées séparément.
  */
 export interface TarifMainOeuvre {
+  origine: OrigineValeur
+  justification?: string
   /** Tarif appliqué à défaut de tarif par spécialité */
   tarifUniqueAr: number | null
   /** Tarif par spécialité, quand il diffère du tarif unique */
@@ -304,6 +319,8 @@ export interface TarifMainOeuvre {
  * tracteur et citerne sont distingués.
  */
 export interface CoutImmobilisation {
+  origine: OrigineValeur
+  justification?: string
   /** Moyenne tous véhicules confondus */
   moyenJourAr: number | null
   /** Par type de véhicule, quand la moyenne ne suffit pas */
@@ -421,6 +438,15 @@ export interface PlanEntretien {
   marque: string
   operations: OperationEntretien[]
   actif: boolean
+  /**
+   * Un plan provisoire n'a pas été transmis par le constructeur : il a été
+   * saisi pour que les échéances existent, sur la base des intervalles
+   * courants du segment. Il déclenche de vraies alertes, il est donc
+   * signalé partout où il sert et attend confirmation de GTD.
+   */
+  provisoire?: boolean
+  /** Origine des intervalles : carnet constructeur, usage du parc, estimation */
+  source?: string
 }
 
 /** Échéance calculée pour un véhicule donné - US 3.1.2. */

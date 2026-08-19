@@ -227,10 +227,32 @@ function cellAlign(col: ListColumn): string {
 }
 
 /* ── Sélection de ligne ─────────────────────────────────────── */
-function rowId(item: T): string | number { return item[props.rowKey] as string | number }
+/**
+ * Identifiant de ligne. Une ligne dont la clé vaut undefined rend toutes
+ * les lignes indistinguables : la sélection s'applique alors au tableau
+ * entier et l'aperçu affiche toujours la première ligne. Le défaut est
+ * silencieux à l'exécution, il est donc signalé en développement.
+ */
+function rowId(item: T): string | number {
+  const v = item[props.rowKey] as string | number | undefined
+  if (import.meta.env.DEV && v == null) {
+    console.warn(
+      `[ListPageLayout] Les lignes n'ont pas de propriété « ${props.rowKey} ». `
+      + `Passez row-key avec le nom d'un champ unique, sinon la sélection `
+      + `portera sur toutes les lignes à la fois.`,
+    )
+  }
+  return v as string | number
+}
 const selectedKey = ref<string | number | null>(null)
-const selectedItem = computed<T | null>(() => props.items.find(i => rowId(i) === selectedKey.value) ?? null)
-function isSelected(item: T): boolean { return selectedKey.value === rowId(item) }
+const selectedItem = computed<T | null>(() =>
+  selectedKey.value == null
+    ? null
+    : props.items.find(i => rowId(i) === selectedKey.value) ?? null)
+function isSelected(item: T): boolean {
+  const k = rowId(item)
+  return k != null && selectedKey.value === k
+}
 function selectRow(item: T) {
   selectedKey.value = rowId(item)
   emit('select', item)

@@ -27,12 +27,12 @@
         <p class="text-xs font-medium">
           {{ modelesSansPlan.length }} modèle(s) du parc sans plan d’entretien
         </p>
-        <p class="text-[11px] leading-relaxed mt-1">
+        <!-- <p class="text-[11px] leading-relaxed mt-1">
           Aucune échéance préventive n’est calculée pour ces véhicules : ils ne remonteront
           jamais dans l’écran Échéances, quel que soit leur kilométrage. Le plan constructeur
           de chaque modèle - liste des opérations, intervalle en kilomètres ou en mois, et
           nature de l’opération - reste à obtenir de GTD.
-        </p>
+        </p> -->
         <div class="flex flex-wrap gap-1.5 mt-2">
           <button
             v-for="m in modelesSansPlan" :key="m.modele"
@@ -165,12 +165,12 @@
           <AlertCircle class="w-3 h-3" /> {{ erreurs[plan.id] }}
         </p>
 
-        <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
+        <!-- <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
           Le déclenchement se fait au premier des deux seuils atteint, kilométrage ou date.
           Une opération doit porter au moins un intervalle, sinon elle ne déclenche rien.
           Le préavis d’alerte - {{ store.PREAVIS_KM.toLocaleString('fr-FR') }} km ou
           {{ store.PREAVIS_JOURS }} jours - se règle dans Flotte → Configuration, onglet Paramètres.
-        </p>
+        </p> -->
       </div>
 
       <div v-if="!store.plans.length" :class="L.card">

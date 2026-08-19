@@ -91,6 +91,7 @@
         <!-- Le coût réel de l'immobilisation, dès que le manque à gagner
              journalier est paramétré. C'est l'argument à présenter au client. -->
         <div v-if="store.coutIndispo(item) != null" class="bg-danger-bg rounded-md px-2.5 py-2">
+          <MentionSimulation groupe="immobilisation" texte="coût journalier simulé" class="mb-1" />
           <p class="text-base font-bold leading-none text-danger">{{ fmtAr(store.coutIndispo(item)!) }}</p>
           <p class="text-[11px] text-danger/80 mt-1 leading-snug">
             {{ store.dureeIndispo(item) }} jour(s) × {{ fmtAr(store.coutJournalierDe(item)!) }} de manque
@@ -122,6 +123,7 @@ import { CalendarOff } from 'lucide-vue-next'
 import { ListPageLayout } from '../../components'
 import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
 import { useMaintenanceStore } from '../../stores/maintenance'
+import MentionSimulation from '../../components/maintenance/MentionSimulation.vue'
 import { LIB_FAMILLE_INDISPO, libelleDuCode } from '../../types/maintenance'
 import type { FamilleIndispo } from '../../types/maintenance'
 import { fmtDate, fmtAr } from '../../lib/fmsUtils'

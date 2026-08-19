@@ -194,7 +194,10 @@ const CLS_STATUT: Record<StatutOT, string> = {
 const echeancesDepassees = computed(() =>
   vehicules.auParc
     .filter(v => v.typeVehicule === 'tracteur' && v.kilometrage != null)
-    .flatMap(v => store.echeancesDuVehicule(v.id, v.plaque, v.modele, v.kilometrage ?? 0, {}))
+    .flatMap(v => {
+      const p = store.passagesDe(v.id)
+      return store.echeancesDuVehicule(v.id, v.plaque, v.modele, v.kilometrage ?? 0, p.km, p.dates)
+    })
     .filter(e => e.statut === 'depassee').length)
 
 /** Ordres sans diagnostic complet : leur clôture est impossible. */

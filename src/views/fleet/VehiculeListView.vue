@@ -19,11 +19,17 @@
     @open-card="(e) => openCard(e.id)"
   >
     <template #header-actions>
-      <button :class="L.btnOutline" @click="importOuvert = true">
+      <!-- Accès direct aux véhicules sortis : le sélecteur Statut y menait
+           déjà, mais rien ne signalait leur existence depuis la liste. -->
+      <button :class="L.btnOutline" @click="basculerArchives">
+        <component :is="vueArchives ? Truck : Archive" class="w-4 h-4" />
+        {{ vueArchives ? 'Revenir au parc' : `Archives (${store.archives.length})` }}
+      </button>
+      <button v-if="!vueArchives" :class="L.btnOutline" @click="importOuvert = true">
         <Upload class="w-4 h-4" />
         Importer le parc
       </button>
-      <button :class="L.btnPrimary" @click="showForm = true">
+      <button v-if="!vueArchives" :class="L.btnPrimary" @click="showForm = true">
         <Plus class="w-4 h-4" />
         Ajouter un véhicule
       </button>
@@ -320,6 +326,21 @@ const pageItems  = computed(() => {
 })
 
 function openCard(id: string) { selectedId.value = id }
+
+/**
+ * Bascule entre parc courant et véhicules sortis.
+ * Les autres filtres sont remis à zéro : un filtre « en réparation »
+ * conservé en vue archives ne renverrait jamais rien, et l'écran vide
+ * passerait pour un défaut.
+ */
+function basculerArchives() {
+  filterStatut.value = vueArchives.value ? '' : 'archive'
+  activeScope.value  = ''
+  filterSite.value   = ''
+  searchQuery.value  = ''
+  selectedId.value   = null
+  page.value = 1
+}
 
 /** Réintègre un véhicule sorti par erreur - US 2.1.5. */
 function reintegrer(id: string) {

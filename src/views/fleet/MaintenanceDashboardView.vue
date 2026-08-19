@@ -274,11 +274,12 @@ const CLS_FAMILLE: Record<FamilleIndispo, string> = {
 const echeances = computed<EcheanceEntretien[]>(() =>
   vehicules.auParc
     .filter(v => v.typeVehicule === 'tracteur' && v.kilometrage != null)
-    .flatMap(v => store.echeancesDuVehicule(
-      v.id, v.plaque, v.modele, v.kilometrage ?? 0,
-      // Dernier passage non historisé : on part du dernier multiple atteint
-      {},
-    ))
+    .flatMap(v => {
+      /* Le relevé des derniers passages est désormais tenu par le store :
+         sans lui, chaque opération repartait de zéro kilomètre. */
+      const p = store.passagesDe(v.id)
+      return store.echeancesDuVehicule(v.id, v.plaque, v.modele, v.kilometrage ?? 0, p.km, p.dates)
+    })
     .filter(e => e.statut !== 'a_venir' || (e.kmRestants ?? 0) < 5_000)
     .sort((a, b) => (a.kmRestants ?? 0) - (b.kmRestants ?? 0)))
 

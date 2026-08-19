@@ -29,23 +29,81 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
   /* ══════════════════════════════════════════════════════════
      Paramètres de l'atelier - les trois valeurs attendues de GTD
      ══════════════════════════════════════════════════════════ */
-  const parametresAtelier = ref<ParametresAtelier>({
+  /**
+   * Valeurs de départ. Elles ne remplacent pas les données de GTD : elles
+   * les précèdent, pour que les indicateurs existent avant leur arrivée.
+   *
+   * Chacune porte sa justification, affichée à l'écran, afin que le client
+   * puisse la juger et la corriger plutôt que de la découvrir en aval dans
+   * un chiffre qu'il ne saurait pas expliquer. Dès qu'il saisit sa propre
+   * valeur, l'origine bascule sur `client` et la mention disparaît.
+   *
+   * La capacité vient de l'exemple donné par GTD lui-même : « 3 postes,
+   * 8 heures par jour, du lundi au samedi ». Les deux montants sont
+   * reconstitués faute de chiffre transmis, et leur calcul est explicité.
+   */
+  const VALEURS_SIMULATION: ParametresAtelier = {
     capacite: {
       site: 'Andoharanofotsy',
-      postes: null,
-      heuresParJour: null,
-      joursOuvresParSemaine: 6,   // du lundi au samedi
+      postes: 3,
+      heuresParJour: 8,
+      joursOuvresParSemaine: 6,
+      origine: 'simulation',
+      justification: 'Exemple fourni par GTD : 3 postes, 8 heures par jour, du lundi au samedi.',
     },
     mainOeuvre: {
-      tarifUniqueAr: null,
+      tarifUniqueAr: 12_000,
       parCompetence: {},
+      origine: 'simulation',
+      justification:
+        'Reconstitué : coût mensuel chargé d’un mécanicien qualifié estimé à 1 200 000 Ar, '
+        + 'majoré de 40 % de charges, rapporté à 140 heures réellement productives par mois. '
+        + 'Soit environ 12 000 Ar l’heure. À remplacer par le coût réel de l’atelier.',
     },
     immobilisation: {
-      moyenJourAr: null,
+      moyenJourAr: 850_000,
       tracteurJourAr: null,
       citerneJourAr: null,
+      origine: 'simulation',
+      justification:
+        'Reconstitué : marge nette moyenne d’une rotation rapportée au nombre de jours '
+        + 'd’exploitation d’un ensemble tracteur-citerne. À remplacer par le manque à gagner '
+        + 'réel constaté par l’exploitation.',
     },
-  })
+  }
+
+  /* Copie profonde : les valeurs de simulation servent aussi de référence
+     pour la restauration, elles ne doivent pas être modifiées par l'édition. */
+  const copier = (v: ParametresAtelier): ParametresAtelier => JSON.parse(JSON.stringify(v))
+
+  const parametresAtelier = ref<ParametresAtelier>(copier(VALEURS_SIMULATION))
+
+  /** Groupes de paramètres, pour la bascule d'origine et la restauration. */
+  type GroupeParametre = 'capacite' | 'mainOeuvre' | 'immobilisation'
+
+  /**
+   * Marque un groupe comme saisi par le client.
+   * Appelé à chaque modification : une valeur touchée n'est plus une
+   * simulation, même si le client a retapé le même chiffre.
+   */
+  function marquerSaisiParClient(groupe: GroupeParametre) {
+    parametresAtelier.value[groupe].origine = 'client'
+    parametresAtelier.value[groupe].justification = undefined
+  }
+
+  /** Restaure les valeurs de départ d'un groupe. */
+  function restaurerSimulation(groupe: GroupeParametre) {
+    Object.assign(parametresAtelier.value[groupe], copier(VALEURS_SIMULATION)[groupe])
+  }
+
+  /** Vrai si l'indicateur repose encore sur une valeur non confirmée. */
+  const estSimule = (groupe: GroupeParametre) =>
+    parametresAtelier.value[groupe].origine === 'simulation'
+
+  /** Groupes encore en simulation, listés pour le rappel en tête d'écran. */
+  const groupesSimules = computed(() =>
+    (['capacite', 'mainOeuvre', 'immobilisation'] as GroupeParametre[])
+      .filter(g => parametresAtelier.value[g].origine === 'simulation'))
 
   function majParametresAtelier(data: Partial<ParametresAtelier>) {
     Object.assign(parametresAtelier.value, data)
@@ -127,6 +185,78 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
       travauxRealises: 'Vidange complète, remplacement des trois filtres, contrôle des niveaux et de la pression des pneumatiques.',
       clotureLe: '2026-07-24T15:30:00Z', cloturePar: 'Hery Ratsimba',
       coutPiecesAr: 1_215_000, kilometrage: 245_120,
+    },
+    /* ── Interventions en cours ────────────────────────────────
+       La charge de l'atelier n'était portée que par un seul ordre
+       ouvert, soit 6 h face à 144 h ouvrables : le taux d'occupation
+       ressortait à 4 %, arithmétiquement juste mais illisible en
+       démonstration. Ces cinq ordres portent la charge à un niveau
+       représentatif d'une semaine réelle, réparti sur les quatre
+       compétences de l'atelier.
+
+       Leurs relevés kilométriques encadrent ceux des ordres clos, ce
+       qui donne au coût au kilomètre une base de calcul cohérente.
+       ────────────────────────────────────────────────────────── */
+    {
+      id: 'OT-2026-0045', reference: 'OT-2026-0045',
+      vehiculeId: 'TRC-004', vehiculePlaque: 'MG-9023-TX',
+      origine: 'alerte_preventive', declarePar: 'Système',
+      declareLe: '2026-08-03T05:00:00Z',
+      symptome: 'Échéance dépassée : vidange moteur et filtres. Dernier passage à 350 000 km, compteur à 412 000.',
+      gravite: 'majeure', typeMaintenance: 'preventif',
+      sousSysteme: 'moteur', modeDefaillance: 'usure_excessive', causeRacine: 'maintenance_insuffisante',
+      diagnostiquePar: 'Hery Ratsimba', diagnostiqueLe: '2026-08-03T07:30:00Z',
+      statut: 'ouvert',
+      mecaniciens: ['Rakoto Andrianina'],
+      pieces: [],
+      temps: [{ id: 'TP-045', mecanicienNom: 'Rakoto Andrianina', heures: 3, date: '2026-08-04' }],
+      kilometrage: 412_000, dureeEstimeeH: 14, planifieeLe: '2026-08-05',
+    },
+    {
+      id: 'OT-2026-0044', reference: 'OT-2026-0044',
+      vehiculeId: 'REM-002', vehiculePlaque: 'MG-1101-TR',
+      origine: 'constat_garage', declarePar: 'Hery Ratsimba',
+      declareLe: '2026-08-02T08:10:00Z',
+      symptome: 'Soupape de sécurité de citerne dure à la manœuvre, tarage à contrôler avant le prochain chargement.',
+      gravite: 'majeure', typeMaintenance: 'correctif',
+      sousSysteme: 'citerne', modeDefaillance: 'blocage', causeRacine: 'environnement',
+      diagnostiquePar: 'Solofo Rabe', diagnostiqueLe: '2026-08-02T10:00:00Z',
+      statut: 'ouvert',
+      mecaniciens: ['Solofo Rabe'],
+      pieces: [],
+      temps: [{ id: 'TP-044', mecanicienNom: 'Solofo Rabe', heures: 2, date: '2026-08-03' }],
+      kilometrage: 0, dureeEstimeeH: 9, planifieeLe: '2026-08-06',
+    },
+    {
+      id: 'OT-2026-0043', reference: 'OT-2026-0043',
+      vehiculeId: 'TRC-002', vehiculePlaque: 'MG-3356-TX',
+      origine: 'remontee_chauffeur', declarePar: 'Fiona Mungroo',
+      declareLe: '2026-08-01T16:45:00Z',
+      symptome: 'Alternateur : voyant de charge intermittent au ralenti, batterie faible au démarrage à froid.',
+      gravite: 'majeure', typeMaintenance: 'correctif',
+      sousSysteme: 'electricite', modeDefaillance: 'defaillance_electrique',
+      causeRacine: 'fournisseur',
+      diagnostiquePar: 'Nirina Rasoa', diagnostiqueLe: '2026-08-02T09:00:00Z',
+      statut: 'ouvert',
+      mecaniciens: ['Nirina Rasoa'],
+      pieces: [],
+      temps: [{ id: 'TP-043', mecanicienNom: 'Nirina Rasoa', heures: 1.5, date: '2026-08-02' }],
+      kilometrage: 246_400, dureeEstimeeH: 7, planifieeLe: '2026-08-05',
+    },
+    {
+      id: 'OT-2026-0042', reference: 'OT-2026-0042',
+      vehiculeId: 'TRC-003', vehiculePlaque: 'MG-5671-TX',
+      origine: 'checklist', declarePar: 'Thierry Randriamanga',
+      declareLe: '2026-07-31T12:00:00Z',
+      symptome: 'Usure irrégulière du train avant relevée à la checklist, tirage à droite signalé par le chauffeur.',
+      gravite: 'mineure', typeMaintenance: 'correctif',
+      sousSysteme: 'direction_suspension', modeDefaillance: 'usure_excessive',
+      causeRacine: 'environnement',
+      statut: 'ouvert',
+      mecaniciens: [],
+      pieces: [],
+      temps: [],
+      kilometrage: 98_800, dureeEstimeeH: 5,
     },
     {
       id: 'OT-2026-0039', reference: 'OT-2026-0039',
@@ -366,8 +496,151 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
         { id: 'OP-07', libelle: 'Contrôle de la boîte de vitesses', sousSysteme: 'transmission',  nature: 'verifier',  intervalleKm: 45_000 },
         { id: 'OP-08', libelle: 'Liquide de refroidissement',       sousSysteme: 'refroidissement', nature: 'remplacer', intervalleJours: 730 },
       ],
+      source: 'Carnet constructeur transmis par GTD',
+    },
+
+    /* ── Plans provisoires ────────────────────────────────────
+       Le parc ne compte aucun SINOTRUCK : le seul plan transmis ne
+       s'appliquait donc à aucun véhicule, et l'écran Échéances restait
+       vide quel que soit le kilométrage.
+
+       Les cinq modèles réellement exploités reçoivent un plan bâti sur
+       les intervalles courants du segment tracteur routier. Ces plans
+       sont marqués `provisoire` : ils produisent de vraies échéances,
+       mais chaque écran qui s'en sert le signale, et ils seront
+       remplacés par les carnets constructeurs dès que GTD les fournira.
+       ────────────────────────────────────────────────────────── */
+    {
+      id: 'PE-002', marque: 'Volvo', modele: 'FH 460', actif: true, provisoire: true,
+      source: 'Intervalles courants du segment, à confirmer par le carnet Volvo',
+      operations: [
+        { id: 'OP-201', libelle: 'Vidange moteur et filtre à huile',   sousSysteme: 'moteur',            nature: 'remplacer', intervalleKm: 45_000, intervalleJours: 365 },
+        { id: 'OP-202', libelle: 'Filtre à carburant et séparateur',   sousSysteme: 'circuit_carburant', nature: 'remplacer', intervalleKm: 45_000 },
+        { id: 'OP-203', libelle: 'Filtre à air',                       sousSysteme: 'moteur',            nature: 'remplacer', intervalleKm: 90_000 },
+        { id: 'OP-204', libelle: 'Contrôle des garnitures de frein',   sousSysteme: 'freinage',          nature: 'verifier',  intervalleKm: 30_000 },
+        { id: 'OP-205', libelle: 'Graissage sellette et attelage',     sousSysteme: 'chassis_tolerie',   nature: 'lubrifier', intervalleKm: 20_000 },
+        { id: 'OP-206', libelle: 'Vidange boîte de vitesses',          sousSysteme: 'transmission',      nature: 'remplacer', intervalleKm: 240_000 },
+        { id: 'OP-207', libelle: 'Purge du dessiccateur d’air',        sousSysteme: 'circuit_air',       nature: 'verifier',  intervalleKm: 15_000 },
+      ],
+    },
+    {
+      id: 'PE-003', marque: 'Mercedes', modele: 'Actros 1845', actif: true, provisoire: true,
+      source: 'Intervalles courants du segment, à confirmer par le carnet Mercedes',
+      operations: [
+        { id: 'OP-301', libelle: 'Vidange moteur et filtre à huile',   sousSysteme: 'moteur',            nature: 'remplacer', intervalleKm: 60_000, intervalleJours: 365 },
+        { id: 'OP-302', libelle: 'Filtre à carburant',                 sousSysteme: 'circuit_carburant', nature: 'remplacer', intervalleKm: 60_000 },
+        { id: 'OP-303', libelle: 'Filtre à air',                       sousSysteme: 'moteur',            nature: 'remplacer', intervalleKm: 120_000 },
+        { id: 'OP-304', libelle: 'Contrôle du circuit de freinage',    sousSysteme: 'freinage',          nature: 'verifier',  intervalleKm: 30_000 },
+        { id: 'OP-305', libelle: 'Contrôle du système AdBlue',         sousSysteme: 'moteur',            nature: 'verifier',  intervalleKm: 60_000 },
+        { id: 'OP-306', libelle: 'Graissage sellette et attelage',     sousSysteme: 'chassis_tolerie',   nature: 'lubrifier', intervalleKm: 20_000 },
+      ],
+    },
+    {
+      id: 'PE-004', marque: 'MAN', modele: 'TGX 18.500', actif: true, provisoire: true,
+      source: 'Intervalles courants du segment, à confirmer par le carnet MAN',
+      operations: [
+        { id: 'OP-401', libelle: 'Vidange moteur et filtre à huile',   sousSysteme: 'moteur',            nature: 'remplacer', intervalleKm: 50_000, intervalleJours: 365 },
+        { id: 'OP-402', libelle: 'Filtre à carburant',                 sousSysteme: 'circuit_carburant', nature: 'remplacer', intervalleKm: 50_000 },
+        { id: 'OP-403', libelle: 'Contrôle des garnitures de frein',   sousSysteme: 'freinage',          nature: 'verifier',  intervalleKm: 30_000 },
+        { id: 'OP-404', libelle: 'Graissage sellette et attelage',     sousSysteme: 'chassis_tolerie',   nature: 'lubrifier', intervalleKm: 20_000 },
+        { id: 'OP-405', libelle: 'Liquide de refroidissement',         sousSysteme: 'refroidissement',   nature: 'remplacer', intervalleJours: 1_095 },
+      ],
+    },
+    {
+      id: 'PE-005', marque: 'Scania', modele: 'R 500', actif: true, provisoire: true,
+      source: 'Intervalles courants du segment, à confirmer par le carnet Scania',
+      operations: [
+        { id: 'OP-501', libelle: 'Vidange moteur et filtre à huile',   sousSysteme: 'moteur',            nature: 'remplacer', intervalleKm: 60_000, intervalleJours: 365 },
+        { id: 'OP-502', libelle: 'Filtre à carburant',                 sousSysteme: 'circuit_carburant', nature: 'remplacer', intervalleKm: 60_000 },
+        { id: 'OP-503', libelle: 'Contrôle des garnitures de frein',   sousSysteme: 'freinage',          nature: 'verifier',  intervalleKm: 30_000 },
+        { id: 'OP-504', libelle: 'Vidange du pont arrière',            sousSysteme: 'transmission',      nature: 'remplacer', intervalleKm: 200_000 },
+        { id: 'OP-505', libelle: 'Graissage sellette et attelage',     sousSysteme: 'chassis_tolerie',   nature: 'lubrifier', intervalleKm: 20_000 },
+        { id: 'OP-506', libelle: 'Purge du dessiccateur d’air',        sousSysteme: 'circuit_air',       nature: 'verifier',  intervalleKm: 15_000 },
+      ],
+    },
+    {
+      id: 'PE-006', marque: 'Scania', modele: 'R 450', actif: true, provisoire: true,
+      source: 'Intervalles courants du segment, à confirmer par le carnet Scania',
+      operations: [
+        { id: 'OP-601', libelle: 'Vidange moteur et filtre à huile',   sousSysteme: 'moteur',            nature: 'remplacer', intervalleKm: 60_000, intervalleJours: 365 },
+        { id: 'OP-602', libelle: 'Filtre à carburant',                 sousSysteme: 'circuit_carburant', nature: 'remplacer', intervalleKm: 60_000 },
+        { id: 'OP-603', libelle: 'Contrôle des garnitures de frein',   sousSysteme: 'freinage',          nature: 'verifier',  intervalleKm: 30_000 },
+        { id: 'OP-604', libelle: 'Graissage sellette et attelage',     sousSysteme: 'chassis_tolerie',   nature: 'lubrifier', intervalleKm: 20_000 },
+        { id: 'OP-605', libelle: 'Contrôle de la suspension pneumatique', sousSysteme: 'direction_suspension', nature: 'verifier', intervalleKm: 45_000 },
+      ],
     },
   ])
+
+  /* ══════════════════════════════════════════════════════════
+     Derniers passages à l'atelier - US 3.1.2
+     ══════════════════════════════════════════════════════════
+     Une échéance se calcule par rapport au dernier entretien réalisé.
+     Sans ce relevé, chaque opération partait de zéro kilomètre et
+     ressortait « dépassée de 380 000 km » sur un camion à 412 000 :
+     l'écran était inexploitable.
+
+     Chaque entrée associe une opération à son kilométrage et à sa date
+     de dernier passage. En production, ce relevé se déduit des ordres
+     de travail clos ; ici il est renseigné pour que les échéances
+     soient réalistes et couvrent les trois états.
+     ══════════════════════════════════════════════════════════ */
+  const derniersPassages = ref<Record<string, {
+    km: Record<string, number>
+    dates: Record<string, string>
+  }>>({
+    /* Volvo FH 460, 187 340 km : entretien à jour, deux seuils approchent */
+    'TRC-001': {
+      km: {
+        'OP-201': 150_000, 'OP-202': 150_000, 'OP-203': 120_000,
+        'OP-204': 165_000, 'OP-205': 172_000, 'OP-206': 0, 'OP-207': 180_000,
+      },
+      dates: { 'OP-201': '2025-11-14' },
+    },
+    /* Mercedes Actros, 245 780 km : vidange dépassée, à programmer */
+    'TRC-002': {
+      km: {
+        'OP-301': 180_000, 'OP-302': 180_000, 'OP-303': 120_000,
+        'OP-304': 220_000, 'OP-305': 200_000, 'OP-306': 232_000,
+      },
+      dates: { 'OP-301': '2025-04-02' },
+    },
+    /* MAN TGX, 98 450 km : le plus récent du parc, tout est à venir */
+    'TRC-003': {
+      km: { 'OP-401': 50_000, 'OP-402': 50_000, 'OP-403': 90_000, 'OP-404': 80_000 },
+      dates: { 'OP-401': '2026-02-20', 'OP-405': '2024-03-11' },
+    },
+    /* Scania R 500, 412 000 km : le plus ancien, trois échéances dépassées */
+    'TRC-004': {
+      km: {
+        'OP-501': 350_000, 'OP-502': 350_000, 'OP-503': 375_000,
+        'OP-504': 200_000, 'OP-505': 395_000, 'OP-506': 400_000,
+      },
+      dates: { 'OP-501': '2025-01-18' },
+    },
+    /* Scania R 450, 34 200 km : véhicule neuf, aucune échéance proche */
+    'TRC-005': {
+      km: { 'OP-601': 0, 'OP-602': 0, 'OP-603': 30_000, 'OP-604': 20_000, 'OP-605': 0 },
+      dates: { 'OP-601': '2026-05-30' },
+    },
+  })
+
+  /** Relevé des derniers passages d'un véhicule, vide s'il n'en a aucun. */
+  const passagesDe = (vehiculeId: string) =>
+    derniersPassages.value[vehiculeId] ?? { km: {}, dates: {} }
+
+  /**
+   * Enregistre un passage à l'atelier.
+   * Appelé à la clôture d'un ordre de travail préventif : l'échéance
+   * suivante se calcule à partir de ce relevé, pas de zéro.
+   */
+  function enregistrerPassage(
+    vehiculeId: string, operationId: string, km: number, date: string,
+  ) {
+    const e = derniersPassages.value[vehiculeId] ?? { km: {}, dates: {} }
+    e.km[operationId] = km
+    e.dates[operationId] = date
+    derniersPassages.value[vehiculeId] = e
+  }
 
   const planDuModele = (modele?: string) =>
     plans.value.find(p => p.actif && p.modele === modele)
@@ -667,6 +940,21 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
   })
 
   /**
+   * Échéances de tout le parc, plan et derniers passages appliqués.
+   * Les trois écrans qui les affichent - Échéances, Tableau de bord
+   * maintenance et Fiabilité - partagent ce calcul plutôt que d'en
+   * tenir chacun une copie qui dériverait.
+   */
+  function echeancesDuParc(
+    parc: { id: string; plaque: string; modele?: string; kilometrage?: number }[],
+  ): EcheanceEntretien[] {
+    return parc.flatMap(v => {
+      const p = passagesDe(v.id)
+      return echeancesDuVehicule(v.id, v.plaque, v.modele, v.kilometrage ?? 0, p.km, p.dates)
+    })
+  }
+
+  /**
    * US 3.5.2 - Coût de maintenance rapporté au kilomètre.
    * Agrège pièces, sous-traitance et main-d'œuvre dès que le tarif horaire
    * est paramétré. Sans tarif, le chiffre reste partiel et l'écran le dit.
@@ -675,6 +963,36 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     if (!kmParcourus) return null
     const cout = ordresDuVehicule(vehiculeId).reduce((s, o) => s + coutOT(o), 0)
     return Math.round(cout / kmParcourus)
+  }
+
+  /**
+   * Kilomètres parcourus sur la période couverte par les interventions.
+   *
+   * Le coût au kilomètre rapportait jusqu'ici le coût des interventions
+   * connues au kilométrage total du véhicule depuis sa mise en service.
+   * Les deux ne couvrent pas la même période : quelques mois d'un côté,
+   * toute la vie du camion de l'autre. Le résultat, quelques ariary par
+   * kilomètre, n'avait aucun sens.
+   *
+   * L'écart entre le premier et le dernier relevé porté par les ordres
+   * de travail donne la bonne base : c'est exactement la distance
+   * parcourue pendant que ces coûts étaient engagés.
+   *
+   * @returns null si moins de deux relevés : un rapport n'aurait pas de base.
+   */
+  function kmSurPeriodeObservee(vehiculeId: string): number | null {
+    const releves = ordresDuVehicule(vehiculeId)
+      .map(o => o.kilometrage)
+      .filter((k): k is number => k != null)
+    if (releves.length < 2) return null
+    const ecart = Math.max(...releves) - Math.min(...releves)
+    return ecart > 0 ? ecart : null
+  }
+
+  /** Coût au kilomètre sur la période observée, ou null si elle est trop courte. */
+  function coutParKmObserve(vehiculeId: string): number | null {
+    const km = kmSurPeriodeObservee(vehiculeId)
+    return km ? coutParKm(vehiculeId, km) : null
   }
 
   /**
@@ -892,6 +1210,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     joursPerdusParFamille, ratioHumainTechnique,
     coutIndispo, coutJournalierDe, coutParFamille, coutTotalImmobilisations,
     plans, getPlan, planDuModele, echeancesDuVehicule, PREAVIS_KM, PREAVIS_JOURS,
+    derniersPassages, passagesDe, enregistrerPassage, echeancesDuParc,
     creerPlan, majPlan, basculerPlanActif, supprimerPlan, dupliquerPlan,
     ajouterOperation, majOperation, supprimerOperation,
     interventionsMobiles, mobilesEnCours,
@@ -900,10 +1219,12 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     nonAffectees, chargeTotaleH, tauxOccupation, tauxOccupationSemaine,
     joursPourAbsorberCharge, planifier,
     parametresAtelier, majParametresAtelier, capaciteRenseignee,
+    VALEURS_SIMULATION, marquerSaisiParClient, restaurerSimulation,
+    estSimule, groupesSimules,
     capaciteHeuresParJour, capaciteHeuresParSemaine,
     tarifRenseigne, coutImmoRenseigne, coutMainOeuvreTotal,
     mtbfParSousSysteme, tauxDisponibilite, tauxRealisationPreventif,
-    coutParKm, coutCumuleParVehicule, piecesProbables, validerCloture,
+    coutParKm, coutParKmObserve, kmSurPeriodeObservee, coutCumuleParVehicule, piecesProbables, validerCloture,
     creerOT, diagnostiquer, ajouterPiece, ajouterPanne, cloturer,
   }
 })

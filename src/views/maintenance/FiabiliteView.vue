@@ -85,10 +85,10 @@
           </tbody>
         </table>
 
-        <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
+        <!-- <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
           Le MTBF est exprimé en kilomètres : GTD ne relève pas d’heures de fonctionnement moteur.
           La cible du ratio préventif est de 60 % au cahier des charges.
-        </p>
+        </p> -->
       </div>
 
       <div :class="L.card">
@@ -143,8 +143,11 @@
       <div :class="L.card">
         <div :class="L.cardHeader">
           <h2 :class="L.cardTitle"><CalendarOff class="w-4 h-4 text-primary" /> Jours perdus par cause</h2>
-          <span v-if="store.coutTotalImmobilisations != null" class="text-[11px] font-semibold text-danger">
-            {{ fmtAr(store.coutTotalImmobilisations) }}
+          <span class="flex items-center gap-2">
+            <MentionSimulation groupe="immobilisation" texte="coût simulé" />
+            <span v-if="store.coutTotalImmobilisations != null" class="text-[11px] font-semibold text-danger">
+              {{ fmtAr(store.coutTotalImmobilisations) }}
+            </span>
           </span>
         </div>
         <div class="flex flex-col gap-2.5">
@@ -184,8 +187,11 @@
     <div v-else-if="onglet === 'couts'" :class="L.card">
       <div :class="L.cardHeader">
         <h2 :class="L.cardTitle"><Coins class="w-4 h-4 text-primary" /> Coûts par ordre de travail</h2>
-        <span class="text-[11px] text-muted-foreground">
-          {{ store.tarifRenseigne ? 'pièces, sous-traitance et main-d’œuvre' : 'pièces et sous-traitance' }}
+        <span class="flex items-center gap-2">
+          <MentionSimulation groupe="mainOeuvre" texte="tarif horaire simulé" />
+          <span class="text-[11px] text-muted-foreground">
+            {{ store.tarifRenseigne ? 'pièces, sous-traitance et main-d’œuvre' : 'pièces et sous-traitance' }}
+          </span>
         </span>
       </div>
 
@@ -302,6 +308,7 @@ import {
   Gauge, AlertTriangle, CalendarOff, Coins, FileQuestion,
 } from 'lucide-vue-next'
 import { useMaintenanceStore } from '../../stores/maintenance'
+import MentionSimulation from '../../components/maintenance/MentionSimulation.vue'
 import { useVehiculesStore } from '../../stores/vehicules'
 import {
   LIB_SOUS_SYSTEME, LIB_TYPE_MAINTENANCE, LIB_FAMILLE_INDISPO,
@@ -340,9 +347,12 @@ const tauxDispo = computed(() =>
   store.tauxDisponibilite(vehicules.auParc.length))
 
 /** Coût au kilomètre d'un véhicule, à partir de son kilométrage réel. */
+/* Le dénominateur est la distance parcourue pendant la période des
+   interventions, pas le compteur du véhicule : rapporter des coûts de
+   quelques mois à un kilométrage de toute une vie donnait un chiffre
+   dix fois trop bas. */
 function coutKm(vehiculeId: string): number | null {
-  const v = vehicules.vehicules.find(x => x.id === vehiculeId)
-  return v?.kilometrage ? store.coutParKm(vehiculeId, v.kilometrage) : null
+  return store.coutParKmObserve(vehiculeId)
 }
 
 const maxPannes = computed(() =>

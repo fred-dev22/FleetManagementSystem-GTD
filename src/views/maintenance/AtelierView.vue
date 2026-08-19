@@ -27,9 +27,12 @@
     <div v-if="store.capaciteRenseignee" :class="L.card" class="mb-3.5">
       <div :class="L.cardHeader">
         <h2 :class="L.cardTitle"><Gauge class="w-4 h-4 text-primary" /> Taux d’occupation</h2>
-        <span class="text-[11px] text-muted-foreground">
-          {{ cap.postes }} poste(s) × {{ cap.heuresParJour }} h ×
-          {{ cap.joursOuvresParSemaine }} j = {{ store.capaciteHeuresParSemaine }} h par semaine
+        <span class="flex items-center gap-2">
+          <MentionSimulation groupe="capacite" texte="capacité simulée" />
+          <span class="text-[11px] text-muted-foreground">
+            {{ cap.postes }} poste(s) × {{ cap.heuresParJour }} h ×
+            {{ cap.joursOuvresParSemaine }} j = {{ store.capaciteHeuresParSemaine }} h par semaine
+          </span>
         </span>
       </div>
 
@@ -257,6 +260,7 @@ import {
   Users, Wrench, AlertTriangle, CalendarClock, Gauge, FileQuestion,
 } from 'lucide-vue-next'
 import { useMaintenanceStore } from '../../stores/maintenance'
+import MentionSimulation from '../../components/maintenance/MentionSimulation.vue'
 import { LIB_SOUS_SYSTEME, LIB_GRAVITE_OT, LIB_COMPETENCE } from '../../types/maintenance'
 import type { CompetenceAtelier } from '../../types/maintenance'
 import { fmtDate } from '../../lib/fmsUtils'
