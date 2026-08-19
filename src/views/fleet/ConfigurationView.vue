@@ -12,8 +12,9 @@
       <Info class="w-4 h-4 shrink-0 mt-px" />
       <p class="text-xs leading-relaxed">
         La page <strong>Conformité</strong> contient les écarts <strong>relevés</strong> - des faits.
-        Cette page contient les <strong>règles</strong> : les types d’écart, leurs gravités et leurs seuils.
-        Sans cette séparation, l’application afficherait des gravités que personne ne peut expliquer.
+        Cette page contient les <strong>règles</strong> qui les produisent : trajets de référence,
+        types d’écart, plans d’entretien et seuils. Tout ce qui est ici se crée et se modifie ici,
+        sans intervention technique.
       </p>
     </div>
 
@@ -32,8 +33,17 @@
     <!-- ══ TRAJETS DE RÉFÉRENCE ══════════════════════════════ -->
     <div v-if="onglet === 'trajets'" class="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-3.5 items-start">
       <div class="flex flex-col gap-2">
+        <button :class="L.btnPrimary" class="justify-center" @click="ouvrirNouveauTrajet">
+          <Plus class="w-4 h-4" /> Nouveau trajet de référence
+        </button>
+
+        <label class="flex items-center gap-2 text-[11px] text-muted-foreground px-1 py-1 cursor-pointer">
+          <input v-model="afficherArchives" type="checkbox" class="cursor-pointer" />
+          Afficher les trajets archivés
+        </label>
+
         <button
-          v-for="t in trajetsStore.trajets" :key="t.id"
+          v-for="t in trajetsAffiches" :key="t.id"
           class="text-left rounded-lg border px-3.5 py-3 cursor-pointer transition-colors"
           :class="trajetSel === t.id ? 'border-primary bg-primary/5' : 'border-border bg-card hover:bg-background'"
           @click="trajetSel = t.id"
@@ -57,7 +67,18 @@
       <div v-if="trajet" :class="L.card">
         <div :class="L.cardHeader">
           <h2 :class="L.cardTitle"><Route class="w-4 h-4 text-primary" /> {{ trajet.libelle }}</h2>
-          <span v-if="trajet.clientNom" class="text-[11px] text-muted-foreground">{{ trajet.clientNom }}</span>
+          <div class="flex items-center gap-2">
+            <span v-if="trajet.clientNom" class="text-[11px] text-muted-foreground">{{ trajet.clientNom }}</span>
+            <button :class="L.actView" @click="ouvrirEditionTrajet(trajet)">
+              <Pencil class="w-3 h-3" /> Modifier
+            </button>
+            <button v-if="trajet.statut === 'actif'" :class="L.actReject" @click="archiverTrajet(trajet.id)">
+              <Archive class="w-3 h-3" /> Archiver
+            </button>
+            <button v-else :class="L.actView" @click="trajetsStore.update(trajet.id, { statut: 'actif' })">
+              <Undo2 class="w-3 h-3" /> Réactiver
+            </button>
+          </div>
         </div>
 
         <FleetMap
@@ -76,20 +97,98 @@
             <th :class="L.th" class="cursor-default">Pause</th>
           </tr></thead>
           <tbody>
-            <tr v-for="e in trajet.etapes" :key="e.id" :class="L.rowHover">
+            <tr v-for="(e, i) in trajet.etapes" :key="e.id" :class="L.rowHover">
               <td :class="L.td"><span class="font-mono text-xs">{{ e.ordre }}</span></td>
               <td :class="L.td"><span class="text-xs font-medium">{{ e.siteNom }}</span></td>
-              <td :class="L.td"><span class="text-xs text-muted-foreground">{{ LIB_ROLE_ETAPE[e.role] }}</span></td>
-              <td :class="L.td"><span class="text-xs">{{ e.intervalleMin ? e.intervalleMin + ' min' : '-' }}</span></td>
-              <td :class="L.td"><span class="text-xs">{{ e.pausePrevueMin ? e.pausePrevueMin + ' min' : '-' }}</span></td>
+              <td :class="L.td">
+                <select
+                  :value="e.role" :class="F.fieldSelect" class="!h-[28px] !text-[11px] w-[130px]"
+                  @change="ev => majEtape(i, { role: (ev.target as HTMLSelectElement).value as RoleEtape })"
+                >
+                  <option v-for="(lib, r) in LIB_ROLE_ETAPE" :key="r" :value="r">{{ lib }}</option>
+                </select>
+              </td>
+              <td :class="L.td">
+                <input
+                  :value="e.intervalleMin ?? 0" type="number" min="0" step="15"
+                  :class="F.fieldInput" class="!h-[28px] !text-[11px] w-[80px]"
+                  @change="ev => majEtape(i, { intervalleMin: Number((ev.target as HTMLInputElement).value) })"
+                />
+              </td>
+              <td :class="L.td">
+                <input
+                  :value="e.pausePrevueMin ?? 0" type="number" min="0" step="15"
+                  :class="F.fieldInput" class="!h-[28px] !text-[11px] w-[80px]"
+                  @change="ev => majEtape(i, { pausePrevueMin: Number((ev.target as HTMLInputElement).value) })"
+                />
+              </td>
+              <td :class="L.td">
+                <div class="flex items-center gap-0.5">
+                  <button :class="L.tbIconBtn" :disabled="i === 0" title="Monter" @click="deplacerEtape(i, -1)">
+                    <ChevronUp class="w-3.5 h-3.5" />
+                  </button>
+                  <button :class="L.tbIconBtn" :disabled="i === trajet.etapes.length - 1" title="Descendre"
+                    @click="deplacerEtape(i, 1)">
+                    <ChevronDown class="w-3.5 h-3.5" />
+                  </button>
+                  <button :class="L.tbIconBtn" title="Retirer l’étape" @click="retirerEtape(i)">
+                    <X class="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
+
+        <!-- Ajout d'une étape : le trajet est une séquence de sites ordonnés,
+             jamais un itinéraire calculé - US 2.4.2. -->
+        <div class="flex flex-wrap items-end gap-2 mt-3">
+          <div :class="F.field" class="min-w-[240px]">
+            <label :class="F.fieldLabel">Ajouter un site à la séquence</label>
+            <select v-model="siteAAjouter" :class="F.fieldSelect" class="!h-[32px] !text-xs">
+              <option value="">Choisir un site…</option>
+              <option v-for="st in sitesDisponibles" :key="st.id" :value="st.id">
+                {{ st.nom }} ({{ st.code }})
+              </option>
+            </select>
+          </div>
+          <div :class="F.field" class="w-[150px]">
+            <label :class="F.fieldLabel">Rôle</label>
+            <select v-model="roleAAjouter" :class="F.fieldSelect" class="!h-[32px] !text-xs">
+              <option v-for="(lib, r) in LIB_ROLE_ETAPE" :key="r" :value="r">{{ lib }}</option>
+            </select>
+          </div>
+          <button :class="L.btnOutline" class="!h-[32px] !py-0" :disabled="!siteAAjouter" @click="ajouterEtape">
+            <Plus class="w-3.5 h-3.5" /> Ajouter
+          </button>
+          <p class="text-[11px] text-muted-foreground ml-auto">
+            {{ trajet.distanceEstimeeKm }} km · {{ fmtDuree(trajet.dureeEstimeeMin) }},
+            recalculés à chaque modification
+          </p>
+        </div>
+      </div>
+
+      <div v-else :class="L.card">
+        <div class="flex flex-col items-center gap-2 py-10 text-muted-foreground">
+          <Route class="w-8 h-8" />
+          <p class="text-sm">Aucun trajet sélectionné</p>
+          <p class="text-[11px]">Choisissez un trajet à gauche, ou créez-en un.</p>
+        </div>
       </div>
     </div>
 
     <!-- ══ TYPES D'ÉCART ═════════════════════════════════════ -->
     <div v-else-if="onglet === 'ecarts'" class="flex flex-col gap-3.5">
+      <div class="flex items-center justify-between gap-3">
+        <p class="text-[11px] text-muted-foreground leading-relaxed">
+          Un type inactif cesse de produire des écarts, sans effacer ceux déjà relevés :
+          l’historique reste explicable avec la règle qui l’a produit.
+        </p>
+        <button :class="L.btnPrimary" class="shrink-0" @click="ouvrirNouveauType">
+          <Plus class="w-4 h-4" /> Nouveau type d’écart
+        </button>
+      </div>
+
       <div v-for="(liste, cat) in configStore.parCategorie" :key="cat" :class="L.card">
         <div :class="L.cardHeader">
           <h2 :class="L.cardTitle">{{ LIB_CATEGORIE_ECART[cat] }}</h2>
@@ -102,6 +201,7 @@
             <th :class="L.th" class="cursor-default">Gravité</th>
             <th :class="L.th" class="cursor-default">Seuil</th>
             <th :class="L.th" class="cursor-default">Actif</th>
+            <th :class="L.th" class="cursor-default"></th>
           </tr></thead>
           <tbody>
             <tr v-for="t in liste" :key="t.id" :class="L.rowHover">
@@ -121,7 +221,14 @@
                 </select>
               </td>
               <td :class="L.td">
-                <span v-if="t.seuilValeur != null" class="text-xs">{{ t.seuilValeur }} {{ t.seuilUnite }}</span>
+                <div v-if="t.seuilValeur != null" class="flex items-center gap-1">
+                  <input
+                    :value="t.seuilValeur" type="number" step="1"
+                    :class="F.fieldInput" class="!h-[28px] !text-[11px] w-[70px]"
+                    @change="ev => configStore.majTypeEcart(t.id, { seuilValeur: Number((ev.target as HTMLInputElement).value) })"
+                  />
+                  <span class="text-[11px] text-muted-foreground">{{ t.seuilUnite }}</span>
+                </div>
                 <span v-else class="text-gray-300">-</span>
               </td>
               <td :class="L.td">
@@ -130,6 +237,11 @@
                   :class="t.actif ? 'bg-success-bg text-success' : 'bg-gray-100 text-gray-400'"
                   @click="configStore.basculerActif(t.id)"
                 >{{ t.actif ? 'Actif' : 'Inactif' }}</button>
+              </td>
+              <td :class="L.td">
+                <button :class="L.actView" @click="ouvrirEditionType(t)">
+                  <Pencil class="w-3 h-3" /> Modifier
+                </button>
               </td>
             </tr>
           </tbody>
@@ -144,6 +256,31 @@
          cinq échéances de 5 000 à 45 000 km.
          ═══════════════════════════════════════════════════════ -->
     <div v-else-if="onglet === 'entretien'" class="flex flex-col gap-3.5">
+      <!-- Les plans se créent et se modifient à un seul endroit. Dupliquer
+           l'éditeur ici ferait diverger les deux écrans à la première
+           évolution ; cette page en donne la lecture et y renvoie. -->
+      <div class="flex items-start gap-2.5 bg-info-bg text-info rounded-lg px-3.5 py-2.5">
+        <Info class="w-4 h-4 shrink-0 mt-px" />
+        <div class="flex-1 text-xs leading-relaxed">
+          Les plans d’entretien se créent, se dupliquent et se modifient dans
+          <strong>Maintenance → Paramétrage → Plans d’entretien</strong> : ajout d’opérations,
+          intervalles en kilomètres ou en jours, activation. Cette page en donne la lecture.
+        </div>
+        <RouterLink :to="{ name: 'maintenance-plans' }" :class="L.btnPrimary" class="shrink-0 no-underline">
+          <Wrench class="w-4 h-4" /> Modifier les plans
+        </RouterLink>
+      </div>
+
+      <div v-if="modelesSansPlan.length"
+        class="flex items-start gap-2.5 bg-warning-bg text-warning rounded-lg px-3.5 py-2.5">
+        <AlertCircle class="w-4 h-4 shrink-0 mt-px" />
+        <p class="text-xs leading-relaxed">
+          {{ modelesSansPlan.length }} modèle(s) du parc n’ont aucun plan :
+          {{ modelesSansPlan.join(' · ') }}. Aucune échéance préventive n’est calculée pour
+          leurs véhicules.
+        </p>
+      </div>
+
       <div v-for="plan in maintStore.plans" :key="plan.id" :class="L.card">
         <div :class="L.cardHeader">
           <h2 :class="L.cardTitle">
@@ -349,6 +486,111 @@
       </div>
     </div>
   </div>
+  <!-- ══ Trajet de référence : création et modification ═══════ -->
+  <div v-if="formTrajet" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+    @click.self="formTrajet = null">
+    <div class="bg-card rounded-lg border border-border shadow-lg w-full max-w-lg p-4">
+      <h3 class="text-sm font-semibold text-foreground mb-3">
+        {{ formTrajet.id ? 'Modifier le trajet' : 'Nouveau trajet de référence' }}
+      </h3>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div :class="F.field">
+          <label :class="F.fieldLabel">Code *</label>
+          <input v-model="formTrajet.code" type="text" :class="F.fieldInput" placeholder="TNR-TMV" />
+        </div>
+        <div :class="F.field">
+          <label :class="F.fieldLabel">Client</label>
+          <input v-model="formTrajet.clientNom" type="text" :class="F.fieldInput" placeholder="Facultatif" />
+        </div>
+        <div :class="F.field" class="col-span-2">
+          <label :class="F.fieldLabel">Libellé *</label>
+          <input v-model="formTrajet.libelle" type="text" :class="F.fieldInput"
+            placeholder="Antananarivo → Toamasina" />
+        </div>
+        <label class="col-span-2 flex items-center gap-2 text-xs text-foreground cursor-pointer">
+          <input v-model="formTrajet.recurrent" type="checkbox" class="cursor-pointer" />
+          Trajet récurrent, proposé par défaut à la création d’un voyage
+        </label>
+      </div>
+
+      <p v-if="erreurTrajet" :class="F.fieldError" class="mt-2">
+        <AlertCircle class="w-3 h-3" /> {{ erreurTrajet }}
+      </p>
+
+      <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
+        Les étapes se composent ensuite dans la fiche du trajet. Distance et durée sont
+        recalculées à chaque changement, jamais saisies.
+      </p>
+
+      <div class="flex justify-end gap-2 mt-4">
+        <button :class="F.btnOutline" @click="formTrajet = null">Annuler</button>
+        <button :class="F.btnPrimary" @click="enregistrerTrajet">
+          {{ formTrajet.id ? 'Enregistrer' : 'Créer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Type d'écart : création et modification ══════════════ -->
+  <div v-if="formType" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+    @click.self="formType = null">
+    <div class="bg-card rounded-lg border border-border shadow-lg w-full max-w-lg p-4">
+      <h3 class="text-sm font-semibold text-foreground mb-3">
+        {{ formType.id ? 'Modifier le type d’écart' : 'Nouveau type d’écart' }}
+      </h3>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div :class="F.field">
+          <label :class="F.fieldLabel">Code *</label>
+          <input v-model="formType.code" type="text" :class="F.fieldInput" placeholder="VOL-MANQ" />
+        </div>
+        <div :class="F.field">
+          <label :class="F.fieldLabel">Catégorie *</label>
+          <select v-model="formType.categorie" :class="F.fieldSelect">
+            <option v-for="(lib, c) in LIB_CATEGORIE_ECART" :key="c" :value="c">{{ lib }}</option>
+          </select>
+        </div>
+        <div :class="F.field" class="col-span-2">
+          <label :class="F.fieldLabel">Libellé *</label>
+          <input v-model="formType.libelle" type="text" :class="F.fieldInput" />
+        </div>
+        <div :class="F.field">
+          <label :class="F.fieldLabel">Gravité *</label>
+          <select v-model="formType.gravite" :class="F.fieldSelect">
+            <option value="mineur">Mineur</option>
+            <option value="majeur">Majeur</option>
+            <option value="critique">Critique</option>
+          </select>
+        </div>
+        <div :class="F.field">
+          <label :class="F.fieldLabel">Seuil et unité</label>
+          <div class="flex gap-2">
+            <input v-model.number="formType.seuilValeur" type="number" :class="F.fieldInput"
+              class="w-[90px]" placeholder="Valeur" />
+            <input v-model="formType.seuilUnite" type="text" :class="F.fieldInput"
+              placeholder="L, %, min…" />
+          </div>
+        </div>
+        <div :class="F.field" class="col-span-2">
+          <label :class="F.fieldLabel">Description</label>
+          <textarea v-model="formType.description" rows="2" :class="F.fieldInput"
+            placeholder="Ce que la règle constate, et à partir de quand." />
+        </div>
+      </div>
+
+      <p v-if="erreurType" :class="F.fieldError" class="mt-2">
+        <AlertCircle class="w-3 h-3" /> {{ erreurType }}
+      </p>
+
+      <div class="flex justify-end gap-2 mt-4">
+        <button :class="F.btnOutline" @click="formType = null">Annuler</button>
+        <button :class="F.btnPrimary" @click="enregistrerType">
+          {{ formType.id ? 'Enregistrer' : 'Créer' }}
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -358,14 +600,23 @@
  * réglages dispersés dans chaque écran.
  */
 import { ref, computed } from 'vue'
-import { Info, Route, Clock, SlidersHorizontal, Wrench, BellRing, AlertCircle } from 'lucide-vue-next'
+import {
+  Info, Route, Clock, SlidersHorizontal, Wrench, BellRing, AlertCircle,
+  Plus, Pencil, Archive, Undo2, ChevronUp, ChevronDown, X,
+} from 'lucide-vue-next'
+import { RouterLink } from 'vue-router'
 import FleetMap from '../../components/fleet/FleetMap.vue'
 import { useTrajetsStore } from '../../stores/trajets'
 import { useConfigurationStore } from '../../stores/configuration'
 import { useMaintenanceStore } from '../../stores/maintenance'
+import { useSitesStore } from '../../stores/sites'
+import { useVehiculesStore } from '../../stores/vehicules'
 import { LIB_SOUS_SYSTEME, LIB_NATURE_OPERATION } from '../../types/maintenance'
 import { LIB_ROLE_ETAPE, LIB_CATEGORIE_ECART } from '../../types/fms'
-import type { GraviteEcart, MapMarker } from '../../types/fms'
+import type {
+  GraviteEcart, MapMarker, RoleEtape, Trajet, EtapeTrajet,
+  TypeEcartConfig, CategorieEcart,
+} from '../../types/fms'
 import { fmtDuree } from '../../lib/fmsUtils'
 import * as L from '../../lib/listClasses'
 import * as F from '../../lib/formClasses'
@@ -373,6 +624,8 @@ import * as F from '../../lib/formClasses'
 const trajetsStore = useTrajetsStore()
 const configStore = useConfigurationStore()
 const maintStore  = useMaintenanceStore()
+const sitesStore  = useSitesStore()
+const vehStore    = useVehiculesStore()
 
 const onglet = ref<'trajets' | 'ecarts' | 'entretien' | 'parametres'>('trajets')
 const trajetSel = ref<string | null>(trajetsStore.trajets[0]?.id ?? null)
@@ -399,4 +652,218 @@ const p = configStore.parametres
 
 /** Bornes de saisie, affichées dans les messages d'erreur des seuils. */
 const B = configStore.BORNES_SEUILS
+/* ══════════════════════════════════════════════════════════════
+   Édition des données de référence
+   ══════════════════════════════════════════════════════════════
+   Les fonctions de création et de modification existaient dans les
+   stores depuis le début, mais aucun écran ne les appelait : on
+   pouvait consulter les règles, pas les définir. Elles sont ici.
+
+   Un principe : chaque règle se modifie à un seul endroit. Les plans
+   d'entretien s'éditent dans Maintenance → Paramétrage, cette page y
+   renvoie plutôt que de dupliquer l'éditeur, car deux éditeurs sur le
+   même objet divergent à la première évolution.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Trajets de référence ───────────────────────────────────── */
+
+const afficherArchives = ref(false)
+
+const trajetsAffiches = computed(() =>
+  afficherArchives.value
+    ? trajetsStore.trajets
+    : trajetsStore.trajets.filter(t => t.statut === 'actif'))
+
+interface FormTrajet {
+  id?: string
+  code: string
+  libelle: string
+  clientNom: string
+  recurrent: boolean
+}
+
+const formTrajet   = ref<FormTrajet | null>(null)
+const erreurTrajet = ref('')
+
+function ouvrirNouveauTrajet() {
+  erreurTrajet.value = ''
+  formTrajet.value = { code: '', libelle: '', clientNom: '', recurrent: true }
+}
+
+function ouvrirEditionTrajet(t: Trajet) {
+  erreurTrajet.value = ''
+  formTrajet.value = {
+    id: t.id, code: t.code, libelle: t.libelle,
+    clientNom: t.clientNom ?? '', recurrent: t.recurrent,
+  }
+}
+
+/** Un code en double rendrait deux trajets indiscernables dans les voyages. */
+function enregistrerTrajet() {
+  const f = formTrajet.value
+  if (!f) return
+  erreurTrajet.value = ''
+
+  if (!f.code.trim() || !f.libelle.trim()) {
+    erreurTrajet.value = 'Le code et le libellé sont obligatoires.'
+    return
+  }
+  const doublon = trajetsStore.trajets.some(
+    t => t.id !== f.id && t.code.trim().toUpperCase() === f.code.trim().toUpperCase())
+  if (doublon) {
+    erreurTrajet.value = `Le code ${f.code.trim().toUpperCase()} est déjà utilisé.`
+    return
+  }
+
+  const donnees = {
+    code: f.code.trim().toUpperCase(),
+    libelle: f.libelle.trim(),
+    clientNom: f.clientNom.trim() || undefined,
+    recurrent: f.recurrent,
+  }
+
+  if (f.id) {
+    trajetsStore.update(f.id, donnees)
+  } else {
+    trajetsStore.create({ ...donnees, etapes: [], statut: 'actif' })
+    trajetSel.value = trajetsStore.trajets[0]?.id ?? null
+  }
+  formTrajet.value = null
+}
+
+/** Archiver plutôt que supprimer : les voyages passés y font référence. */
+function archiverTrajet(id: string) {
+  trajetsStore.archiver(id)
+}
+
+/* ── Étapes du trajet sélectionné ───────────────────────────── */
+
+const siteAAjouter = ref('')
+const roleAAjouter = ref<RoleEtape>('livraison')
+
+/** Sites actifs, y compris ceux déjà présents : un aller-retour repasse
+ *  par le même dépôt, l'exclure interdirait de composer le retour. */
+const sitesDisponibles = computed(() =>
+  sitesStore.sitesActifs.filter(st => st.latitude != null && st.longitude != null))
+
+function ajouterEtape() {
+  const t = trajet.value
+  const site = sitesStore.getSiteById(siteAAjouter.value)
+  if (!t || !site) return
+  /* Les coordonnées sont facultatives sur un site mais indispensables à une
+     étape : sans elles, le trajet ne se trace pas et la distance ne se
+     calcule pas. Le site est écarté plutôt que d'entrer avec des zéros. */
+  if (site.latitude == null || site.longitude == null) return
+  const etape = trajetsStore.nouvelleEtape(
+    { id: site.id, nom: site.nom, latitude: site.latitude, longitude: site.longitude },
+    t.etapes.length + 1, roleAAjouter.value,
+  )
+  trajetsStore.update(t.id, { etapes: [...t.etapes, etape] })
+  siteAAjouter.value = ''
+}
+
+function majEtape(index: number, data: Partial<EtapeTrajet>) {
+  const t = trajet.value
+  if (!t) return
+  const etapes = t.etapes.map((e, i) => i === index ? { ...e, ...data } : e)
+  trajetsStore.update(t.id, { etapes })
+}
+
+function retirerEtape(index: number) {
+  const t = trajet.value
+  if (!t) return
+  trajetsStore.update(t.id, { etapes: t.etapes.filter((_, i) => i !== index) })
+}
+
+/** Le store renumérote et recalcule distance et durée à chaque écriture. */
+function deplacerEtape(index: number, sens: -1 | 1) {
+  const t = trajet.value
+  if (!t) return
+  const cible = index + sens
+  if (cible < 0 || cible >= t.etapes.length) return
+  const etapes = [...t.etapes]
+  const [deplacee] = etapes.splice(index, 1)
+  etapes.splice(cible, 0, deplacee!)
+  trajetsStore.update(t.id, { etapes })
+}
+
+/* ── Types d'écart ──────────────────────────────────────────── */
+
+interface FormType {
+  id?: string
+  code: string
+  libelle: string
+  categorie: CategorieEcart
+  gravite: GraviteEcart
+  seuilValeur: number | null
+  seuilUnite: string
+  description: string
+}
+
+const formType   = ref<FormType | null>(null)
+const erreurType = ref('')
+
+function ouvrirNouveauType() {
+  erreurType.value = ''
+  formType.value = {
+    code: '', libelle: '', categorie: 'itineraire', gravite: 'majeur',
+    seuilValeur: null, seuilUnite: '', description: '',
+  }
+}
+
+function ouvrirEditionType(t: TypeEcartConfig) {
+  erreurType.value = ''
+  formType.value = {
+    id: t.id, code: t.code, libelle: t.libelle, categorie: t.categorie,
+    gravite: t.gravite, seuilValeur: t.seuilValeur ?? null,
+    seuilUnite: t.seuilUnite ?? '', description: t.description ?? '',
+  }
+}
+
+function enregistrerType() {
+  const f = formType.value
+  if (!f) return
+  erreurType.value = ''
+
+  if (!f.code.trim() || !f.libelle.trim()) {
+    erreurType.value = 'Le code et le libellé sont obligatoires.'
+    return
+  }
+  const doublon = configStore.typesEcart.some(
+    t => t.id !== f.id && t.code.trim().toUpperCase() === f.code.trim().toUpperCase())
+  if (doublon) {
+    erreurType.value = `Le code ${f.code.trim().toUpperCase()} est déjà utilisé.`
+    return
+  }
+  /* Un seuil sans unité ne se lit pas : « 5 » ne dit ni litres ni pourcent. */
+  if (f.seuilValeur != null && !f.seuilUnite.trim()) {
+    erreurType.value = 'Un seuil doit porter son unité : litres, pourcent, minutes…'
+    return
+  }
+
+  const donnees = {
+    code: f.code.trim().toUpperCase(),
+    libelle: f.libelle.trim(),
+    categorie: f.categorie,
+    gravite: f.gravite,
+    seuilValeur: f.seuilValeur ?? undefined,
+    seuilUnite: f.seuilUnite.trim() || undefined,
+    description: f.description.trim() || undefined,
+  }
+
+  if (f.id) configStore.majTypeEcart(f.id, donnees)
+  else configStore.creerTypeEcart({ ...donnees, actif: true })
+  formType.value = null
+}
+
+/* ── Plans d'entretien : lecture seule, l'édition est ailleurs ── */
+
+const modelesSansPlan = computed(() => {
+  const avecPlan = new Set(maintStore.plans.map(p => p.modele.toLowerCase()))
+  const manquants = new Set(
+    vehStore.auParc
+      .filter(v => v.modele && !avecPlan.has(v.modele.toLowerCase()))
+      .map(v => `${v.marque ?? ''} ${v.modele}`.trim()))
+  return [...manquants]
+})
 </script>
