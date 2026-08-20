@@ -63,7 +63,7 @@ export const useVoyagesStore = defineStore('voyages', () => {
     {
       id: 'VOY-002', reference: 'VOY-2026-0149', numeroOT: 'GRT-2026-04418',
       statut: 'en_cours',
-      clientNom: 'Galana', toleranceCoulagePourMille: 1,
+      clientNom: 'Galana Distribution Pétrolière', toleranceCoulagePourMille: 1,
       trajetId: 'TRJ-001', trajetLibelle: 'Tamatave → Antananarivo (RN2 standard)', etapes: [],
       origine: 'Antananarivo', destination: 'Toamasina',
       vehiculeId: 'TRC-003', vehiculePlaque: 'MG-5671-TX',
@@ -86,7 +86,7 @@ export const useVoyagesStore = defineStore('voyages', () => {
     {
       id: 'VOY-003', reference: 'VOY-2026-0147', numeroOT: 'GRT-2026-04405',
       statut: 'cloture',
-      clientNom: 'Galana', toleranceCoulagePourMille: 1,
+      clientNom: 'Galana Distribution Pétrolière', toleranceCoulagePourMille: 1,
       trajetId: 'TRJ-002', trajetLibelle: 'Antananarivo → Mahajanga (RN4)', etapes: [],
       origine: 'Antananarivo', destination: 'Mahajanga',
       vehiculeId: 'TRC-002', vehiculePlaque: 'MG-3356-TX',
@@ -119,7 +119,7 @@ export const useVoyagesStore = defineStore('voyages', () => {
     {
       id: 'VOY-005', reference: 'VOY-2026-0146', numeroOT: 'GRT-2026-04390',
       statut: 'livre',
-      clientNom: 'Vivo Energy', toleranceCoulagePourMille: 1,
+      clientNom: 'Vivo Energy Madagascar', toleranceCoulagePourMille: 1,
       trajetId: 'TRJ-001', trajetLibelle: 'Tamatave → Antananarivo (RN2 standard)', etapes: [],
       origine: 'Antananarivo', destination: 'Toamasina',
       vehiculeId: 'TRC-004', vehiculePlaque: 'MG-4410-TX',

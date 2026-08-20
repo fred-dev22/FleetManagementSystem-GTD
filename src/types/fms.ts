@@ -213,6 +213,37 @@ export interface ArretReleve {
   motif?: string
 }
 
+/* ══════════════════════════════════════════════════════════════
+   Référentiel clients
+   ══════════════════════════════════════════════════════════════
+   Le nom du client était saisi librement, et la tolérance de coulage
+   retapée à chaque voyage depuis une liste codée en dur dans un seul
+   composant. Deux conséquences observées dans les données :
+
+     · « VIVO » et « Vivo Energy » désignaient le même client sous deux
+       orthographes, donc deux lignes distinctes dans tout regroupement ;
+     · un voyage dont le nom ne correspondait à aucune entrée de la liste
+       retombait sur la tolérance par défaut de 1 ‰, silencieusement.
+
+   La tolérance est contractuelle, elle appartient au client et non au
+   voyage. Un écart de 0,5 ‰ sur 30 000 litres, c'est 15 litres : de quoi
+   déclencher un litige à tort, ou en masquer un.
+   ══════════════════════════════════════════════════════════════ */
+
+export interface Client {
+  id: string
+  /** Code court, unique, employé dans les références et les exports */
+  code: string
+  nom: string
+  /** Tolérance de coulage contractuelle, en ‰ - LPSA 0,5 ‰, les autres 1 ‰ */
+  toleranceCoulagePourMille: number
+  contact?: string
+  telephone?: string
+  /** Un client inactif n'est plus proposé, sans effacer son historique */
+  actif: boolean
+  notes?: string
+}
+
 export interface Voyage {
   id: string
   reference: string                 // 'VOY-2026-0148'

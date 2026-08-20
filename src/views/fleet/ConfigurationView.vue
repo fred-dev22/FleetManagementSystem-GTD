@@ -13,8 +13,9 @@
       <p class="text-xs leading-relaxed">
         La page <strong>Conformité</strong> contient les écarts <strong>relevés</strong> - des faits.
         Cette page contient les <strong>règles</strong> qui les produisent : trajets de référence,
-        types d’écart, plans d’entretien et seuils. Tout ce qui est ici se crée et se modifie ici,
-        sans intervention technique.
+        clients, types d’écart et seuils d’alerte. Tout ce qui est ici se crée et se modifie ici,
+        sans intervention technique. Les plans d’entretien relèvent de la maintenance et se
+        gèrent dans <strong>Maintenance → Paramétrage</strong>.
       </p>
     </div>
 
@@ -249,87 +250,82 @@
       </div>
     </div>
 
-    <!-- ══ PARAMÈTRES ════════════════════════════════════════ -->
-    <!-- ═══════════════════════════════════════════════════════
-         US 3.1.1 - Plans d'entretien par modèle
-         Source : plan constructeur SINOTRUCK HOWO NX-400,
-         cinq échéances de 5 000 à 45 000 km.
+    <!-- ══ CLIENTS ═══════════════════════════════════════════
+         Le nom du client était saisi librement, et sa tolérance de
+         coulage vivait dans une constante d'un seul composant. Deux
+         orthographes du même client coexistaient dans les données.
          ═══════════════════════════════════════════════════════ -->
-    <div v-else-if="onglet === 'entretien'" class="flex flex-col gap-3.5">
-      <!-- Les plans se créent et se modifient à un seul endroit. Dupliquer
-           l'éditeur ici ferait diverger les deux écrans à la première
-           évolution ; cette page en donne la lecture et y renvoie. -->
-      <div class="flex items-start gap-2.5 bg-info-bg text-info rounded-lg px-3.5 py-2.5">
-        <Info class="w-4 h-4 shrink-0 mt-px" />
-        <div class="flex-1 text-xs leading-relaxed">
-          Les plans d’entretien se créent, se dupliquent et se modifient dans
-          <strong>Maintenance → Paramétrage → Plans d’entretien</strong> : ajout d’opérations,
-          intervalles en kilomètres ou en jours, activation. Cette page en donne la lecture.
-        </div>
-        <RouterLink :to="{ name: 'maintenance-plans' }" :class="L.btnPrimary" class="shrink-0 no-underline">
-          <Wrench class="w-4 h-4" /> Modifier les plans
-        </RouterLink>
+    <div v-else-if="onglet === 'clients'" class="flex flex-col gap-3.5">
+      <div class="flex items-center justify-between gap-3">
+        <p class="text-[11px] text-muted-foreground leading-relaxed">
+          La tolérance de coulage est contractuelle : elle appartient au client, pas au voyage.
+          Elle est recopiée dans chaque voyage à sa création, si bien qu’une renégociation
+          n’altère pas le coulage des voyages déjà clôturés.
+        </p>
+        <button :class="L.btnPrimary" class="shrink-0" @click="ouvrirNouveauClient">
+          <Plus class="w-4 h-4" /> Nouveau client
+        </button>
       </div>
 
-      <div v-if="modelesSansPlan.length"
+      <div v-if="clientsOrphelins.length"
         class="flex items-start gap-2.5 bg-warning-bg text-warning rounded-lg px-3.5 py-2.5">
         <AlertCircle class="w-4 h-4 shrink-0 mt-px" />
         <p class="text-xs leading-relaxed">
-          {{ modelesSansPlan.length }} modèle(s) du parc n’ont aucun plan :
-          {{ modelesSansPlan.join(' · ') }}. Aucune échéance préventive n’est calculée pour
-          leurs véhicules.
+          {{ clientsOrphelins.length }} nom(s) présents dans les voyages ou les trajets ne
+          correspondent à aucun client du référentiel : {{ clientsOrphelins.join(' · ') }}.
+          Ces voyages n’ont pas de tolérance contractuelle rattachée.
         </p>
       </div>
 
-      <div v-for="plan in maintStore.plans" :key="plan.id" :class="L.card">
-        <div :class="L.cardHeader">
-          <h2 :class="L.cardTitle">
-            <Wrench class="w-4 h-4 text-primary" /> {{ plan.marque }} {{ plan.modele }}
-          </h2>
-          <span class="text-[11px] font-medium px-2 py-0.5 rounded-full"
-            :class="plan.actif ? 'bg-success-bg text-success' : 'bg-gray-100 text-gray-400'">
-            {{ plan.actif ? 'Actif' : 'Inactif' }}
-          </span>
-        </div>
-
+      <div :class="L.card">
         <table :class="L.table">
           <thead><tr>
-            <th :class="L.th" class="cursor-default">Opération</th>
-            <th :class="L.th" class="cursor-default">Sous-système</th>
-            <th :class="L.th" class="cursor-default">Nature</th>
-            <th :class="L.th" class="cursor-default">Intervalle</th>
+            <th :class="L.th" class="cursor-default">Code</th>
+            <th :class="L.th" class="cursor-default">Nom</th>
+            <th :class="L.th" class="cursor-default">Tolérance de coulage</th>
+            <th :class="L.th" class="cursor-default">Contact</th>
+            <th :class="L.th" class="cursor-default">Voyages</th>
+            <th :class="L.th" class="cursor-default">Actif</th>
+            <th :class="L.th" class="cursor-default"></th>
           </tr></thead>
           <tbody>
-            <tr v-for="op in plan.operations" :key="op.id" :class="L.rowHover">
-              <td :class="L.td"><span class="text-xs font-medium">{{ op.libelle }}</span></td>
+            <tr v-for="c in clientsStore.clients" :key="c.id" :class="L.rowHover">
+              <td :class="L.td"><span class="font-mono text-xs font-semibold">{{ c.code }}</span></td>
               <td :class="L.td">
-                <span class="text-xs text-muted-foreground">{{ LIB_SOUS_SYSTEME[op.sousSysteme] }}</span>
+                <span class="text-xs font-medium">{{ c.nom }}</span>
+                <div v-if="c.notes" class="text-[11px] text-muted-foreground">{{ c.notes }}</div>
               </td>
               <td :class="L.td">
-                <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                  {{ LIB_NATURE_OPERATION[op.nature] }}
-                </span>
+                <div class="flex items-center gap-1">
+                  <input
+                    :value="c.toleranceCoulagePourMille" type="number" step="0.1" min="0"
+                    :class="F.fieldInput" class="!h-[28px] !text-[11px] w-[70px]"
+                    @change="ev => clientsStore.maj(c.id, { toleranceCoulagePourMille: Number((ev.target as HTMLInputElement).value) })"
+                  />
+                  <span class="text-[11px] text-muted-foreground">‰</span>
+                </div>
+              </td>
+              <td :class="L.td"><span class="text-xs text-muted-foreground">{{ c.contact ?? '-' }}</span></td>
+              <td :class="L.td"><span class="text-xs">{{ nbVoyages(c) }}</span></td>
+              <td :class="L.td">
+                <button
+                  class="text-[11px] font-medium px-2 py-0.5 rounded-full border-0 cursor-pointer"
+                  :class="c.actif ? 'bg-success-bg text-success' : 'bg-gray-100 text-gray-400'"
+                  @click="clientsStore.basculerActif(c.id)"
+                >{{ c.actif ? 'Actif' : 'Inactif' }}</button>
               </td>
               <td :class="L.td">
-                <span v-if="op.intervalleKm" class="text-xs">
-                  tous les {{ op.intervalleKm.toLocaleString('fr-FR') }} km
-                </span>
-                <span v-else-if="op.intervalleJours" class="text-xs">
-                  tous les {{ op.intervalleJours }} jours
-                </span>
-                <span v-else class="text-gray-300">-</span>
+                <button :class="L.actView" @click="ouvrirEditionClient(c)">
+                  <Pencil class="w-3 h-3" /> Modifier
+                </button>
               </td>
             </tr>
           </tbody>
         </table>
-
-        <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
-          Le déclenchement se fait au premier des deux seuils atteint. Ce plan s’applique à tous
-          les véhicules de ce modèle et sert de base au calcul des échéances.
-        </p>
       </div>
+    </div>
 
-      </div>
+    <!-- ══ PARAMÈTRES ════════════════════════════════════════ -->
 
     <div v-else-if="onglet === 'parametres'" class="grid grid-cols-1 lg:grid-cols-2 gap-3.5 items-start">
       <div :class="L.card">
@@ -501,7 +497,10 @@
         </div>
         <div :class="F.field">
           <label :class="F.fieldLabel">Client</label>
-          <input v-model="formTrajet.clientNom" type="text" :class="F.fieldInput" placeholder="Facultatif" />
+          <select v-model="formTrajet.clientId" :class="F.fieldSelect">
+            <option value="">Aucun client attitré</option>
+            <option v-for="c in clientsStore.actifs" :key="c.id" :value="c.id">{{ c.nom }}</option>
+          </select>
         </div>
         <div :class="F.field" class="col-span-2">
           <label :class="F.fieldLabel">Libellé *</label>
@@ -591,6 +590,61 @@
       </div>
     </div>
   </div>
+  <!-- ══ Client : création et modification ════════════════════ -->
+  <div v-if="formClient" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+    @click.self="formClient = null">
+    <div class="bg-card rounded-lg border border-border shadow-lg w-full max-w-lg p-4">
+      <h3 class="text-sm font-semibold text-foreground mb-3">
+        {{ formClient.id ? 'Modifier le client' : 'Nouveau client' }}
+      </h3>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div :class="F.field">
+          <label :class="F.fieldLabel">Code *</label>
+          <input v-model="formClient.code" type="text" :class="F.fieldInput" placeholder="VIVO" />
+        </div>
+        <div :class="F.field">
+          <label :class="F.fieldLabel">Tolérance de coulage (‰) *</label>
+          <input v-model.number="formClient.toleranceCoulagePourMille" type="number"
+            step="0.1" min="0" :class="F.fieldInput" placeholder="1" />
+        </div>
+        <div :class="F.field" class="col-span-2">
+          <label :class="F.fieldLabel">Nom *</label>
+          <input v-model="formClient.nom" type="text" :class="F.fieldInput"
+            placeholder="Vivo Energy Madagascar" />
+        </div>
+        <div :class="F.field">
+          <label :class="F.fieldLabel">Contact</label>
+          <input v-model="formClient.contact" type="text" :class="F.fieldInput" />
+        </div>
+        <div :class="F.field">
+          <label :class="F.fieldLabel">Téléphone</label>
+          <input v-model="formClient.telephone" type="text" :class="F.fieldInput" />
+        </div>
+        <div :class="F.field" class="col-span-2">
+          <label :class="F.fieldLabel">Notes</label>
+          <textarea v-model="formClient.notes" rows="2" :class="F.fieldInput"
+            placeholder="Particularités contractuelles, anciennes graphies du nom…" />
+        </div>
+      </div>
+
+      <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
+        La tolérance conditionne le déclenchement d’un litige. Sur 30 000 litres, l’écart entre
+        0,5 ‰ et 1 ‰ représente 15 litres : de quoi ouvrir un litige à tort, ou en masquer un.
+      </p>
+
+      <p v-if="erreurClient" :class="F.fieldError" class="mt-2">
+        <AlertCircle class="w-3 h-3" /> {{ erreurClient }}
+      </p>
+
+      <div class="flex justify-end gap-2 mt-4">
+        <button :class="F.btnOutline" @click="formClient = null">Annuler</button>
+        <button :class="F.btnPrimary" @click="enregistrerClient">
+          {{ formClient.id ? 'Enregistrer' : 'Créer' }}
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -601,21 +655,19 @@
  */
 import { ref, computed } from 'vue'
 import {
-  Info, Route, Clock, SlidersHorizontal, Wrench, BellRing, AlertCircle,
+  Info, Route, Clock, SlidersHorizontal, BellRing, AlertCircle,
   Plus, Pencil, Archive, Undo2, ChevronUp, ChevronDown, X,
 } from 'lucide-vue-next'
-import { RouterLink } from 'vue-router'
 import FleetMap from '../../components/fleet/FleetMap.vue'
 import { useTrajetsStore } from '../../stores/trajets'
 import { useConfigurationStore } from '../../stores/configuration'
-import { useMaintenanceStore } from '../../stores/maintenance'
 import { useSitesStore } from '../../stores/sites'
-import { useVehiculesStore } from '../../stores/vehicules'
-import { LIB_SOUS_SYSTEME, LIB_NATURE_OPERATION } from '../../types/maintenance'
+import { useClientsStore } from '../../stores/clients'
+import { useVoyagesStore } from '../../stores/voyages'
 import { LIB_ROLE_ETAPE, LIB_CATEGORIE_ECART } from '../../types/fms'
 import type {
   GraviteEcart, MapMarker, RoleEtape, Trajet, EtapeTrajet,
-  TypeEcartConfig, CategorieEcart,
+  TypeEcartConfig, CategorieEcart, Client,
 } from '../../types/fms'
 import { fmtDuree } from '../../lib/fmsUtils'
 import * as L from '../../lib/listClasses'
@@ -623,17 +675,17 @@ import * as F from '../../lib/formClasses'
 
 const trajetsStore = useTrajetsStore()
 const configStore = useConfigurationStore()
-const maintStore  = useMaintenanceStore()
-const sitesStore  = useSitesStore()
-const vehStore    = useVehiculesStore()
+const sitesStore   = useSitesStore()
+const clientsStore = useClientsStore()
+const voyagesStore = useVoyagesStore()
 
-const onglet = ref<'trajets' | 'ecarts' | 'entretien' | 'parametres'>('trajets')
+const onglet = ref<'trajets' | 'clients' | 'ecarts' | 'parametres'>('trajets')
 const trajetSel = ref<string | null>(trajetsStore.trajets[0]?.id ?? null)
 
 const onglets = computed(() => [
   { key: 'trajets' as const,    label: 'Trajets de référence', compte: trajetsStore.trajets.length },
+  { key: 'clients' as const,    label: 'Clients',              compte: clientsStore.clients.length },
   { key: 'ecarts' as const,     label: 'Types d’écart',        compte: configStore.typesEcart.length },
-  { key: 'entretien' as const,  label: 'Plans d’entretien',   compte: maintStore.plans.length },
   { key: 'parametres' as const, label: 'Paramètres',           compte: 0 },
 ])
 
@@ -659,10 +711,10 @@ const B = configStore.BORNES_SEUILS
    stores depuis le début, mais aucun écran ne les appelait : on
    pouvait consulter les règles, pas les définir. Elles sont ici.
 
-   Un principe : chaque règle se modifie à un seul endroit. Les plans
-   d'entretien s'éditent dans Maintenance → Paramétrage, cette page y
-   renvoie plutôt que de dupliquer l'éditeur, car deux éditeurs sur le
-   même objet divergent à la première évolution.
+   Un principe : chaque règle se modifie à un seul endroit, celui du
+   domaine auquel elle appartient. Les plans d'entretien relèvent de la
+   maintenance et ne figurent donc pas ici : deux éditeurs sur le même
+   objet divergent à la première évolution.
    ══════════════════════════════════════════════════════════════ */
 
 /* ── Trajets de référence ───────────────────────────────────── */
@@ -678,7 +730,8 @@ interface FormTrajet {
   id?: string
   code: string
   libelle: string
-  clientNom: string
+  /** Identifiant du client, pas son nom : le nom se recopie à l'écriture */
+  clientId: string
   recurrent: boolean
 }
 
@@ -687,14 +740,17 @@ const erreurTrajet = ref('')
 
 function ouvrirNouveauTrajet() {
   erreurTrajet.value = ''
-  formTrajet.value = { code: '', libelle: '', clientNom: '', recurrent: true }
+  formTrajet.value = { code: '', libelle: '', clientId: '', recurrent: true }
 }
 
 function ouvrirEditionTrajet(t: Trajet) {
   erreurTrajet.value = ''
   formTrajet.value = {
     id: t.id, code: t.code, libelle: t.libelle,
-    clientNom: t.clientNom ?? '', recurrent: t.recurrent,
+    /* Les trajets existants portent un nom libre : on retrouve le client
+       correspondant plutôt que de vider le champ à l'ouverture. */
+    clientId: clientsStore.retrouverParNom(t.clientNom)?.id ?? '',
+    recurrent: t.recurrent,
   }
 }
 
@@ -718,7 +774,7 @@ function enregistrerTrajet() {
   const donnees = {
     code: f.code.trim().toUpperCase(),
     libelle: f.libelle.trim(),
-    clientNom: f.clientNom.trim() || undefined,
+    clientNom: clientsStore.getById(f.clientId)?.nom,
     recurrent: f.recurrent,
   }
 
@@ -856,14 +912,70 @@ function enregistrerType() {
   formType.value = null
 }
 
-/* ── Plans d'entretien : lecture seule, l'édition est ailleurs ── */
+/* ── Référentiel clients ────────────────────────────────────── */
 
-const modelesSansPlan = computed(() => {
-  const avecPlan = new Set(maintStore.plans.map(p => p.modele.toLowerCase()))
-  const manquants = new Set(
-    vehStore.auParc
-      .filter(v => v.modele && !avecPlan.has(v.modele.toLowerCase()))
-      .map(v => `${v.marque ?? ''} ${v.modele}`.trim()))
-  return [...manquants]
-})
+interface FormClient {
+  id?: string
+  code: string
+  nom: string
+  toleranceCoulagePourMille: number
+  contact: string
+  telephone: string
+  notes: string
+}
+
+const formClient   = ref<FormClient | null>(null)
+const erreurClient = ref('')
+
+function ouvrirNouveauClient() {
+  erreurClient.value = ''
+  formClient.value = {
+    code: '', nom: '', toleranceCoulagePourMille: 1,
+    contact: '', telephone: '', notes: '',
+  }
+}
+
+function ouvrirEditionClient(c: Client) {
+  erreurClient.value = ''
+  formClient.value = {
+    id: c.id, code: c.code, nom: c.nom,
+    toleranceCoulagePourMille: c.toleranceCoulagePourMille,
+    contact: c.contact ?? '', telephone: c.telephone ?? '', notes: c.notes ?? '',
+  }
+}
+
+function enregistrerClient() {
+  const f = formClient.value
+  if (!f) return
+  erreurClient.value = ''
+
+  if (f.toleranceCoulagePourMille == null || f.toleranceCoulagePourMille < 0) {
+    erreurClient.value = 'La tolérance de coulage est obligatoire et ne peut pas être négative.'
+    return
+  }
+
+  const donnees = {
+    code: f.code, nom: f.nom,
+    toleranceCoulagePourMille: f.toleranceCoulagePourMille,
+    contact: f.contact.trim() || undefined,
+    telephone: f.telephone.trim() || undefined,
+    notes: f.notes.trim() || undefined,
+  }
+
+  const res = f.id
+    ? clientsStore.maj(f.id, donnees)
+    : clientsStore.creer({ ...donnees, actif: true })
+
+  if ('erreur' in res) { erreurClient.value = res.erreur; return }
+  formClient.value = null
+}
+
+const nbVoyages = (c: Client) =>
+  voyagesStore.voyages.filter(v => clientsStore.retrouverParNom(v.clientNom)?.id === c.id).length
+
+/** Noms employés dans les données mais absents du référentiel. */
+const clientsOrphelins = computed(() => clientsStore.nomsOrphelins([
+  ...voyagesStore.voyages.map(v => v.clientNom),
+  ...trajetsStore.trajets.map(t => t.clientNom ?? ''),
+]))
 </script>

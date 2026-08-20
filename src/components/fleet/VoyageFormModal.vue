@@ -54,9 +54,10 @@
 
           <div :class="F.field">
             <label :class="F.fieldLabel">Client</label>
-            <select v-model="form.clientNom" :class="F.fieldSelect">
-              <option v-for="c in CLIENTS" :key="c.nom" :value="c.nom">
-                {{ c.nom }} - tolérance {{ c.tolerance }} ‰
+            <select v-model="form.clientId" :class="F.fieldSelect">
+              <option value="">Choisir un client…</option>
+              <option v-for="c in clientsStore.actifs" :key="c.id" :value="c.id">
+                {{ c.nom }} - tolérance {{ c.toleranceCoulagePourMille }} ‰
               </option>
             </select>
           </div>
@@ -142,6 +143,7 @@ import { useAffectationsChauffeursStore } from '../../stores/affectationsChauffe
 import { useAttelagesStore } from '../../stores/attelages'
 import { useTrajetsStore } from '../../stores/trajets'
 import { useDocumentsVehiculesStore } from '../../stores/documentsVehicules'
+import { useClientsStore } from '../../stores/clients'
 import { useRegistresStore } from '../../stores/registres'
 import { useScoresConducteursStore } from '../../stores/scoresConducteurs'
 import { useConduceteursProfilesStore } from '../../stores/conducteursProfiles'
@@ -162,20 +164,18 @@ const docsStore       = useDocumentsVehiculesStore()
 const scoresStore = useScoresConducteursStore()
 const conducteursStore = useConduceteursProfilesStore()
 
-const CLIENTS = [
-  { nom: 'LPSA',        tolerance: 0.5 },
-  { nom: 'TOTAL',       tolerance: 1 },
-  { nom: 'VIVO',        tolerance: 1 },
-  { nom: 'JOVENA',      tolerance: 1 },
-  { nom: 'GALANA',      tolerance: 1 },
-]
+/* La liste des clients et leurs tolérances vivaient ici, dans une
+   constante locale : aucun autre écran ne pouvait les lire, et rien
+   n'empêchait un voyage de référencer un client absent de la liste.
+   Elles viennent désormais du référentiel partagé. */
+const clientsStore = useClientsStore()
 
 const etapes = ref<EtapeTrajet[]>([])
 const erreur = ref('')
 
 const form = reactive({
   vehiculeId: '',
-  clientNom: 'LPSA',
+  clientId: '',
   datePlanifiee: new Date(Date.now() + 86_400_000).toISOString().slice(0, 16),
   numeroOT: '',
   produit: 'Gazole',
@@ -292,12 +292,17 @@ function enregistrer() {
   const seq = trajetsStore.renumeroter(etapes.value)
   const premier = seq[0]
   const dernier = seq[seq.length - 1]
-  const tolerance = CLIENTS.find(c => c.nom === form.clientNom)?.tolerance ?? 1
+  /* La tolérance est recopiée dans le voyage, pas référencée : une
+     renégociation du contrat ne doit pas modifier rétroactivement le
+     coulage d'un voyage déjà clôturé. */
+  const client = clientsStore.getById(form.clientId)
+  if (!client) { erreur.value = 'Choisissez un client : sa tolérance de coulage conditionne le litige.'; return }
+  const tolerance = client.toleranceCoulagePourMille
 
   voyagesStore.create({
     numeroOT: form.numeroOT || undefined,
     statut: 'planifie',
-    clientNom: form.clientNom,
+    clientNom: client.nom,
     toleranceCoulagePourMille: tolerance,
     trajetId: form.trajetId || undefined,
     trajetLibelle: form.trajetId ? trajetsStore.getById(form.trajetId)?.libelle : undefined,
