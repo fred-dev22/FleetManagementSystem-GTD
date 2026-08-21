@@ -160,10 +160,6 @@
           </tbody>
         </table>
 
-        <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
-          La compétence n’est pas saisie : elle se déduit du sous-système du diagnostic ISO 14224.
-          Une panne de freinage relève de la mécanique, une fuite de vanne relève de la citerne.
-        </p>
       </div>
 
       <!-- ═══ Interventions non affectées ═══ -->
@@ -232,10 +228,6 @@
           </tbody>
         </table>
 
-        <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
-          Ces immobilisations sont visibles de l’exploitation : le véhicule cesse d’être compté
-          comme disponible sur la page État de flotte.
-        </p>
       </div>
     </div>
 

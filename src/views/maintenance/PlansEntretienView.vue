@@ -165,12 +165,7 @@
           <AlertCircle class="w-3 h-3" /> {{ erreurs[plan.id] }}
         </p>
 
-        <!-- <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
-          Le déclenchement se fait au premier des deux seuils atteint, kilométrage ou date.
-          Une opération doit porter au moins un intervalle, sinon elle ne déclenche rien.
-          Le préavis d’alerte - {{ store.PREAVIS_KM.toLocaleString('fr-FR') }} km ou
-          {{ store.PREAVIS_JOURS }} jours - se règle dans Flotte → Configuration, onglet Paramètres.
-        </p> -->
+        <!-- -->
       </div>
 
       <div v-if="!store.plans.length" :class="L.card">

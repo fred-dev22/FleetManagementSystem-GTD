@@ -54,12 +54,11 @@
 
           <div :class="F.field">
             <label :class="F.fieldLabel">Client</label>
-            <select v-model="form.clientId" :class="F.fieldSelect">
-              <option value="">Choisir un client…</option>
-              <option v-for="c in clientsStore.actifs" :key="c.id" :value="c.id">
-                {{ c.nom }} - tolérance {{ c.toleranceCoulagePourMille }} ‰
-              </option>
-            </select>
+            <SearchableDropdown
+              v-model="form.clientId"
+              :items="optionsClients"
+              placeholder="Choisir un client…"
+            />
           </div>
 
           <div :class="F.field">
@@ -143,6 +142,8 @@ import { useAffectationsChauffeursStore } from '../../stores/affectationsChauffe
 import { useAttelagesStore } from '../../stores/attelages'
 import { useTrajetsStore } from '../../stores/trajets'
 import { useDocumentsVehiculesStore } from '../../stores/documentsVehicules'
+import SearchableDropdown from '../ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../ui/SearchableDropdown.vue'
 import { useClientsStore } from '../../stores/clients'
 import { useRegistresStore } from '../../stores/registres'
 import { useScoresConducteursStore } from '../../stores/scoresConducteurs'
@@ -164,11 +165,18 @@ const docsStore       = useDocumentsVehiculesStore()
 const scoresStore = useScoresConducteursStore()
 const conducteursStore = useConduceteursProfilesStore()
 
-/* La liste des clients et leurs tolérances vivaient ici, dans une
-   constante locale : aucun autre écran ne pouvait les lire, et rien
-   n'empêchait un voyage de référencer un client absent de la liste.
-   Elles viennent désormais du référentiel partagé. */
 const clientsStore = useClientsStore()
+
+/* Un client désactivé reste visible, grisé : le faire disparaître
+   laisserait l'exploitant chercher un client qu'il sait exister. */
+const optionsClients = computed<DropdownItem[]>(() =>
+  clientsStore.clients.map(c => ({
+    id: c.id,
+    label: c.nom,
+    sublabel: `Tolérance ${c.toleranceCoulagePourMille} ‰`,
+    itemDisabled: !c.actif,
+    disabledReason: 'Client désactivé dans Configuration',
+  })))
 
 const etapes = ref<EtapeTrajet[]>([])
 const erreur = ref('')
@@ -293,10 +301,9 @@ function enregistrer() {
   const premier = seq[0]
   const dernier = seq[seq.length - 1]
   /* La tolérance est recopiée dans le voyage, pas référencée : une
-     renégociation du contrat ne doit pas modifier rétroactivement le
-     coulage d'un voyage déjà clôturé. */
+     renégociation ne doit pas altérer un voyage déjà clôturé. */
   const client = clientsStore.getById(form.clientId)
-  if (!client) { erreur.value = 'Choisissez un client : sa tolérance de coulage conditionne le litige.'; return }
+  if (!client) { erreur.value = 'Choisissez un client.'; return }
   const tolerance = client.toleranceCoulagePourMille
 
   voyagesStore.create({

@@ -85,10 +85,7 @@
           </tbody>
         </table>
 
-        <!-- <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
-          Le MTBF est exprimé en kilomètres : GTD ne relève pas d’heures de fonctionnement moteur.
-          La cible du ratio préventif est de 60 % au cahier des charges.
-        </p> -->
+        <!-- -->
       </div>
 
       <div :class="L.card">
@@ -168,15 +165,9 @@
           </div>
         </div>
 
-        <p v-if="store.coutImmoRenseigne" class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
-          Les jours perdus sont valorisés au manque à gagner journalier paramétré. La famille
-          réglementaire est celle qui se corrige le plus vite : un vetting suivi ne coûte rien.
-        </p>
-        <p v-else class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
-          Les jours perdus sont comptés mais non valorisés : le coût d’immobilisation journalier
-          n’est pas renseigné dans
-          <RouterLink :to="{ name: 'maintenance-parametres' }" class="underline">
-            Paramétrage → Paramètres de l’atelier</RouterLink>.
+        <p v-if="!store.coutImmoRenseigne" class="text-[11px] text-muted-foreground mt-3">
+          Coût journalier non renseigné.
+          <RouterLink :to="{ name: 'maintenance-parametres' }" class="underline">Paramétrer</RouterLink>
         </p>
       </div>
     </div>
@@ -273,20 +264,14 @@
         class="flex items-start gap-2.5 bg-success-bg border border-success/20 rounded-lg px-3.5 py-2.5 mt-3">
         <Coins class="w-4 h-4 shrink-0 mt-px text-success" />
         <p class="text-[11px] text-success leading-relaxed">
-          Le coût est complet : pièces, sous-traitance et main-d’œuvre interne.
-          La main-d’œuvre représente {{ fmtAr(store.coutMainOeuvreTotal ?? 0) }}
-          sur {{ fmtAr(store.coutTotal) }}, soit {{ partMainOeuvre }} % du total.
-          Le coût au kilomètre est calculé sur le kilométrage réel de chaque véhicule.
+          Main-d’œuvre : {{ fmtAr(store.coutMainOeuvreTotal ?? 0) }}, soit {{ partMainOeuvre }} % du total.
         </p>
       </div>
       <div v-else class="flex items-start gap-2.5 bg-background border border-border rounded-lg px-3.5 py-2.5 mt-3">
         <FileQuestion class="w-4 h-4 shrink-0 mt-px text-muted-foreground" />
         <p class="text-[11px] text-muted-foreground leading-relaxed">
-          Le coût affiché est partiel : il couvre les pièces et la sous-traitance, mais pas la
-          main-d’œuvre interne. Les {{ heuresNonValorisees }} h déjà enregistrées par les
-          mécaniciens attendent un tarif horaire, à renseigner dans
-          <RouterLink :to="{ name: 'maintenance-parametres' }" class="underline">
-            Paramétrage → Paramètres de l’atelier</RouterLink>.
+          {{ heuresNonValorisees }} h sans tarif horaire.
+          <RouterLink :to="{ name: 'maintenance-parametres' }" class="underline">Paramétrer</RouterLink>
         </p>
       </div>
     </div>

@@ -86,12 +86,7 @@
         </div>
 
         <!-- <BlocOrigine groupe="capacite" />
-        <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
-          Un taux d’occupation rapporte une charge à une capacité. La charge est déjà calculée :
-          le système additionne les heures estimées des interventions ouvertes. Ces deux champs
-          fournissent la capacité et font apparaître le
-          <strong>taux d’occupation</strong> sur l’écran Charge atelier.
-        </p> -->
+ -->
       </div>
 
       <!-- ═══ 2. Tarif horaire de la main-d'œuvre ════════════════ -->
@@ -130,12 +125,7 @@
         </div>
 
         <!-- <BlocOrigine groupe="mainOeuvre" />
-        <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
-          Le temps passé par chaque mécanicien est enregistré depuis le début ; seul son prix
-          manquait. Ce tarif fait apparaître le <strong>coût complet d’une intervention</strong>
-          et le <strong>coût de maintenance au kilomètre</strong>, sur l’onglet Coûts de l’écran Fiabilité.
-          Le tarif d’une spécialité prime sur le tarif unique.
-        </p> -->
+ -->
       </div>
 
       <!-- ═══ 3. Coût d'immobilisation ═══════════════════════════ -->
@@ -188,12 +178,7 @@
         </div>
 
         <!-- <BlocOrigine groupe="immobilisation" />
-        <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
-          Les jours perdus sont comptés par famille de cause depuis le début, mais ils restaient
-          des jours. Cette valeur les convertit en ariary — c’est l’argument le plus parlant face
-          au client : « ce vetting expiré vous a coûté tant ». Visible sur l’écran Immobilisations
-          et dans le bloc Jours perdus de l’écran Fiabilité.
-        </p> -->
+ -->
       </div>
 
       <!-- ═══ Indicateurs, formules et valeurs ════════════════════
@@ -273,12 +258,6 @@
 
         <!-- <div class="flex items-start gap-2.5 bg-info-bg text-info rounded-lg px-3.5 py-2.5 mt-3">
           <Info class="w-4 h-4 shrink-0 mt-px" />
-          <p class="text-[11px] leading-relaxed">
-            Les termes en gris sont mesurés par le système et ne se saisissent pas : la charge
-            vient des heures estimées des interventions ouvertes, les heures pointées viennent
-            des relevés de temps des mécaniciens, les jours perdus des immobilisations
-            enregistrées. Seuls les termes encadrés attendent une valeur de GTD.
-          </p>
         </div> -->
       <!--</div> -->
     </div>

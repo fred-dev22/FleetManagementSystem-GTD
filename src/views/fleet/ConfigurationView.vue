@@ -8,16 +8,6 @@
       </div>
     </div>
 
-    <div class="flex items-start gap-2.5 bg-info-bg text-info rounded-lg px-3.5 py-2.5 mb-3.5">
-      <Info class="w-4 h-4 shrink-0 mt-px" />
-      <p class="text-xs leading-relaxed">
-        La page <strong>Conformité</strong> contient les écarts <strong>relevés</strong> - des faits.
-        Cette page contient les <strong>règles</strong> qui les produisent : trajets de référence,
-        clients, types d’écart et seuils d’alerte. Tout ce qui est ici se crée et se modifie ici,
-        sans intervention technique. Les plans d’entretien relèvent de la maintenance et se
-        gèrent dans <strong>Maintenance → Paramétrage</strong>.
-      </p>
-    </div>
 
     <!-- Onglets -->
     <div class="flex gap-1 border-b border-border mb-3.5 overflow-x-auto">
@@ -180,15 +170,6 @@
 
     <!-- ══ TYPES D'ÉCART ═════════════════════════════════════ -->
     <div v-else-if="onglet === 'ecarts'" class="flex flex-col gap-3.5">
-      <div class="flex items-center justify-between gap-3">
-        <p class="text-[11px] text-muted-foreground leading-relaxed">
-          Un type inactif cesse de produire des écarts, sans effacer ceux déjà relevés :
-          l’historique reste explicable avec la règle qui l’a produit.
-        </p>
-        <button :class="L.btnPrimary" class="shrink-0" @click="ouvrirNouveauType">
-          <Plus class="w-4 h-4" /> Nouveau type d’écart
-        </button>
-      </div>
 
       <div v-for="(liste, cat) in configStore.parCategorie" :key="cat" :class="L.card">
         <div :class="L.cardHeader">
@@ -256,16 +237,6 @@
          orthographes du même client coexistaient dans les données.
          ═══════════════════════════════════════════════════════ -->
     <div v-else-if="onglet === 'clients'" class="flex flex-col gap-3.5">
-      <div class="flex items-center justify-between gap-3">
-        <p class="text-[11px] text-muted-foreground leading-relaxed">
-          La tolérance de coulage est contractuelle : elle appartient au client, pas au voyage.
-          Elle est recopiée dans chaque voyage à sa création, si bien qu’une renégociation
-          n’altère pas le coulage des voyages déjà clôturés.
-        </p>
-        <button :class="L.btnPrimary" class="shrink-0" @click="ouvrirNouveauClient">
-          <Plus class="w-4 h-4" /> Nouveau client
-        </button>
-      </div>
 
       <div v-if="clientsOrphelins.length"
         class="flex items-start gap-2.5 bg-warning-bg text-warning rounded-lg px-3.5 py-2.5">
@@ -416,11 +387,6 @@
                   :class="[F.fieldInput, configStore.seuilHorsBornes('preavisEntretienJours') ? F.inputError : '']" />
               </div>
             </div>
-            <p class="text-[11px] text-muted-foreground leading-relaxed">
-              Combien de kilomètres ou de jours avant l’échéance le garage est prévenu.
-              Ce délai doit couvrir l’approvisionnement des pièces : un préavis plus court
-              que le délai fournisseur garantit l’immobilisation.
-            </p>
             <p v-if="configStore.seuilHorsBornes('preavisEntretienKm')" :class="F.fieldError">
               <AlertCircle class="w-3 h-3" />
               Attendu entre {{ B.preavisEntretienKm.min }} et
@@ -436,12 +402,6 @@
               <input v-model.number="p.rayonValidationPassageM" type="number" min="0" step="100"
                 :class="[F.fieldInput, configStore.seuilHorsBornes('rayonValidationPassageM') ? F.inputError : '']" />
             </div>
-            <p class="text-[11px] text-muted-foreground leading-relaxed">
-              À quelle distance d’un site le camion est réputé y être passé. Trop court, des
-              passages réels sont manqués ; trop long, un site simplement longé est validé.
-              La valeur doit rester cohérente avec la précision d’un relevé télématique
-              en zone rurale.
-            </p>
             <p v-if="configStore.seuilHorsBornes('rayonValidationPassageM')" :class="F.fieldError">
               <AlertCircle class="w-3 h-3" />
               Attendu entre {{ B.rayonValidationPassageM.min }} et
@@ -457,11 +417,6 @@
               <input v-model.number="p.preavisDocumentaireJours" type="number" min="0"
                 :class="[F.fieldInput, configStore.seuilHorsBornes('preavisDocumentaireJours') ? F.inputError : '']" />
             </div>
-            <p class="text-[11px] text-muted-foreground leading-relaxed">
-              Combien de jours avant l’expiration d’un permis, d’un vetting, d’une assurance
-              ou d’une visite médicale l’alerte est émise. Le cahier des charges retient J-30 ;
-              ce délai s’applique aux documents véhicule et conducteur.
-            </p>
             <p v-if="configStore.seuilHorsBornes('preavisDocumentaireJours')" :class="F.fieldError">
               <AlertCircle class="w-3 h-3" />
               Attendu entre {{ B.preavisDocumentaireJours.min }} et
@@ -470,15 +425,6 @@
           </div>
         </div>
 
-        <div class="flex items-start gap-2.5 bg-info-bg text-info rounded-lg px-3.5 py-2.5 mt-3.5">
-          <Info class="w-4 h-4 shrink-0 mt-px" />
-          <p class="text-[11px] leading-relaxed">
-            Une modification s’applique immédiatement à tous les écrans qui en dépendent :
-            les échéances préventives, la détection des passages sur site et les alertes
-            documentaires du véhicule comme du conducteur. Aucun de ces seuils n’est
-            recopié ailleurs dans le code.
-          </p>
-        </div>
       </div>
     </div>
   </div>
@@ -517,10 +463,6 @@
         <AlertCircle class="w-3 h-3" /> {{ erreurTrajet }}
       </p>
 
-      <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
-        Les étapes se composent ensuite dans la fiche du trajet. Distance et durée sont
-        recalculées à chaque changement, jamais saisies.
-      </p>
 
       <div class="flex justify-end gap-2 mt-4">
         <button :class="F.btnOutline" @click="formTrajet = null">Annuler</button>
@@ -628,10 +570,6 @@
         </div>
       </div>
 
-      <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
-        La tolérance conditionne le déclenchement d’un litige. Sur 30 000 litres, l’écart entre
-        0,5 ‰ et 1 ‰ représente 15 litres : de quoi ouvrir un litige à tort, ou en masquer un.
-      </p>
 
       <p v-if="erreurClient" :class="F.fieldError" class="mt-2">
         <AlertCircle class="w-3 h-3" /> {{ erreurClient }}
