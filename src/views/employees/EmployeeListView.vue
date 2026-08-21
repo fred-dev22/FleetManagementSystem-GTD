@@ -86,26 +86,21 @@
     <template #filters>
       <div :class="L.fpField">
         <label :class="L.fpFieldLabel">Société</label>
-        <select v-model="fSociete" :class="L.fpSelect">
-          <option value="">Toutes les sociétés</option>
-          <option value="GTD">GTD</option>
-          <option value="Logistics Sarl">Logistics Sarl</option>
-          <option value="Damdjee Nadir Transporteur">Damdjee Nadir Transporteur</option>
-        </select>
+        <SearchableDropdown
+          v-model="fSociete"
+          :items="optfSociete"
+          placeholder="Toutes les sociétés"
+          compact
+        />
       </div>
       <div :class="L.fpField">
         <label :class="L.fpFieldLabel">Fonction</label>
-        <select v-model="fFonction" :class="L.fpSelect">
-          <option value="">Toutes les fonctions</option>
-          <option value="Chauffeur">Chauffeur</option>
-          <option value="RH">RH</option>
-          <option value="Opérations">Opérations</option>
-          <option value="Comptabilité">Comptabilité</option>
-          <option value="Direction">Direction</option>
-          <option value="Logistique">Logistique</option>
-          <option value="Commercial">Commercial</option>
-          <option value="Maintenance">Maintenance</option>
-        </select>
+        <SearchableDropdown
+          v-model="fFonction"
+          :items="optfFonction"
+          placeholder="Toutes les fonctions"
+          compact
+        />
       </div>
       <button
         class="mt-auto py-[7px] bg-transparent border-0 text-xs text-muted-foreground cursor-pointer text-left hover:text-[#1a3c6e]"
@@ -241,6 +236,8 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { UserPlus, Upload, Users, UserCheck, UserX, Truck } from 'lucide-vue-next'
 import ImportComingSoon from '../../components/ui/ImportComingSoon.vue'
 import { ListPageLayout } from '../../components'
@@ -391,4 +388,21 @@ const pageItems  = computed(() => {
   const start = (page.value - 1) * pageSize.value
   return filtered.value.slice(start, start + pageSize.value)
 })
+
+const optfSociete: DropdownItem[] = [
+          { id: 'GTD', label: "GTD" },
+          { id: 'Logistics Sarl', label: "Logistics Sarl" },
+          { id: 'Damdjee Nadir Transporteur', label: "Damdjee Nadir Transporteur" },
+]
+
+const optfFonction: DropdownItem[] = [
+          { id: 'Chauffeur', label: "Chauffeur" },
+          { id: 'RH', label: "RH" },
+          { id: 'Opérations', label: "Opérations" },
+          { id: 'Comptabilité', label: "Comptabilité" },
+          { id: 'Direction', label: "Direction" },
+          { id: 'Logistique', label: "Logistique" },
+          { id: 'Commercial', label: "Commercial" },
+          { id: 'Maintenance', label: "Maintenance" },
+]
 </script>

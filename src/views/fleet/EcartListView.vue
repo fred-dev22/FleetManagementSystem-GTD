@@ -43,12 +43,12 @@
       </div>
       <div>
         <label :class="L.fpFieldLabel">Gravité</label>
-        <select v-model="filterGravite" :class="L.fpSelect">
-          <option value="">Toutes</option>
-          <option value="mineur">Mineur</option>
-          <option value="majeur">Majeur</option>
-          <option value="critique">Critique</option>
-        </select>
+        <SearchableDropdown
+          v-model="filterGravite"
+          :items="optfilterGravite"
+          placeholder="Toutes"
+          compact
+        />
       </div>
       <button class="mt-auto py-[7px] bg-transparent border-0 text-xs text-muted-foreground cursor-pointer hover:text-primary"
         @click="resetFilters">Réinitialiser</button>
@@ -182,6 +182,8 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { useRouter } from 'vue-router'
 import { AlertTriangle, ShieldCheck, Gavel, Eye, Ban, Clock } from 'lucide-vue-next'
 import { ListPageLayout } from '../../components'
@@ -281,4 +283,10 @@ function openCard(id: string) {
 function voirConducteur(chauffeurId: string) {
   router.push({ name: 'fleet-conducteur-detail', params: { id: chauffeurId } })
 }
+
+const optfilterGravite: DropdownItem[] = [
+          { id: 'mineur', label: "Mineur" },
+          { id: 'majeur', label: "Majeur" },
+          { id: 'critique', label: "Critique" },
+]
 </script>

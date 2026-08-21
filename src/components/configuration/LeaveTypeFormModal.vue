@@ -45,10 +45,11 @@
         </div>
         <div :class="cls.field">
           <label :class="cls.fieldLabel">Workflow</label>
-          <select v-model="form.workflow" :class="cls.fieldSelect">
-            <option value="standard">Standard (approbation)</option>
-            <option value="medical">Médical (enregistrement)</option>
-          </select>
+          <SearchableDropdown
+            v-model="form.workflow"
+            :items="optform_workflow"
+            placeholder="Sélectionner…"
+          />
         </div>
         <div class="flex items-center gap-3 pt-4">
           <span :class="cls.fieldLabel">Justificatif obligatoire</span>
@@ -87,6 +88,8 @@
 
 <script setup lang="ts">
 import { reactive, computed, watch, type Component } from 'vue'
+import SearchableDropdown from '../ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../ui/SearchableDropdown.vue'
 import {
   Check, Calendar, Stethoscope, Heart, Clock, Users, Star,
   Home, Briefcase, Umbrella, Baby, Globe, Sun,
@@ -227,4 +230,9 @@ function handleSave() {
   emit('saved')
   close()
 }
+
+const optform_workflow: DropdownItem[] = [
+            { id: 'standard', label: "Standard (approbation)" },
+            { id: 'medical', label: "Médical (enregistrement)" },
+]
 </script>

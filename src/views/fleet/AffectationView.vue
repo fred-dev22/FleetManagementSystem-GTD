@@ -90,17 +90,23 @@
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label :class="L.fpFieldLabel">Chauffeur *</label>
-            <select v-model="newAff.chauffeurId" :class="L.fpSelect" @change="onChauffeurChange">
-              <option value="">Sélectionner un chauffeur</option>
-              <option v-for="c in conducteursDisponibles" :key="c.id" :value="c.id">{{ c.lastName }} {{ c.firstName }}</option>
-            </select>
+            <SearchableDropdown
+              :model-value="newAff.chauffeurId"
+              :items="optionsChauffeurs"
+              placeholder="Sélectionner un chauffeur"
+              show-avatar compact
+              @update:model-value="onChauffeurChange"
+            />
           </div>
           <div>
             <label :class="L.fpFieldLabel">Tracteur *</label>
-            <select v-model="newAff.tracteurId" :class="L.fpSelect" @change="onTracteurChange">
-              <option value="">Sélectionner un tracteur</option>
-              <option v-for="t in tracteursLibres" :key="t.id" :value="t.id">{{ t.plaque }} - {{ t.marque }} {{ t.modele }}</option>
-            </select>
+            <SearchableDropdown
+              :model-value="newAff.tracteurId"
+              :items="optionsTracteurs"
+              placeholder="Sélectionner un tracteur"
+              compact
+              @update:model-value="onTracteurChange"
+            />
           </div>
           <div>
             <label :class="L.fpFieldLabel">Date début *</label>
@@ -173,6 +179,8 @@
 <script setup lang="ts">
 import { ref, computed, reactive } from 'vue'
 import { UserCheck, Plus, History, AlertCircle, Loader2 } from 'lucide-vue-next'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { useAffectationsChauffeursStore } from '../../stores/affectationsChauffeurs'
 import { useVehiculesStore } from '../../stores/vehicules'
 import { useEmployeeStore } from '../../stores/employees'
@@ -213,15 +221,33 @@ const conducteursDisponibles = computed(() => {
 
 const tracteursLibres = computed(() => vehStore.getTracteurLibre())
 
-function onChauffeurChange() {
-  const emp = (empStore.employees ?? []).find((e: any) => e.id === newAff.chauffeurId)
-  if (emp) newAff.chauffeurNom = `${emp.lastName} ${emp.firstName}`
+/* La plaque identifie le camion, la marque et le modèle le confirment :
+   le sous-titre évite d'allonger le libellé et reste cherchable. */
+const optionsTracteurs = computed<DropdownItem[]>(() =>
+  tracteursLibres.value.map(t => ({
+    id: t.id,
+    label: t.plaque,
+    sublabel: [t.marque, t.modele].filter(Boolean).join(' '),
+  })))
+
+const optionsChauffeurs = computed<DropdownItem[]>(() =>
+  conducteursDisponibles.value.map(c => ({
+    id: c.id,
+    label: `${c.lastName ?? ''} ${c.firstName ?? ''}`.trim(),
+    sublabel: c.code,
+  })))
+
+function onChauffeurChange(id: string) {
+  newAff.chauffeurId = id
+  const emp = (empStore.employees ?? []).find((e: any) => e.id === id)
+  newAff.chauffeurNom = emp ? `${emp.lastName} ${emp.firstName}` : ''
   checkBlockage()
 }
 
-function onTracteurChange() {
-  const t = vehStore.getById(newAff.tracteurId)
-  if (t) newAff.tracteurPlaque = t.plaque
+function onTracteurChange(id: string) {
+  newAff.tracteurId = id
+  const t = vehStore.getById(id)
+  newAff.tracteurPlaque = t?.plaque ?? ''
   checkBlockage()
 }
 

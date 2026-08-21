@@ -42,21 +42,21 @@
       <div class="grid grid-cols-2 gap-x-6 gap-y-4 max-sm:grid-cols-1">
         <div :class="cls.field">
           <label :class="cls.fieldLabel">Entité *</label>
-          <select v-model="form.entityId" :class="[cls.fieldSelect, errors.entityId ? cls.inputError : '']" @change="onEntityChange">
-            <option value="">-- Choisir une entité --</option>
-            <option v-for="e in selectableEntities" :key="e.id" :value="e.id">{{ e.code }} — {{ e.name }}</option>
-          </select>
+          <SearchableDropdown
+            :model-value="form.entityId"
+            :items="optionsEntites"
+            placeholder="Choisir une entité"
+            @update:model-value="onEntityChange"
+          />
           <div v-if="errors.entityId" :class="cls.fieldError">{{ errors.entityId }}</div>
         </div>
         <div :class="cls.field">
           <label :class="cls.fieldLabel">Rôle *</label>
-          <select v-model="form.role" :class="[cls.fieldSelect, errors.role ? cls.inputError : '']">
-            <option value="">-- Choisir un rôle --</option>
-            <option value="employee">Employé</option>
-            <option value="validator">Validateur / Manager</option>
-            <option value="hr_admin">Administrateur RH</option>
-            <option value="hr_director">Directeur RH</option>
-          </select>
+          <SearchableDropdown
+            v-model="form.role"
+            :items="optform_role"
+            placeholder="Choisir un rôle"
+          />
           <div v-if="errors.role" :class="cls.fieldError">{{ errors.role }}</div>
         </div>
         <div :class="[cls.field, 'col-span-2 max-sm:col-span-1']">
@@ -86,13 +86,11 @@
       <div class="grid grid-cols-2 gap-x-6 gap-y-4 max-sm:grid-cols-1">
         <div :class="cls.field">
           <label :class="cls.fieldLabel">Type de contrat *</label>
-          <select v-model="form.contractType" :class="[cls.fieldSelect, errors.contractType ? cls.inputError : '']">
-            <option value="">-- Choisir --</option>
-            <option value="CDI">CDI</option>
-            <option value="CDD">CDD</option>
-            <option value="Stage">Stage</option>
-            <option value="Freelance">Freelance</option>
-          </select>
+          <SearchableDropdown
+            v-model="form.contractType"
+            :items="optform_contractType"
+            placeholder="Choisir"
+          />
           <div v-if="errors.contractType" :class="cls.fieldError">{{ errors.contractType }}</div>
         </div>
         <div :class="cls.field">
@@ -102,12 +100,11 @@
         </div>
         <div :class="cls.field">
           <label :class="cls.fieldLabel">Statut</label>
-          <select v-model="form.status" :class="cls.fieldSelect">
-            <option value="actif">Actif</option>
-            <option value="en_conge">En congé</option>
-            <option value="suspendu">Suspendu</option>
-            <option value="sorti">Sorti</option>
-          </select>
+          <SearchableDropdown
+            v-model="form.status"
+            :items="optform_status"
+            placeholder="Sélectionner…"
+          />
         </div>
       </div>
     </FormSection>
@@ -118,6 +115,8 @@
 
 <script setup lang="ts">
 import { reactive, computed, watch } from 'vue'
+import SearchableDropdown from '../ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../ui/SearchableDropdown.vue'
 import { User, Building, FileText, Lock, Info, Check } from 'lucide-vue-next'
 import CreateModalShell from '../shared/CreateModalShell.vue'
 import FormSection from '../ui/form-field/FormSection.vue'
@@ -174,6 +173,9 @@ const selectableEntities = computed(() =>
     .filter(e => !props.visibleEntityIds || props.visibleEntityIds.includes(e.id))
 )
 
+const optionsEntites = computed<DropdownItem[]>(() =>
+  selectableEntities.value.map(e => ({ id: e.id, label: e.name, sublabel: e.code })))
+
 const directManager = computed(() => {
   const entity = selectableEntities.value.find(e => e.id === form.entityId)
   if (!entity?.responsibleName) return null
@@ -186,8 +188,9 @@ const directManager = computed(() => {
   }
 })
 
-function onEntityChange() {
-  const e = selectableEntities.value.find(e => e.id === form.entityId)
+function onEntityChange(id: string) {
+  form.entityId = id
+  const e = selectableEntities.value.find(x => x.id === id)
   form.entityName = e?.name ?? ''
   form.managerId  = e?.responsibleId ?? ''
 }
@@ -273,4 +276,25 @@ function handleSave() {
   emit('saved')
   close()
 }
+
+const optform_role: DropdownItem[] = [
+            { id: 'employee', label: "Employé" },
+            { id: 'validator', label: "Validateur / Manager" },
+            { id: 'hr_admin', label: "Administrateur RH" },
+            { id: 'hr_director', label: "Directeur RH" },
+]
+
+const optform_contractType: DropdownItem[] = [
+            { id: 'CDI', label: "CDI" },
+            { id: 'CDD', label: "CDD" },
+            { id: 'Stage', label: "Stage" },
+            { id: 'Freelance', label: "Freelance" },
+]
+
+const optform_status: DropdownItem[] = [
+            { id: 'actif', label: "Actif" },
+            { id: 'en_conge', label: "En congé" },
+            { id: 'suspendu', label: "Suspendu" },
+            { id: 'sorti', label: "Sorti" },
+]
 </script>

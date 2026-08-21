@@ -9,16 +9,12 @@
         <div :class="L.cardHeader">
           <h3 :class="L.cardTitle"><Bookmark class="w-4 h-4 text-primary" /> Trajet de référence</h3>
         </div>
-        <select v-model="trajetRef" :class="F.fieldSelect" @change="chargerTrajet">
-          <option value="">Composer un trajet ponctuel…</option>
-          <option v-for="t in trajetsStore.recurrents" :key="t.id" :value="t.id">
-            {{ t.libelle }}
-          </option>
-        </select>
-        <p class="text-[11px] text-muted-foreground mt-1.5 leading-snug">
-          Charger un trajet enregistré en copie ses étapes, que vous pouvez ensuite ajuster
-          sans modifier le trajet d’origine.
-        </p>
+        <SearchableDropdown
+          :model-value="trajetRef"
+          :items="optionsTrajets"
+          placeholder="Composer un trajet ponctuel…"
+          @update:model-value="chargerTrajet"
+        />
       </div>
 
       <!-- Séquence composée -->
@@ -158,11 +154,6 @@
         :show-legend="false"
       />
 
-      <p class="text-[11px] text-muted-foreground mt-2 leading-relaxed">
-        Le tracé suit exactement l’ordre des sites sélectionnés. Il n’est pas enregistré :
-        seule la séquence de sites est conservée, parce que c’est elle que la télématique
-        peut vérifier.
-      </p>
     </div>
   </div>
 </template>
@@ -176,6 +167,8 @@
  * la carte se met à jour immédiatement. Le tracé n'est jamais persisté.
  */
 import { ref, computed, watch } from 'vue'
+import SearchableDropdown from '../ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../ui/SearchableDropdown.vue'
 import {
   Bookmark, ListOrdered, MapPin, Route, Plus, X, Search, GripVertical,
 } from 'lucide-vue-next'
@@ -195,6 +188,9 @@ const emit = defineEmits<{
 }>()
 
 const trajetsStore = useTrajetsStore()
+
+const optionsTrajets = computed<DropdownItem[]>(() =>
+  trajetsStore.recurrents.map(t => ({ id: t.id, label: t.libelle, sublabel: t.code })))
 const sitesStore = useSitesStore()
 
 /* US 2.4.2 - répartition des étapes entre les deux volets */
@@ -278,12 +274,22 @@ function survol(i: number) {
   emettre()
 }
 
-function chargerTrajet() {
-  if (!trajetRef.value) {
+/**
+ * Charge la séquence d'un trajet de référence.
+ *
+ * L'identifiant arrive en argument. Le lire dans `trajetRef` supposait
+ * que la liaison l'ait déjà écrit, ce qui n'est plus le cas depuis que
+ * le composant pilote lui-même la valeur : la fonction s'exécutait sur
+ * l'ancienne sélection, donc sur une valeur vide au premier choix, et
+ * la séquence ne se chargeait jamais.
+ */
+function chargerTrajet(id: string) {
+  trajetRef.value = id
+  if (!id) {
     emit('trajet-ref', '')
     return
   }
-  const t = trajetsStore.getById(trajetRef.value)
+  const t = trajetsStore.getById(id)
   if (!t) return
   // COPIE des étapes : modifier ce voyage ne doit pas altérer le trajet de référence
   etapes.value = t.etapes.map(e => ({ ...e, id: `${e.id}-c${Date.now()}` }))

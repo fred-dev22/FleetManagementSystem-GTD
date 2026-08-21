@@ -36,14 +36,12 @@
     <template #filters>
       <div :class="L.fpField">
         <label :class="L.fpFieldLabel">Type</label>
-        <select v-model="filterType" :class="L.fpSelect">
-          <option value="">Tous</option>
-          <option value="Citerne">Citerne</option>
-          <option value="Bâchée">Bâchée</option>
-          <option value="Plateau">Plateau</option>
-          <option value="Frigorifique">Frigorifique</option>
-          <option value="Autre">Autre</option>
-        </select>
+        <SearchableDropdown
+          v-model="filterType"
+          :items="optfilterType"
+          placeholder="Tous"
+          compact
+        />
       </div>
       <button class="mt-auto py-[7px] bg-transparent border-0 text-xs text-muted-foreground cursor-pointer text-left hover:text-primary" @click="resetFilters">
         Réinitialiser
@@ -102,6 +100,8 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { Plus, Container, Check, AlertTriangle, Archive } from 'lucide-vue-next'
 import { ListPageLayout } from '../../components'
 import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
@@ -175,4 +175,12 @@ function statutClass(s?: string) { return ({ en_service: 'bg-success-bg text-suc
 function typeClass(type?: string) {
   return ({ Citerne: 'bg-primary/10 text-primary', Bâchée: 'bg-success-bg text-success', Plateau: 'bg-warning-bg text-warning', Frigorifique: 'bg-danger-bg text-danger', Autre: 'bg-background text-muted-foreground' } as any)[type ?? ''] ?? 'bg-background text-muted-foreground'
 }
+
+const optfilterType: DropdownItem[] = [
+          { id: 'Citerne', label: "Citerne" },
+          { id: 'Bâchée', label: "Bâchée" },
+          { id: 'Plateau', label: "Plateau" },
+          { id: 'Frigorifique', label: "Frigorifique" },
+          { id: 'Autre', label: "Autre" },
+]
 </script>

@@ -139,18 +139,19 @@
               <div :class="formGrid">
                 <div :class="cls.field">
                   <label :class="fieldLabel">Langue</label>
-                  <select v-model="form.lang" :class="cls.fieldSelect">
-                    <option value="fr">Français</option>
-                    <option value="en">English</option>
-                  </select>
+                  <SearchableDropdown
+                    v-model="form.lang"
+                    :items="optform_lang"
+                    placeholder="Sélectionner…"
+                  />
                 </div>
                 <div :class="cls.field">
                   <label :class="fieldLabel">Notifications email</label>
-                  <select v-model="form.emailNotifs" :class="cls.fieldSelect">
-                    <option value="all">Toutes</option>
-                    <option value="important">Importantes uniquement</option>
-                    <option value="none">Désactivées</option>
-                  </select>
+                  <SearchableDropdown
+                    v-model="form.emailNotifs"
+                    :items="optform_emailNotifs"
+                    placeholder="Sélectionner…"
+                  />
                 </div>
               </div>
             </div>
@@ -163,6 +164,8 @@
 
 <script setup lang="ts">
 import { computed, reactive } from 'vue'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { FileDown, Save, Camera, PieChart, Zap, CalendarPlus, Plane, Calendar, User, Briefcase, Settings } from 'lucide-vue-next'
 import { StatusPill } from '../../components'
 import * as cls from '../../lib/formClasses'
@@ -226,4 +229,15 @@ const myBalances = computed(() => {
 function saveInfo() {
   // In a real app, dispatch to store; here just UI feedback
 }
+
+const optform_lang: DropdownItem[] = [
+                    { id: 'fr', label: "Français" },
+                    { id: 'en', label: "English" },
+]
+
+const optform_emailNotifs: DropdownItem[] = [
+                    { id: 'all', label: "Toutes" },
+                    { id: 'important', label: "Importantes uniquement" },
+                    { id: 'none', label: "Désactivées" },
+]
 </script>

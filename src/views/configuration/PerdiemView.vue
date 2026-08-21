@@ -76,11 +76,11 @@
     </div>
     <div :class="cls.field">
       <label :class="cls.fieldLabel">Devise</label>
-      <select :class="cls.fieldSelect" v-model="pdForm.currency">
-        <option value="MGA">MGA (Ariary)</option>
-        <option value="MUR">MUR (Roupie mauricienne)</option>
-        <option value="EUR">EUR (Euro)</option>
-      </select>
+      <SearchableDropdown
+        v-model="pdForm.currency"
+        :items="optpdForm_currency"
+        placeholder="Sélectionner…"
+      />
     </div>
     <template #footer>
       <button :class="cls.btnOutline" @click="showModal = false">Annuler</button>
@@ -91,6 +91,8 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { storeToRefs } from 'pinia'
 import { Plus, TriangleAlert, Pencil, Trash2 } from 'lucide-vue-next'
 import ModalShell from '../../components/ui/ModalShell.vue'
@@ -142,4 +144,10 @@ function savePerdiem() {
   }
   showModal.value = false
 }
+
+const optpdForm_currency: DropdownItem[] = [
+        { id: 'MGA', label: "MGA (Ariary)" },
+        { id: 'MUR', label: "MUR (Roupie mauricienne)" },
+        { id: 'EUR', label: "EUR (Euro)" },
+]
 </script>

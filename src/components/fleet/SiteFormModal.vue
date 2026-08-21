@@ -20,14 +20,11 @@
             </div>
             <div class="flex flex-col gap-1">
               <label class="text-[12px] font-medium text-muted-foreground">Type *</label>
-              <select v-model="form.type" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary">
-                <option value="" disabled>Sélectionner un type</option>
-                <option value="Garage">Garage</option>
-                <option value="Dépôt chargement">Dépôt chargement</option>
-                <option value="Dépôt déchargement">Dépôt déchargement</option>
-                <option value="Zone à risque">Zone à risque</option>
-                <option value="Point de contrôle">Point de contrôle</option>
-              </select>
+              <SearchableDropdown
+                v-model="form.type"
+                :items="optform_type"
+                placeholder="Sélectionner un type"
+              />
               <p v-if="errors.type" class="text-red-500 text-[11px]">{{ errors.type }}</p>
             </div>
             <div class="col-span-2 flex flex-col gap-1">
@@ -57,6 +54,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue'
+import SearchableDropdown from '../ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../ui/SearchableDropdown.vue'
 import CreateModalShell from '../shared/CreateModalShell.vue'
 import FormSection from '../ui/form-field/FormSection.vue'
 import { useSitesStore } from '../../stores/sites'
@@ -142,4 +141,12 @@ async function handleSubmit() {
     submitting.value = false
   }
 }
+
+const optform_type: DropdownItem[] = [
+                { id: 'Garage', label: "Garage" },
+                { id: 'Dépôt chargement', label: "Dépôt chargement" },
+                { id: 'Dépôt déchargement', label: "Dépôt déchargement" },
+                { id: 'Zone à risque', label: "Zone à risque" },
+                { id: 'Point de contrôle', label: "Point de contrôle" },
+]
 </script>

@@ -35,14 +35,12 @@
     <template #filters>
       <div :class="L.fpField">
         <label :class="L.fpFieldLabel">Type</label>
-        <select v-model="filterType" :class="L.fpSelect">
-          <option value="">Tous</option>
-          <option value="Garage">Garage</option>
-          <option value="Dépôt chargement">Dépôt chargement</option>
-          <option value="Dépôt déchargement">Dépôt déchargement</option>
-          <option value="Zone à risque">Zone à risque</option>
-          <option value="Point de contrôle">Point de contrôle</option>
-        </select>
+        <SearchableDropdown
+          v-model="filterType"
+          :items="optfilterType"
+          placeholder="Tous"
+          compact
+        />
       </div>
       <button class="mt-auto py-[7px] bg-transparent border-0 text-xs text-muted-foreground cursor-pointer text-left hover:text-primary" @click="resetFilters">
         Réinitialiser
@@ -99,6 +97,8 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { Plus, MapPinned, Check } from 'lucide-vue-next'
 import { ListPageLayout } from '../../components'
 import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
@@ -175,4 +175,12 @@ function typeBadge(type: string) {
   }
   return m[type] ?? 'bg-background text-muted-foreground'
 }
+
+const optfilterType: DropdownItem[] = [
+          { id: 'Garage', label: "Garage" },
+          { id: 'Dépôt chargement', label: "Dépôt chargement" },
+          { id: 'Dépôt déchargement', label: "Dépôt déchargement" },
+          { id: 'Zone à risque', label: "Zone à risque" },
+          { id: 'Point de contrôle', label: "Point de contrôle" },
+]
 </script>

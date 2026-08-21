@@ -192,11 +192,11 @@
     </div>
     <div :class="cls.field">
       <label :class="cls.fieldLabel">Unité</label>
-      <select v-model="feeForm.unit" :class="cls.fieldSelect">
-        <option value="per_day">Par jour</option>
-        <option value="flat">Forfait</option>
-        <option value="real">Au réel</option>
-      </select>
+      <SearchableDropdown
+        v-model="feeForm.unit"
+        :items="optfeeForm_unit"
+        placeholder="Sélectionner…"
+      />
     </div>
     <div class="flex items-center justify-between">
       <span :class="cls.fieldLabel">Justificatif obligatoire</span>
@@ -214,6 +214,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, nextTick } from 'vue'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { Upload, TriangleAlert, Check, Plus, Pencil, Trash2, Minus } from 'lucide-vue-next'
 import DataTable        from '../../components/ui/DataTable.vue'
 import ModalShell       from '../../components/ui/ModalShell.vue'
@@ -353,4 +355,10 @@ function deleteFee(id: string, name: string) {
     triggerToast(`Type « ${name} » supprimé`)
   }
 }
+
+const optfeeForm_unit: DropdownItem[] = [
+        { id: 'per_day', label: "Par jour" },
+        { id: 'flat', label: "Forfait" },
+        { id: 'real', label: "Au réel" },
+]
 </script>

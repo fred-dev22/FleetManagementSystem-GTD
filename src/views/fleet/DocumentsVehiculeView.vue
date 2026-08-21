@@ -36,21 +36,22 @@
 
     <!-- Filtres -->
     <template #filters>
-      <select v-model="filterEntity" :class="L.fpSelect">
-        <option value="">Toutes les entités</option>
-        <option value="vehicule">Véhicules</option>
-        <option value="conducteur">Conducteurs</option>
-      </select>
-      <select v-model="filterType" :class="L.fpSelect">
-        <option value="">Tous les types</option>
-        <option v-for="t in typesDoc" :key="t" :value="t">{{ t }}</option>
-      </select>
-      <select v-model="filterStatut" :class="L.fpSelect">
-        <option value="">Tous les statuts</option>
-        <option value="valide">Valide</option>
-        <option value="archive">Expiré</option>
-        <option value="depose">Déposé</option>
-      </select>
+      <SearchableDropdown
+        v-model="filterEntity"
+        :items="optfilterEntity"
+        placeholder="Toutes les entités"
+        compact
+      />
+      <SearchableDropdown
+        v-model="filterType" :items="optionsTypes"
+        placeholder="Tous les types" compact
+      />
+      <SearchableDropdown
+        v-model="filterStatut"
+        :items="optfilterStatut"
+        placeholder="Tous les statuts"
+        compact
+      />
     </template>
 
     <!-- Header actions -->
@@ -181,12 +182,12 @@
           </div>
           <div>
             <label :class="L.fpFieldLabel">Statut</label>
-            <select v-model="form.statut" :class="L.fpSelect">
-              <option value="depose">Déposé</option>
-              <option value="valide">Valide</option>
-              <option value="refuse">Refusé</option>
-              <option value="archive">Archivé</option>
-            </select>
+            <SearchableDropdown
+              v-model="form.statut"
+              :items="optform_statut"
+              placeholder="Sélectionner…"
+              compact
+            />
           </div>
         </div>
         <div class="px-6 py-4 bg-gray-50 border-t flex justify-end gap-3">
@@ -215,6 +216,8 @@
 
 <script setup lang="ts">
 import { ref, computed, reactive, watch } from 'vue'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { Plus, AlertTriangle, Clock, X } from 'lucide-vue-next'
 import { ListPageLayout } from '../../components'
 import { useDocumentsVehiculesStore } from '../../stores/documentsVehicules'
@@ -241,6 +244,8 @@ const form = reactive<Partial<DocumentVehicule>>({
 })
 
 const typesDoc = ['Carte grise', 'Assurance', 'Visite technique', 'Vignette', 'Permis C', 'Permis CE', 'Visite médicale', 'ADR', 'Autre']
+
+const optionsTypes: DropdownItem[] = typesDoc.map(t => ({ id: t, label: t }))
 
 const filtered = computed(() => {
   const q = search.value.toLowerCase()
@@ -368,4 +373,22 @@ const STATUT_MAP: Record<string, { label: string; cls: string }> = {
 }
 const statutLabel = (s: string) => STATUT_MAP[s]?.label ?? s
 const statutClass = (s: string) => STATUT_MAP[s]?.cls ?? ''
+
+const optfilterEntity: DropdownItem[] = [
+        { id: 'vehicule', label: "Véhicules" },
+        { id: 'conducteur', label: "Conducteurs" },
+]
+
+const optfilterStatut: DropdownItem[] = [
+        { id: 'valide', label: "Valide" },
+        { id: 'archive', label: "Expiré" },
+        { id: 'depose', label: "Déposé" },
+]
+
+const optform_statut: DropdownItem[] = [
+              { id: 'depose', label: "Déposé" },
+              { id: 'valide', label: "Valide" },
+              { id: 'refuse', label: "Refusé" },
+              { id: 'archive', label: "Archivé" },
+]
 </script>

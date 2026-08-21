@@ -67,19 +67,16 @@
   <template v-if="navStore.activeEntityTab === 'list'">
     <div :class="L.tableCard">
       <div class="flex gap-2 items-center px-3.5 py-2.5 border-b border-border flex-wrap">
-        <select v-model="fType" :class="filterSel">
-          <option value="">Tous les types</option>
-          <option value="direction">Direction</option>
-          <option value="department">Département</option>
-          <option value="service">Service</option>
-        </select>
-        <select v-model="fStatus" :class="filterSel">
-          <option value="">Tous les statuts</option>
-          <option value="draft">Brouillon</option>
-          <option value="pending_approval">En attente</option>
-          <option value="approved">Approuvé</option>
-          <option value="inactive">Inactif</option>
-        </select>
+        <SearchableDropdown
+          v-model="fType"
+          :items="optfType"
+          placeholder="Tous les types"
+        />
+        <SearchableDropdown
+          v-model="fStatus"
+          :items="optfStatus"
+          placeholder="Tous les statuts"
+        />
         <div :class="L.searchBox">
           <Search class="w-3.5 h-3.5 text-muted-foreground" />
           <input v-model="fSearch" placeholder="Rechercher…" :class="L.searchInput" />
@@ -192,6 +189,8 @@
 
 <script setup lang="ts">
 import { ref, computed, provide, onMounted, watch, type Component } from 'vue'
+import SearchableDropdown from '../ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../ui/SearchableDropdown.vue'
 import { useRouter, useRoute } from 'vue-router'
 import {
   ListTree, Network, List, Clock, Maximize2, Minimize2, Info, Search,
@@ -318,4 +317,17 @@ function parentName(parentId: string | null): string {
   if (!parentId) return '— Racine —'
   return store.getEntityById(parentId)?.name ?? '—'
 }
+
+const optfType: DropdownItem[] = [
+          { id: 'direction', label: "Direction" },
+          { id: 'department', label: "Département" },
+          { id: 'service', label: "Service" },
+]
+
+const optfStatus: DropdownItem[] = [
+          { id: 'draft', label: "Brouillon" },
+          { id: 'pending_approval', label: "En attente" },
+          { id: 'approved', label: "Approuvé" },
+          { id: 'inactive', label: "Inactif" },
+]
 </script>

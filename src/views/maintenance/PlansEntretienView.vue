@@ -136,15 +136,21 @@
           </div>
           <div :class="F.field">
             <label :class="F.fieldLabel">Sous-système</label>
-            <select v-model="brouillons[plan.id]!.sousSysteme" :class="F.fieldSelect" class="!h-[32px] !text-xs">
-              <option v-for="(lib, ss) in LIB_SOUS_SYSTEME" :key="ss" :value="ss">{{ lib }}</option>
-            </select>
+            <SearchableDropdown
+              v-model="brouillons[plan.id]!.sousSysteme"
+              :items="optSousSystemes"
+              placeholder="Sous-système…"
+              compact
+            />
           </div>
           <div :class="F.field">
             <label :class="F.fieldLabel">Nature</label>
-            <select v-model="brouillons[plan.id]!.nature" :class="F.fieldSelect" class="!h-[32px] !text-xs">
-              <option v-for="(lib, n) in LIB_NATURE_OPERATION" :key="n" :value="n">{{ lib }}</option>
-            </select>
+            <SearchableDropdown
+              v-model="brouillons[plan.id]!.nature"
+              :items="optNatures"
+              placeholder="Nature…"
+              compact
+            />
           </div>
           <div :class="F.field">
             <label :class="F.fieldLabel">Tous les … km</label>
@@ -254,6 +260,8 @@
  * plan sont listés en tête, avec le nombre de véhicules qu'ils privent
  * d'échéances préventives.
  */
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import { optionsDeLibelles } from '../../lib/dropdownItems'
 import { ref, computed, reactive, watchEffect } from 'vue'
 import {
   Wrench, FileQuestion, Plus, X, Copy, Trash2, AlertCircle, ClipboardList,
@@ -403,4 +411,7 @@ function confirmerSuppression() {
   if (aSupprimer.value) store.supprimerPlan(aSupprimer.value.id)
   aSupprimer.value = null
 }
+
+const optSousSystemes = computed(() => optionsDeLibelles(LIB_SOUS_SYSTEME))
+const optNatures      = computed(() => optionsDeLibelles(LIB_NATURE_OPERATION))
 </script>

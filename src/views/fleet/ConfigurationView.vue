@@ -136,12 +136,10 @@
         <div class="flex flex-wrap items-end gap-2 mt-3">
           <div :class="F.field" class="min-w-[240px]">
             <label :class="F.fieldLabel">Ajouter un site à la séquence</label>
-            <select v-model="siteAAjouter" :class="F.fieldSelect" class="!h-[32px] !text-xs">
-              <option value="">Choisir un site…</option>
-              <option v-for="st in sitesDisponibles" :key="st.id" :value="st.id">
-                {{ st.nom }} ({{ st.code }})
-              </option>
-            </select>
+            <SearchableDropdown
+              v-model="siteAAjouter" :items="optionsSites"
+              placeholder="Choisir un site…" compact
+            />
           </div>
           <div :class="F.field" class="w-[150px]">
             <label :class="F.fieldLabel">Rôle</label>
@@ -327,11 +325,6 @@
             <input v-model.number="p.plafondHebdoH" type="number" :class="F.fieldInput" />
           </div>
         </div>
-        <p class="text-[11px] text-muted-foreground mt-2.5">
-          Valeurs en vigueur chez GTD : 4 h 30 de conduite continue suivie de 45 min d’arrêt,
-          10 h de conduite journalière, 12 h de travail, 24 h de repos hebdomadaire,
-          plafonds de 56 h par semaine et 90 h sur deux semaines.
-        </p>
       </div>
 
       <div :class="L.card">
@@ -443,10 +436,10 @@
         </div>
         <div :class="F.field">
           <label :class="F.fieldLabel">Client</label>
-          <select v-model="formTrajet.clientId" :class="F.fieldSelect">
-            <option value="">Aucun client attitré</option>
-            <option v-for="c in clientsStore.actifs" :key="c.id" :value="c.id">{{ c.nom }}</option>
-          </select>
+          <SearchableDropdown
+            v-model="formTrajet.clientId" :items="optionsClients"
+            placeholder="Aucun client attitré"
+          />
         </div>
         <div :class="F.field" class="col-span-2">
           <label :class="F.fieldLabel">Libellé *</label>
@@ -498,11 +491,11 @@
         </div>
         <div :class="F.field">
           <label :class="F.fieldLabel">Gravité *</label>
-          <select v-model="formType.gravite" :class="F.fieldSelect">
-            <option value="mineur">Mineur</option>
-            <option value="majeur">Majeur</option>
-            <option value="critique">Critique</option>
-          </select>
+          <SearchableDropdown
+            v-model="formType.gravite"
+            :items="optformType_gravite"
+            placeholder="Sélectionner…"
+          />
         </div>
         <div :class="F.field">
           <label :class="F.fieldLabel">Seuil et unité</label>
@@ -596,6 +589,8 @@ import {
   Info, Route, Clock, SlidersHorizontal, BellRing, AlertCircle,
   Plus, Pencil, Archive, Undo2, ChevronUp, ChevronDown, X,
 } from 'lucide-vue-next'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import FleetMap from '../../components/fleet/FleetMap.vue'
 import { useTrajetsStore } from '../../stores/trajets'
 import { useConfigurationStore } from '../../stores/configuration'
@@ -739,6 +734,17 @@ const roleAAjouter = ref<RoleEtape>('livraison')
  *  par le même dépôt, l'exclure interdirait de composer le retour. */
 const sitesDisponibles = computed(() =>
   sitesStore.sitesActifs.filter(st => st.latitude != null && st.longitude != null))
+
+const optionsSites = computed<DropdownItem[]>(() =>
+  sitesDisponibles.value.map(st => ({ id: st.id, label: st.nom, sublabel: st.code })))
+
+const optionsClients = computed<DropdownItem[]>(() =>
+  clientsStore.clients.map(c => ({
+    id: c.id, label: c.nom,
+    sublabel: `Tolérance ${c.toleranceCoulagePourMille} ‰`,
+    itemDisabled: !c.actif, disabledReason: 'Client désactivé',
+  })))
+
 
 function ajouterEtape() {
   const t = trajet.value
@@ -916,4 +922,10 @@ const clientsOrphelins = computed(() => clientsStore.nomsOrphelins([
   ...voyagesStore.voyages.map(v => v.clientNom),
   ...trajetsStore.trajets.map(t => t.clientNom ?? ''),
 ]))
+
+const optformType_gravite: DropdownItem[] = [
+            { id: 'mineur', label: "Mineur" },
+            { id: 'majeur', label: "Majeur" },
+            { id: 'critique', label: "Critique" },
+]
 </script>

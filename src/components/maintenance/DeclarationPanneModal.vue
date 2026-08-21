@@ -19,12 +19,11 @@
         <div class="grid grid-cols-2 gap-x-5 gap-y-3 max-sm:grid-cols-1">
           <div :class="F.field">
             <label :class="F.fieldLabel">Véhicule <span class="text-danger">*</span></label>
-            <select v-model="form.vehiculeId" :class="F.fieldSelect">
-              <option value="">Choisir…</option>
-              <option v-for="v in vehiculesDisponibles" :key="v.id" :value="v.id">
-                {{ v.plaque }} - {{ v.marque }} {{ v.modele }}
-              </option>
-            </select>
+            <SearchableDropdown
+              v-model="form.vehiculeId"
+              :items="optVehicules"
+              placeholder="Choisir un véhicule…"
+            />
           </div>
 
           <div :class="F.field">
@@ -34,9 +33,11 @@
 
           <div :class="F.field">
             <label :class="F.fieldLabel">Origine de la déclaration <span class="text-danger">*</span></label>
-            <select v-model="form.origine" :class="F.fieldSelect">
-              <option v-for="(lib, k) in LIB_ORIGINE_OT" :key="k" :value="k">{{ lib }}</option>
-            </select>
+            <SearchableDropdown
+              v-model="form.origine"
+              :items="optOrigines"
+              placeholder="Origine…"
+            />
           </div>
 
           <div :class="F.field">
@@ -46,28 +47,29 @@
 
           <div :class="F.field">
             <label :class="F.fieldLabel">Organe concerné <span class="text-danger">*</span></label>
-            <select v-model="form.sousSysteme" :class="F.fieldSelect">
-              <option value="">Choisir…</option>
-              <option v-for="(lib, k) in LIB_SOUS_SYSTEME" :key="k" :value="k">{{ lib }}</option>
-            </select>
+            <SearchableDropdown
+              v-model="form.sousSysteme"
+              :items="optSousSystemes"
+              placeholder="Choisir un sous-système…"
+            />
           </div>
 
           <div :class="F.field">
             <label :class="F.fieldLabel">Gravité <span class="text-danger">*</span></label>
-            <select v-model="form.gravite" :class="F.fieldSelect">
-              <option value="mineure">Mineure - le véhicule peut rouler</option>
-              <option value="majeure">Majeure - intervention rapide requise</option>
-              <option value="critique">Critique - immobilisation immédiate</option>
-            </select>
+            <SearchableDropdown
+              v-model="form.gravite"
+              :items="optform_gravite"
+              placeholder="Sélectionner…"
+            />
           </div>
 
           <div :class="F.field">
             <label :class="F.fieldLabel">Type de maintenance</label>
-            <select v-model="form.typeMaintenance" :class="F.fieldSelect">
-              <option value="correctif">Correctif - panne constatée</option>
-              <option value="preventif">Préventif - entretien planifié</option>
-              <option value="ameliorative">Améliorative - modification</option>
-            </select>
+            <SearchableDropdown
+              v-model="form.typeMaintenance"
+              :items="optform_typeMaintenance"
+              placeholder="Sélectionner…"
+            />
           </div>
 
           <div :class="F.field">
@@ -140,6 +142,9 @@
  * L'ouverture bascule le véhicule en indisponibilité avec le code
  * correspondant - MTN pour un préventif, PNN pour un correctif.
  */
+import SearchableDropdown from '../ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../ui/SearchableDropdown.vue'
+import { optionsDeLibelles, optionsDEntites } from '../../lib/dropdownItems'
 import { ref, reactive, computed } from 'vue'
 import { X, AlertCircle } from 'lucide-vue-next'
 import { useMaintenanceStore } from '../../stores/maintenance'
@@ -228,4 +233,27 @@ function enregistrer() {
 
   emit('created', id)
 }
+
+/* Options des listes déroulantes. Le sous-libellé est recherchable :
+   taper une marque retrouve le véhicule, sans connaître sa plaque. */
+const optVehicules = computed(() => optionsDEntites(vehicules.auParc, v => ({
+  id: v.id,
+  label: v.plaque,
+  sublabel: [v.marque, v.modele].filter(Boolean).join(' '),
+})))
+
+const optOrigines     = computed(() => optionsDeLibelles(LIB_ORIGINE_OT))
+const optSousSystemes = computed(() => optionsDeLibelles(LIB_SOUS_SYSTEME))
+
+const optform_gravite: DropdownItem[] = [
+              { id: 'mineure', label: "Mineure - le véhicule peut rouler" },
+              { id: 'majeure', label: "Majeure - intervention rapide requise" },
+              { id: 'critique', label: "Critique - immobilisation immédiate" },
+]
+
+const optform_typeMaintenance: DropdownItem[] = [
+              { id: 'correctif', label: "Correctif - panne constatée" },
+              { id: 'preventif', label: "Préventif - entretien planifié" },
+              { id: 'ameliorative', label: "Améliorative - modification" },
+]
 </script>

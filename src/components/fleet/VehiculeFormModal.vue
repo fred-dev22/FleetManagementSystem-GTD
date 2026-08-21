@@ -60,10 +60,11 @@
             <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Tracteur</p>
             <div>
               <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Type de carburant</label>
-              <select v-model="form.typeCarburant" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
-                <option value="">-</option>
-                <option v-for="c in ['Diesel','GNL','Essence','Électrique','Hybride']" :key="c" :value="c">{{ c }}</option>
-              </select>
+              <SearchableDropdown
+                v-model="form.typeCarburant"
+                :items="optCarburants"
+                placeholder="Type de carburant…"
+              />
             </div>
           </div>
 
@@ -73,9 +74,11 @@
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Type</label>
-                <select v-model="form.typeRemorque" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
-                  <option v-for="t in ['Citerne','Bâchée','Frigorifique','Plateau','Autre']" :key="t" :value="t">{{ t }}</option>
-                </select>
+                <SearchableDropdown
+                  v-model="form.typeRemorque"
+                  :items="optRemorques"
+                  placeholder="Type de remorque…"
+                />
               </div>
               <div>
                 <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Capacité</label>
@@ -92,12 +95,11 @@
             </div>
             <div>
               <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Mode acquisition</label>
-              <select v-model="form.modeAcquisition" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
-                <option value="">-</option>
-                <option value="achat">Achat</option>
-                <option value="leasing">Leasing</option>
-                <option value="location">Location</option>
-              </select>
+              <SearchableDropdown
+                v-model="form.modeAcquisition"
+                :items="optform_modeAcquisition"
+                placeholder="-"
+              />
             </div>
             <div>
               <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Coût (MGA)</label>
@@ -141,6 +143,9 @@
  * validation : l'utilisateur corrige avant d'avoir rempli le reste.
  */
 import { reactive, computed, ref } from 'vue'
+import SearchableDropdown from '../ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../ui/SearchableDropdown.vue'
+import { optionsDeChaines } from '../../lib/dropdownItems'
 import { X, AlertCircle } from 'lucide-vue-next'
 import { useVehiculesStore } from '../../stores/vehicules'
 import type { Vehicule } from '../../types'
@@ -175,4 +180,13 @@ function submit() {
   }
   emit('close')
 }
+
+const optCarburants = optionsDeChaines(['Diesel', 'GNL', 'Essence', 'Électrique', 'Hybride'])
+const optRemorques  = optionsDeChaines(['Citerne', 'Bâchée', 'Frigorifique', 'Plateau', 'Autre'])
+
+const optform_modeAcquisition: DropdownItem[] = [
+                { id: 'achat', label: "Achat" },
+                { id: 'leasing', label: "Leasing" },
+                { id: 'location', label: "Location" },
+]
 </script>

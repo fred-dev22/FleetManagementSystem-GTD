@@ -25,10 +25,11 @@
             </div>
             <div class="flex flex-col gap-1">
               <label class="text-[12px] font-medium text-muted-foreground">Marque *</label>
-              <select v-model="form.marque" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary">
-                <option value="" disabled>Sélectionner une marque</option>
-                <option v-for="m in marques" :key="m" :value="m">{{ m }}</option>
-              </select>
+              <SearchableDropdown
+                v-model="form.marque"
+                :items="optionsMarques"
+                placeholder="Sélectionner une marque"
+              />
               <p v-if="errors.marque" class="text-red-500 text-[11px]">{{ errors.marque }}</p>
             </div>
             <div class="flex flex-col gap-1">
@@ -43,10 +44,11 @@
             </div>
             <div v-if="editId" class="flex flex-col gap-1">
               <label class="text-[12px] font-medium text-muted-foreground">Statut administratif</label>
-              <select v-model="form.statutAdmin" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary">
-                <option value="en_service">En service</option>
-                <option value="hors_service">Hors service</option>
-              </select>
+              <SearchableDropdown
+                v-model="form.statutAdmin"
+                :items="optform_statutAdmin"
+                placeholder="Sélectionner…"
+              />
             </div>
           </div>
         </FormSection>
@@ -57,6 +59,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
+import SearchableDropdown from '../ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../ui/SearchableDropdown.vue'
 import CreateModalShell from '../shared/CreateModalShell.vue'
 import FormSection from '../ui/form-field/FormSection.vue'
 import { useTracteurStore } from '../../stores/tracteurs'
@@ -74,6 +78,8 @@ const emit = defineEmits<{
 
 const store = useTracteurStore()
 const marques = ['Volvo', 'Mercedes', 'MAN', 'Scania', 'DAF', 'Autre']
+
+const optionsMarques: DropdownItem[] = marques.map(m => ({ id: m, label: m }))
 const todayISO = new Date().toISOString().split('T')[0]
 
 const form = reactive({
@@ -161,4 +167,9 @@ async function handleSubmit() {
     submitting.value = false
   }
 }
+
+const optform_statutAdmin: DropdownItem[] = [
+                { id: 'en_service', label: "En service" },
+                { id: 'hors_service', label: "Hors service" },
+]
 </script>

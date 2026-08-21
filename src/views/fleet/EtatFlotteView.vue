@@ -23,12 +23,7 @@
         <option value="">Situation du jour</option>
         <!-- Un jour rectifié compte plusieurs versions : le sélecteur
              liste les jours, la version faisant foi est la plus récente. -->
-        <option v-for="j in store.joursArchives" :key="j" :value="j">
-          État du {{ fmtDate(j) }}
-          <template v-if="(store.etatDuJour(j)?.version ?? 1) > 1">
-            (v{{ store.etatDuJour(j)!.version }})
-          </template>
-        </option>
+        <option v-for="o in optionsJours" :key="o.id" :value="o.id">{{ o.label }}</option>
       </select>
       <button :class="L.btnOutline" @click="archiver">
         <Archive class="w-4 h-4" />
@@ -100,11 +95,12 @@
       </div>
       <div>
         <label :class="L.fpFieldLabel">Immobilisation</label>
-        <select v-model="filterImmo" :class="L.fpSelect">
-          <option value="">Tous</option>
-          <option value="oui">Immobilisés</option>
-          <option value="non">Disponibles</option>
-        </select>
+        <SearchableDropdown
+          v-model="filterImmo"
+          :items="optfilterImmo"
+          placeholder="Tous"
+          compact
+        />
       </div>
       <button class="mt-auto py-[7px] bg-transparent border-0 text-xs text-muted-foreground cursor-pointer hover:text-primary"
         @click="resetFilters">
@@ -242,6 +238,8 @@
  * connue ; la colonne reste vide sinon.
  */
 import { ref, computed, watch } from 'vue'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import {
   ClipboardList, Download, Archive, Truck, Route, Clock, AlertTriangle,
   FileCheck2, Send, AlertCircle,
@@ -256,6 +254,13 @@ import { fmtDate } from '../../lib/fmsUtils'
 import * as L from '../../lib/listClasses'
 
 const store = useFlotteStore()
+
+/* Une date rectifiée porte son numéro de version dans le libellé. */
+const optionsJours = computed(() =>
+  store.joursArchives.map(j => {
+    const v = store.etatDuJour(j)?.version ?? 1
+    return { id: j, label: `État du ${fmtDate(j)}${v > 1 ? ` (v${v})` : ''}` }
+  }))
 const auth  = useAuthStore()
 
 const searchQuery = ref('')
@@ -417,4 +422,9 @@ function exporter() {
   a.click()
   URL.revokeObjectURL(url)
 }
+
+const optfilterImmo: DropdownItem[] = [
+          { id: 'oui', label: "Immobilisés" },
+          { id: 'non', label: "Disponibles" },
+]
 </script>

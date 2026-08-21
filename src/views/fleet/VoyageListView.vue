@@ -43,25 +43,26 @@
     <template #filters>
       <div>
         <label :class="L.fpFieldLabel">Trajet</label>
-        <select v-model="filterTrajet" :class="L.fpSelect">
-          <option value="">Tous</option>
-          <option v-for="t in trajetsStore.actifs" :key="t.id" :value="t.id">{{ t.code }}</option>
-        </select>
+        <SearchableDropdown
+          v-model="filterTrajet" :items="optionsTrajets"
+          placeholder="Tous" compact
+        />
       </div>
       <div>
         <label :class="L.fpFieldLabel">Client</label>
-        <select v-model="filterClient" :class="L.fpSelect">
-          <option value="">Tous</option>
-          <option v-for="c in clients" :key="c" :value="c">{{ c }}</option>
-        </select>
+        <SearchableDropdown
+          v-model="filterClient" :items="optionsClients"
+          placeholder="Tous" compact
+        />
       </div>
       <div>
         <label :class="L.fpFieldLabel">Sites</label>
-        <select v-model="filterDossier" :class="L.fpSelect">
-          <option value="">Tous</option>
-          <option value="complet">Tous desservis</option>
-          <option value="incomplet">Site(s) manqué(s)</option>
-        </select>
+        <SearchableDropdown
+          v-model="filterDossier"
+          :items="optfilterDossier"
+          placeholder="Tous"
+          compact
+        />
       </div>
       <button class="mt-auto py-[7px] bg-transparent border-0 text-xs text-muted-foreground cursor-pointer hover:text-primary"
         @click="resetFilters">
@@ -211,6 +212,8 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Package, Plus, AlertTriangle, MapPinned, Droplets } from 'lucide-vue-next'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { ListPageLayout } from '../../components'
 import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
 import { useVoyagesStore } from '../../stores/voyages'
@@ -264,6 +267,12 @@ const scopeOptions = [
 ]
 
 const clients = computed(() => [...new Set(store.voyages.map(v => v.clientNom))].sort())
+
+const optionsTrajets = computed<DropdownItem[]>(() =>
+  trajetsStore.actifs.map(t => ({ id: t.id, label: t.code, sublabel: t.libelle })))
+
+const optionsClients = computed<DropdownItem[]>(() =>
+  clients.value.map(c => ({ id: c, label: c })))
 
 const kpis = computed(() => [
   { label: 'En cours',        value: store.enCours.length,   icon: Package,      bg: 'bg-info-bg',    iconColor: 'text-info'    },
@@ -360,4 +369,9 @@ const pageItems  = computed(() => {
 function ouvrirFiche(id: string) {
   ficheId.value = id
 }
+
+const optfilterDossier: DropdownItem[] = [
+          { id: 'complet', label: "Tous desservis" },
+          { id: 'incomplet', label: "Site(s) manqué(s)" },
+]
 </script>

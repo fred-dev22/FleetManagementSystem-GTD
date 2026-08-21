@@ -7,9 +7,6 @@
       <div class="flex items-center justify-between px-5 py-3.5 border-b border-border">
         <div>
           <h2 class="text-base font-semibold text-foreground">Importer un relevé de carburant</h2>
-          <p class="text-[11px] text-muted-foreground">
-            Fichier du fournisseur de cartes ou de la station partenaire, au format CSV.
-          </p>
         </div>
         <button :class="L.tbIconBtn" @click="emit('close')"><X class="w-4 h-4" /></button>
       </div>
@@ -37,10 +34,6 @@
         <template v-if="entetes.length">
           <div>
             <p class="text-[13px] font-semibold text-foreground mb-1">2. Faire correspondre les colonnes</p>
-            <p class="text-[11px] text-muted-foreground mb-2.5">
-              Chaque fournisseur nomme ses colonnes différemment. Indiquez, pour chaque champ attendu,
-              la colonne correspondante de votre fichier. Les correspondances évidentes sont pré-remplies.
-            </p>
 
             <div class="grid grid-cols-2 gap-x-5 gap-y-3 max-sm:grid-cols-1">
               <div v-for="ch in CHAMPS" :key="ch.cle" :class="F.field">

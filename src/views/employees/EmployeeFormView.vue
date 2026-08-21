@@ -89,35 +89,30 @@
             </div>
             <div :class="cls.field">
               <label :class="cls.fieldLabel">Entité *</label>
-              <select v-model="form.entityId" :class="[cls.fieldSelect, err.entityId && cls.inputError]" @change="onEntityChange">
-                <option value="">-- Sélectionner --</option>
-                <option v-for="e in entityStore.approvedEntities" :key="e.id" :value="e.id">
-                  {{ e.code }} — {{ e.name }}
-                </option>
-              </select>
+              <SearchableDropdown
+                :model-value="form.entityId"
+                :items="optionsEntites"
+                placeholder="Sélectionner une entité"
+                @update:model-value="onEntityChange"
+              />
               <div v-if="err.entityId" :class="cls.fieldError">{{ err.entityId }}</div>
             </div>
             <div :class="cls.field">
               <label :class="cls.fieldLabel">Rôle système *</label>
-              <select v-model="form.role" :class="[cls.fieldSelect, err.role && cls.inputError]">
-                <option value="">-- Sélectionner --</option>
-                <option value="employee">Employé</option>
-                <option value="validator">Validateur</option>
-                <option value="hr_admin">Admin RH</option>
-                <option value="hr_director">Directeur RH</option>
-              </select>
+              <SearchableDropdown
+                v-model="form.role"
+                :items="optform_role"
+                placeholder="Sélectionner"
+              />
               <div v-if="err.role" :class="cls.fieldError">{{ err.role }}</div>
             </div>
             <div :class="cls.field">
               <label :class="cls.fieldLabel">Type de contrat *</label>
-              <select v-model="form.contractType" :class="[cls.fieldSelect, err.contractType && cls.inputError]">
-                <option value="">-- Sélectionner --</option>
-                <option value="CDI">CDI</option>
-                <option value="CDD">CDD</option>
-                <option value="Prestataire">Prestataire</option>
-                <option value="Stage">Stage</option>
-                <option value="Freelance">Freelance</option>
-              </select>
+              <SearchableDropdown
+                v-model="form.contractType"
+                :items="optform_contractType"
+                placeholder="Sélectionner"
+              />
               <div v-if="err.contractType" :class="cls.fieldError">{{ err.contractType }}</div>
             </div>
             <div :class="cls.field">
@@ -127,12 +122,11 @@
             </div>
             <div :class="cls.field" v-if="isEdit">
               <label :class="cls.fieldLabel">Statut</label>
-              <select v-model="form.status" :class="cls.fieldSelect">
-                <option value="actif">Actif</option>
-                <option value="en_conge">En congé</option>
-                <option value="suspendu">Suspendu</option>
-                <option value="sorti">Sorti</option>
-              </select>
+              <SearchableDropdown
+                v-model="form.status"
+                :items="optform_status"
+                placeholder="Sélectionner…"
+              />
             </div>
             <!-- Motif requis si suspendu ou sorti -->
             <div :class="[cls.field, 'col-span-full']" v-if="isEdit && (form.status === 'suspendu' || form.status === 'sorti')">
@@ -228,24 +222,12 @@
           <div :class="fieldGrid">
             <div :class="cls.field">
               <label :class="cls.fieldLabel">Manager</label>
-              <select v-model="form.managerId" :class="cls.fieldSelect">
-                <option value="">-- Aucun --</option>
-                <optgroup label="Directeurs RH">
-                  <option v-for="e in mgrs.filter(e => e.role === 'hr_director')" :key="e.id" :value="e.id">
-                    {{ e.code }} — {{ e.name }} · {{ e.fonction ?? e.jobTitle }}
-                  </option>
-                </optgroup>
-                <optgroup label="Admins RH">
-                  <option v-for="e in mgrs.filter(e => e.role === 'hr_admin')" :key="e.id" :value="e.id">
-                    {{ e.code }} — {{ e.name }} · {{ e.fonction ?? e.jobTitle }}
-                  </option>
-                </optgroup>
-                <optgroup label="Validateurs">
-                  <option v-for="e in mgrs.filter(e => e.role === 'validator')" :key="e.id" :value="e.id">
-                    {{ e.code }} — {{ e.name }} · {{ e.fonction ?? e.jobTitle }}
-                  </option>
-                </optgroup>
-              </select>
+              <SearchableDropdown
+                v-model="form.managerId"
+                :items="optionsManagers"
+                placeholder="Aucun manager"
+                show-avatar
+              />
             </div>
             <div :class="cls.field" v-if="selectedManager">
               <label :class="cls.fieldLabel">Manager sélectionné</label>
@@ -282,9 +264,14 @@
 
 <script setup lang="ts">
 import { reactive, computed, ref, onMounted } from 'vue'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeft, User, Briefcase, ShieldCheck, Save, FileText, ChevronDown } from 'lucide-vue-next'
 import * as cls from '../../lib/formClasses'
+
+const optionsEntites = computed<DropdownItem[]>(() =>
+  entityStore.approvedEntities.map(e => ({ id: e.id, label: e.name, sublabel: e.code })))
 import * as L from '../../lib/listClasses'
 import { useEmployeeStore } from '../../stores/employees'
 import { useEntityStore }   from '../../stores/entities'
@@ -371,6 +358,31 @@ const err = reactive({
 // ── Computed ────────────────────────────────────────────────────
 const mgrs = computed(() => store.validatorEmployees.filter(e => e.id !== empId.value))
 
+/**
+ * Managers possibles, groupés par rôle.
+ *
+ * Le sélecteur natif employait des optgroup, que le composant ne gère
+ * pas. Le rôle passe donc en sous-libellé : la séparation visuelle est
+ * perdue, mais le rôle devient cherchable, ce qu'un optgroup n'offre pas.
+ */
+const LIB_ROLE_MGR: Record<string, string> = {
+  hr_director: 'Directeur RH',
+  hr_admin:    'Admin RH',
+  validator:   'Validateur',
+}
+
+const optionsManagers = computed<DropdownItem[]>(() =>
+  ['hr_director', 'hr_admin', 'validator'].flatMap(role =>
+    mgrs.value
+      .filter(e => e.role === role)
+      .map(e => ({
+        id: e.id,
+        label: e.name,
+        sublabel: `${LIB_ROLE_MGR[role]} · ${e.fonction ?? e.jobTitle}`,
+        initials: e.initials,
+        avatarColor: e.avatarBg,
+      }))))
+
 const selectedManager = computed(() =>
   form.managerId ? store.getById(form.managerId) : undefined
 )
@@ -387,9 +399,9 @@ function onCinInput() {
   }
 }
 
-function onEntityChange() {
-  const e = entityStore.getEntityById(form.entityId ?? '')
-  form.entityName = e?.name ?? ''
+function onEntityChange(id: string) {
+  form.entityId = id
+  form.entityName = entityStore.getEntityById(id)?.name ?? ''
 }
 
 // ── Chargement mode édition ─────────────────────────────────────
@@ -531,4 +543,26 @@ function handleSave() {
     router.push({ name: 'hr-employees' })
   }
 }
+
+const optform_role: DropdownItem[] = [
+                { id: 'employee', label: "Employé" },
+                { id: 'validator', label: "Validateur" },
+                { id: 'hr_admin', label: "Admin RH" },
+                { id: 'hr_director', label: "Directeur RH" },
+]
+
+const optform_contractType: DropdownItem[] = [
+                { id: 'CDI', label: "CDI" },
+                { id: 'CDD', label: "CDD" },
+                { id: 'Prestataire', label: "Prestataire" },
+                { id: 'Stage', label: "Stage" },
+                { id: 'Freelance', label: "Freelance" },
+]
+
+const optform_status: DropdownItem[] = [
+                { id: 'actif', label: "Actif" },
+                { id: 'en_conge', label: "En congé" },
+                { id: 'suspendu', label: "Suspendu" },
+                { id: 'sorti', label: "Sorti" },
+]
 </script>

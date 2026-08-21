@@ -19,10 +19,11 @@
         </div>
         <div class="flex flex-col gap-1">
           <label class="text-[12px] font-medium text-muted-foreground">Mission liée <span class="font-normal">(optionnel)</span></label>
-          <select v-model="form.missionId" class="h-[38px] px-3 border border-border rounded-md bg-background text-[13px] text-foreground focus:outline-none focus:border-primary">
-            <option value="">Aucune</option>
-            <option v-for="m in missionStore.missions.filter(m => m.status === 'approved')" :key="m.id" :value="m.id">{{ m.code }} — {{ m.destination }}</option>
-          </select>
+          <SearchableDropdown
+            v-model="form.missionId"
+            :items="optionsMissions"
+            placeholder="Aucune"
+          />
         </div>
       </div>
     </FormSection>
@@ -76,6 +77,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue'
+import SearchableDropdown from '../ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../ui/SearchableDropdown.vue'
 import { Plus, Trash2, Save, Send } from 'lucide-vue-next'
 import CreateModalShell from '../shared/CreateModalShell.vue'
 import FormSection from '../ui/form-field/FormSection.vue'
@@ -100,6 +103,12 @@ const emit = defineEmits<{
 const auth          = useAuthStore()
 const expenseStore  = useExpenseStore()
 const missionStore  = useMissionStore()
+
+/* Seules les missions approuvées peuvent porter une note de frais. */
+const optionsMissions = computed<DropdownItem[]>(() =>
+  missionStore.missions
+    .filter(m => m.status === 'approved')
+    .map(m => ({ id: m.id, label: m.destination, sublabel: m.code })))
 const employeeStore = useEmployeeStore()
 
 const forWhom = ref<BeneficiaryValue>({ mode: 'self', employeeId: '' })

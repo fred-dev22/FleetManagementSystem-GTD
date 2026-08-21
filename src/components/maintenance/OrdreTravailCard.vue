@@ -143,32 +143,35 @@
               <div class="grid grid-cols-2 gap-3 mb-2.5 max-sm:grid-cols-1">
                 <div :class="F.field">
                   <label :class="F.fieldLabel">Sous-système</label>
-                  <select v-model="nouvellePanne.sousSysteme" :class="F.fieldSelect">
-                    <option value="">Choisir…</option>
-                    <option v-for="(lib, k) in LIB_SOUS_SYSTEME" :key="k" :value="k">{{ lib }}</option>
-                  </select>
+                  <SearchableDropdown
+                    v-model="nouvellePanne.sousSysteme"
+                    :items="optSousSystemes"
+                    placeholder="Sous-système…"
+                  />
                 </div>
                 <div :class="F.field">
                   <label :class="F.fieldLabel">Mode de défaillance</label>
-                  <select v-model="nouvellePanne.modeDefaillance" :class="F.fieldSelect">
-                    <option value="">Choisir…</option>
-                    <option v-for="(lib, k) in LIB_MODE_DEFAILLANCE" :key="k" :value="k">{{ lib }}</option>
-                  </select>
+                  <SearchableDropdown
+                    v-model="nouvellePanne.modeDefaillance"
+                    :items="optModes"
+                    placeholder="Mode de défaillance…"
+                  />
                 </div>
                 <div :class="F.field">
                   <label :class="F.fieldLabel">Cause racine</label>
-                  <select v-model="nouvellePanne.causeRacine" :class="F.fieldSelect">
-                    <option value="">Choisir…</option>
-                    <option v-for="(lib, k) in LIB_CAUSE_RACINE" :key="k" :value="k">{{ lib }}</option>
-                  </select>
+                  <SearchableDropdown
+                    v-model="nouvellePanne.causeRacine"
+                    :items="optCauses"
+                    placeholder="Cause racine…"
+                  />
                 </div>
                 <div :class="F.field">
                   <label :class="F.fieldLabel">Gravité</label>
-                  <select v-model="nouvellePanne.gravite" :class="F.fieldSelect">
-                    <option value="mineure">Mineure</option>
-                    <option value="majeure">Majeure</option>
-                    <option value="critique">Critique</option>
-                  </select>
+                  <SearchableDropdown
+                    v-model="nouvellePanne.gravite"
+                    :items="optnouvellePanne_gravite"
+                    placeholder="Sélectionner…"
+                  />
                 </div>
               </div>
               <button :class="Lc.btnPrimary" :disabled="!panneComplete" @click="ajouterPanne">
@@ -190,24 +193,27 @@
             <div class="grid grid-cols-3 gap-3 max-sm:grid-cols-1">
               <div :class="F.field">
                 <label :class="F.fieldLabel">Sous-système <span class="text-danger">*</span></label>
-                <select v-model="diag.sousSysteme" :class="F.fieldSelect">
-                  <option value="">Choisir…</option>
-                  <option v-for="(lib, k) in LIB_SOUS_SYSTEME" :key="k" :value="k">{{ lib }}</option>
-                </select>
+                <SearchableDropdown
+                  v-model="diag.sousSysteme"
+                  :items="optSousSystemes"
+                  placeholder="Sous-système…"
+                />
               </div>
               <div :class="F.field">
                 <label :class="F.fieldLabel">Mode de défaillance <span class="text-danger">*</span></label>
-                <select v-model="diag.modeDefaillance" :class="F.fieldSelect">
-                  <option value="">Choisir…</option>
-                  <option v-for="(lib, k) in LIB_MODE_DEFAILLANCE" :key="k" :value="k">{{ lib }}</option>
-                </select>
+                <SearchableDropdown
+                  v-model="diag.modeDefaillance"
+                  :items="optModes"
+                  placeholder="Mode de défaillance…"
+                />
               </div>
               <div :class="F.field">
                 <label :class="F.fieldLabel">Cause racine <span class="text-danger">*</span></label>
-                <select v-model="diag.causeRacine" :class="F.fieldSelect">
-                  <option value="">Choisir…</option>
-                  <option v-for="(lib, k) in LIB_CAUSE_RACINE" :key="k" :value="k">{{ lib }}</option>
-                </select>
+                <SearchableDropdown
+                  v-model="diag.causeRacine"
+                  :items="optCauses"
+                  placeholder="Cause racine…"
+                />
               </div>
             </div>
 
@@ -433,6 +439,9 @@
  * Fiche d'un ordre de travail.
  * Même coquille et même langage visuel que la fiche véhicule.
  */
+import SearchableDropdown from '../ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../ui/SearchableDropdown.vue'
+import { optionsDeLibelles } from '../../lib/dropdownItems'
 import { ref, reactive, computed } from 'vue'
 import { AlertCircle, FileQuestion, ShieldCheck, Plus } from 'lucide-vue-next'
 import CardModalShell from '../shared/CardModalShell.vue'
@@ -558,4 +567,17 @@ function naviguer(delta: number) {
   const cible = ordresOrdonnes.value[indexCourant.value + delta]
   if (cible) emit('navigate', cible.id)
 }
+
+/* Options ISO 14224 : onze sous-systèmes, huit modes, cinq causes.
+   Une liste native imposait de les parcourir ; la recherche y accède
+   directement, ce qui compte quand le diagnostic se fait au garage. */
+const optSousSystemes = computed(() => optionsDeLibelles(LIB_SOUS_SYSTEME))
+const optModes        = computed(() => optionsDeLibelles(LIB_MODE_DEFAILLANCE))
+const optCauses       = computed(() => optionsDeLibelles(LIB_CAUSE_RACINE))
+
+const optnouvellePanne_gravite: DropdownItem[] = [
+                    { id: 'mineure', label: "Mineure" },
+                    { id: 'majeure', label: "Majeure" },
+                    { id: 'critique', label: "Critique" },
+]
 </script>

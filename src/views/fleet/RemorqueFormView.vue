@@ -46,19 +46,11 @@
         <!-- Type -->
         <div class="field" :class="{ 'field--error': errors.type }">
           <label class="field__label" for="type">Type <span class="required">*</span></label>
-          <select
-            id="type"
+          <SearchableDropdown
             v-model="form.type"
-            class="field__select"
-            @blur="validateField('type')"
-          >
-            <option value="" disabled>Sélectionner un type</option>
-            <option value="Citerne">Citerne</option>
-            <option value="Bâchée">Bâchée</option>
-            <option value="Frigorifique">Frigorifique</option>
-            <option value="Plateau">Plateau</option>
-            <option value="Autre">Autre</option>
-          </select>
+            :items="optform_type"
+            placeholder="Sélectionner un type"
+          />
           <p v-if="errors.type" class="field__error">{{ errors.type }}</p>
         </div>
 
@@ -78,10 +70,11 @@
               placeholder="ex. 30"
               @blur="validateField('capacite')"
             />
-            <select v-model="form.uniteCapacite" class="field__select unit-select">
-              <option value="T">T</option>
-              <option value="L">L</option>
-            </select>
+            <SearchableDropdown
+              v-model="form.uniteCapacite"
+              :items="optform_uniteCapacite"
+              placeholder="Sélectionner…"
+            />
           </div>
           <p v-if="errors.capacite" class="field__error">{{ errors.capacite }}</p>
         </div>
@@ -134,10 +127,11 @@
         <!-- Statut administratif (EDIT only) -->
         <div v-if="isEdit" class="field">
           <label class="field__label" for="statutAdmin">Statut administratif</label>
-          <select id="statutAdmin" v-model="form.statutAdmin" class="field__select">
-            <option value="en_service">En service</option>
-            <option value="hors_service">Hors service</option>
-          </select>
+          <SearchableDropdown
+            v-model="form.statutAdmin"
+            :items="optform_statutAdmin"
+            placeholder="Sélectionner…"
+          />
         </div>
 
         <!-- Global error -->
@@ -161,6 +155,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useRemorquesStore } from '../../stores/remorques'
 
@@ -315,6 +311,24 @@ function goBack() {
     router.push({ name: 'fleet-dashboard' })
   }
 }
+
+const optform_type: DropdownItem[] = [
+            { id: 'Citerne', label: "Citerne" },
+            { id: 'Bâchée', label: "Bâchée" },
+            { id: 'Frigorifique', label: "Frigorifique" },
+            { id: 'Plateau', label: "Plateau" },
+            { id: 'Autre', label: "Autre" },
+]
+
+const optform_uniteCapacite: DropdownItem[] = [
+              { id: 'T', label: "T" },
+              { id: 'L', label: "L" },
+]
+
+const optform_statutAdmin: DropdownItem[] = [
+            { id: 'en_service', label: "En service" },
+            { id: 'hors_service', label: "Hors service" },
+]
 </script>
 
 <style scoped>

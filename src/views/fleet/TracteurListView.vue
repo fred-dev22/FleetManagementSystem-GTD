@@ -36,13 +36,12 @@
     <template #filters>
       <div :class="L.fpField">
         <label :class="L.fpFieldLabel">Statut op.</label>
-        <select v-model="filterOp" :class="L.fpSelect">
-          <option value="">Tous</option>
-          <option value="en_mouvement">En mouvement</option>
-          <option value="arrete">Arrêté</option>
-          <option value="allume_immobile">Allumé/immobile</option>
-          <option value="signal_perdu">Signal perdu</option>
-        </select>
+        <SearchableDropdown
+          v-model="filterOp"
+          :items="optfilterOp"
+          placeholder="Tous"
+          compact
+        />
       </div>
       <button class="mt-auto py-[7px] bg-transparent border-0 text-xs text-muted-foreground cursor-pointer text-left hover:text-primary" @click="resetFilters">
         Réinitialiser
@@ -124,6 +123,8 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { Plus, Truck, Check, AlertTriangle, Archive } from 'lucide-vue-next'
 import { ListPageLayout } from '../../components'
 import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
@@ -214,4 +215,11 @@ function statutOpLabel(s?: string) {
 function statutOpClass(s?: string) {
   return ({ en_mouvement: 'bg-success-bg text-success', arrete: 'bg-primary/10 text-primary', allume_immobile: 'bg-warning-bg text-warning', signal_perdu: 'bg-danger-bg text-danger' } as any)[s ?? ''] ?? ''
 }
+
+const optfilterOp: DropdownItem[] = [
+          { id: 'en_mouvement', label: "En mouvement" },
+          { id: 'arrete', label: "Arrêté" },
+          { id: 'allume_immobile', label: "Allumé/immobile" },
+          { id: 'signal_perdu', label: "Signal perdu" },
+]
 </script>

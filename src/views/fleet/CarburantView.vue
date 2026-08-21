@@ -44,12 +44,12 @@
     <template #filters>
       <div v-if="vue === 'recharges'">
         <label :class="L.fpFieldLabel">Statut</label>
-        <select v-model="filterStatut" :class="L.fpSelect">
-          <option value="">Tous</option>
-          <option value="valide">Conforme</option>
-          <option value="anomalie">En anomalie</option>
-          <option value="qualifie">Qualifiée</option>
-        </select>
+        <SearchableDropdown
+          v-model="filterStatut"
+          :items="optfilterStatut"
+          placeholder="Tous"
+          compact
+        />
       </div>
       <div v-if="vue === 'recharges'">
         <label :class="L.fpFieldLabel">Canal</label>
@@ -60,10 +60,10 @@
       </div>
       <div>
         <label :class="L.fpFieldLabel">Véhicule</label>
-        <select v-model="filterVehicule" :class="L.fpSelect">
-          <option value="">Tous</option>
-          <option v-for="p in plaques" :key="p" :value="p">{{ p }}</option>
-        </select>
+        <SearchableDropdown
+          v-model="filterVehicule" :items="optionsPlaques"
+          placeholder="Tous" compact
+        />
       </div>
       <button class="mt-auto py-[7px] bg-transparent border-0 text-xs text-muted-foreground cursor-pointer hover:text-primary"
         @click="resetFilters">
@@ -251,6 +251,8 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { Fuel, Upload, Coins, Gauge, AlertTriangle, Ticket } from 'lucide-vue-next'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { ListPageLayout } from '../../components'
 import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
 import RechargeCard from '../../components/fleet/RechargeCard.vue'
@@ -377,6 +379,9 @@ const messageVide = computed(() =>
 const plaques = computed(() =>
   [...new Set(store.recharges.map(r => r.vehiculePlaque))].sort())
 
+const optionsPlaques = computed<DropdownItem[]>(() =>
+  plaques.value.map(p => ({ id: p, label: p })))
+
 /* ══ Données, selon la vue active ══════════════════════════ */
 const donnees = computed<LigneCarburant[]>(() => {
   const q = searchQuery.value.toLowerCase()
@@ -431,4 +436,10 @@ function resetFilters() {
 }
 
 function openCard(id: string) { selectedId.value = id }
+
+const optfilterStatut: DropdownItem[] = [
+          { id: 'valide', label: "Conforme" },
+          { id: 'anomalie', label: "En anomalie" },
+          { id: 'qualifie', label: "Qualifiée" },
+]
 </script>

@@ -23,12 +23,11 @@
         </div>
         <div :class="cls.field">
           <label :class="cls.fieldLabel">Type *</label>
-          <select v-model="form.type" :class="[cls.fieldSelect, errors.type ? cls.inputError : '']">
-            <option value="">-- Choisir un type --</option>
-            <option value="direction">Direction</option>
-            <option value="department">Département</option>
-            <option value="service">Service</option>
-          </select>
+          <SearchableDropdown
+            v-model="form.type"
+            :items="optform_type"
+            placeholder="Choisir un type"
+          />
           <div v-if="errors.type" :class="cls.fieldError">{{ errors.type }}</div>
         </div>
         <div :class="cls.field">
@@ -285,4 +284,10 @@ function handleSubmit() {
   emit('saved')
   close()
 }
+
+const optform_type: DropdownItem[] = [
+            { id: 'direction', label: "Direction" },
+            { id: 'department', label: "Département" },
+            { id: 'service', label: "Service" },
+]
 </script>

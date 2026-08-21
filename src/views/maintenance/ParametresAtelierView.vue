@@ -24,10 +24,6 @@
 
     <div v-else class="flex items-start gap-2.5 bg-success-bg text-success rounded-lg px-3.5 py-2.5 mb-3.5">
       <BadgeCheck class="w-4 h-4 shrink-0 mt-px" />
-      <p class="text-xs leading-relaxed">
-        Tous les paramètres proviennent de GTD. Les indicateurs de charge et de coût
-        reposent sur des données réelles.
-      </p>
     </div> -->
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-3.5 items-start">

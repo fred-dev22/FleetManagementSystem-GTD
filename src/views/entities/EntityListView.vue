@@ -56,12 +56,12 @@
     <template #filters>
       <div :class="L.fpField">
         <label :class="L.fpFieldLabel">Type</label>
-        <select v-model="filterType" :class="L.fpSelect">
-          <option value="">Tous les types</option>
-          <option value="direction">Direction</option>
-          <option value="department">Département</option>
-          <option value="service">Service</option>
-        </select>
+        <SearchableDropdown
+          v-model="filterType"
+          :items="optfilterType"
+          placeholder="Tous les types"
+          compact
+        />
       </div>
       <button class="mt-auto py-[7px] bg-transparent border-0 text-xs text-muted-foreground cursor-pointer text-left hover:text-primary" @click="resetFilters">
         Réinitialiser les filtres
@@ -135,6 +135,8 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, provide, type Component } from 'vue'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { useRouter } from 'vue-router'
 import {
   Plus, Upload, List, ListTree, Network, Building, Users, Check, Clock, Maximize2, Minimize2, Info,
@@ -260,4 +262,10 @@ const pageItems = computed(() => {
   const start = (page.value - 1) * pageSize.value
   return filtered.value.slice(start, start + pageSize.value)
 })
+
+const optfilterType: DropdownItem[] = [
+          { id: 'direction', label: "Direction" },
+          { id: 'department', label: "Département" },
+          { id: 'service', label: "Service" },
+]
 </script>

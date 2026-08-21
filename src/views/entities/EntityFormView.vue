@@ -33,21 +33,21 @@
 
                 <div :class="cls.field">
                   <label :class="cls.fieldLabel">Type *</label>
-                  <select v-model="form.type" :class="[cls.fieldSelect, errors.type && cls.inputError]">
-                    <option value="">-- Choisir un type --</option>
-                    <option value="direction">Direction</option>
-                    <option value="department">Département</option>
-                    <option value="service">Service</option>
-                  </select>
+                  <SearchableDropdown
+                    v-model="form.type"
+                    :items="optform_type"
+                    placeholder="Choisir un type"
+                  />
                   <div v-if="errors.type" :class="cls.fieldError">{{ errors.type }}</div>
                 </div>
 
                 <div :class="cls.field">
                   <label :class="cls.fieldLabel">Entité parente</label>
-                  <select v-model="form.parentId" :class="cls.fieldSelect">
-                    <option value="">Aucune (entité racine)</option>
-                    <option v-for="e in parentOptions" :key="e.id" :value="e.id">{{ e.code }} — {{ e.name }}</option>
-                  </select>
+                  <SearchableDropdown
+                    v-model="form.parentId"
+                    :items="optionsParents"
+                    placeholder="Aucune (entité racine)"
+                  />
                 </div>
 
                 <div :class="cls.field">
@@ -68,12 +68,13 @@
               <div :class="fieldGrid">
                 <div :class="cls.field">
                   <label :class="cls.fieldLabel">Responsable</label>
-                  <select v-model="form.responsibleId" :class="cls.fieldSelect" @change="onResponsibleChange">
-                    <option value="">-- Aucun --</option>
-                    <option v-for="e in empStore.employees" :key="e.id" :value="e.id">
-                      {{ e.code }} — {{ e.name }} · {{ e.jobTitle }}
-                    </option>
-                  </select>
+                  <SearchableDropdown
+                    :model-value="form.responsibleId"
+                    :items="optionsResponsables"
+                    placeholder="Aucun responsable"
+                    show-avatar
+                    @update:model-value="onResponsibleChange"
+                  />
                 </div>
                 <div :class="cls.field">
                   <label :class="cls.fieldLabel">Téléphone principal</label>
@@ -160,6 +161,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from 'vue'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeft, Building, User, ShieldCheck, Trash2, Plus, Save, Send } from 'lucide-vue-next'
 import * as cls from '../../lib/formClasses'
@@ -172,6 +175,12 @@ import type { EntityType, ValidatorPool } from '../../types'
 const auth        = useAuthStore()
 const store       = useEntityStore()
 const empStore    = useEmployeeStore()
+
+const optionsResponsables = computed<DropdownItem[]>(() =>
+  (empStore.employees ?? []).map(e => ({
+    id: e.id, label: e.name, sublabel: `${e.code} · ${e.jobTitle}`,
+    initials: e.initials, avatarColor: e.avatarBg,
+  })))
 const router      = useRouter()
 const route       = useRoute()
 
@@ -217,6 +226,9 @@ const localPools = ref<ValidatorPool[]>([])
 const parentOptions = computed(() =>
   store.entities.filter(e => e.status === 'approved' && e.id !== entityId.value)
 )
+
+const optionsParents = computed<DropdownItem[]>(() =>
+  parentOptions.value.map(e => ({ id: e.id, label: e.name, sublabel: e.code })))
 
 // Pré-remplissage en mode édition
 onMounted(() => {
@@ -268,9 +280,9 @@ function updatePoolEmployee(level: number, employeeId: string) {
   }
 }
 
-function onResponsibleChange() {
-  const emp = empStore.getById(form.responsibleId ?? '')
-  form.responsibleName = emp?.name ?? ''
+function onResponsibleChange(id: string) {
+  form.responsibleId = id
+  form.responsibleName = empStore.getById(id)?.name ?? ''
 }
 
 // ── Validation ────────────────────────────────────────────────
@@ -325,4 +337,10 @@ async function handleSubmit() {
   }
   router.push({ name: 'hr-entities' })
 }
+
+const optform_type: DropdownItem[] = [
+                    { id: 'direction', label: "Direction" },
+                    { id: 'department', label: "Département" },
+                    { id: 'service', label: "Service" },
+]
 </script>

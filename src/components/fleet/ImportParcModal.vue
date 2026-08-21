@@ -6,9 +6,6 @@
       <div class="flex items-center justify-between px-5 py-3.5 border-b border-border">
         <div>
           <h2 class="text-base font-semibold text-foreground">Importer le parc</h2>
-          <p class="text-[11px] text-muted-foreground">
-            Fichier CSV issu des tableurs actuels. Une ligne passe entièrement ou est rejetée.
-          </p>
         </div>
         <button :class="L.tbIconBtn" @click="emit('close')"><X class="w-4 h-4" /></button>
       </div>
@@ -35,10 +32,6 @@
           <!-- Étape 2 - correspondance des colonnes -->
           <div>
             <p class="text-[13px] font-semibold text-foreground mb-1">2. Faire correspondre les colonnes</p>
-            <p class="text-[11px] text-muted-foreground mb-2.5">
-              Chaque fichier a ses propres intitulés. Les correspondances évidentes sont pré-remplies ;
-              corrigez celles qui ne le sont pas.
-            </p>
 
             <div class="grid grid-cols-3 gap-x-5 gap-y-3 max-sm:grid-cols-1">
               <div v-for="ch in CHAMPS" :key="ch.cle" :class="F.field">

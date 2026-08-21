@@ -137,11 +137,6 @@
             height="300px"
           />
 
-          <p class="text-[11px] text-muted-foreground mt-2 leading-relaxed">
-            Le camion quitte sa base et dessert les sites qui lui ont été affectés, dans l’ordre.
-            Le tracé bleu relie les sites prévus, le tracé rouge est le trajet réellement enregistré
-            par la télématique. Il n’est pas calculé par le système : seule la séquence de sites fait foi.
-          </p>
         </FormSection>
 
         <!-- ═══════════════════════════════════════════════════
@@ -280,11 +275,6 @@
             </div>
           </div>
 
-          <p class="text-[11px] text-muted-foreground mt-2.5 leading-relaxed">
-            Le volume à 15 °C est calculé par le système à partir du volume mesuré, de la température
-            et de la densité - jamais ressaisi. C’est la première source d’erreur et de contestation
-            avec les distributeurs.
-          </p>
 
           <!-- Projet de note de protêt, pré-rempli dès dépassement -->
           <div v-if="coulage.verdict.startsWith('hors')" class="mt-4">
@@ -366,10 +356,6 @@
             </div>
           </div>
 
-          <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
-            Évalué automatiquement à partir des heures d’arrivée et de départ relevées sur chaque site.
-            Les seuils sont modifiables dans Configuration → Paramètres.
-          </p>
         </FormSection>
 
         <!-- ═══════════════════════════════════════════════════
@@ -517,8 +503,6 @@
             <ShieldAlert class="w-4 h-4 shrink-0 mt-px" />
             <p class="text-xs leading-relaxed">
               <strong>Alerte prioritaire.</strong> Les trois signaux sont réunis sur cette tournée.
-              Pris isolément, chacun n’est qu’un indice ; leur concomitance constitue un faisceau
-              nettement plus solide. Le dossier ci-dessous est déjà constitué.
             </p>
           </div>
 

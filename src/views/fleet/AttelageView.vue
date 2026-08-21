@@ -73,21 +73,19 @@
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label :class="L.fpFieldLabel">Tracteur *</label>
-            <select v-model="newAtt.tracteurId" :class="L.fpSelect" @change="onTracteurChange">
-              <option value="">Sélectionner un tracteur</option>
-              <option v-for="t in tracteursLibres" :key="t.id" :value="t.id">
-                {{ t.plaque }} - {{ t.marque }} {{ t.modele }}
-              </option>
-            </select>
+            <SearchableDropdown
+              :model-value="newAtt.tracteurId" :items="optionsTracteurs"
+              placeholder="Sélectionner un tracteur" compact
+              @update:model-value="onTracteurChange"
+            />
           </div>
           <div>
             <label :class="L.fpFieldLabel">Remorque *</label>
-            <select v-model="newAtt.remorqueId" :class="L.fpSelect" @change="onRemorqueChange">
-              <option value="">Sélectionner une remorque</option>
-              <option v-for="r in remorquesLibres" :key="r.id" :value="r.id">
-                {{ r.plaque }} - {{ r.typeRemorque }} {{ r.capacite }}
-              </option>
-            </select>
+            <SearchableDropdown
+              :model-value="newAtt.remorqueId" :items="optionsRemorques"
+              placeholder="Sélectionner une remorque" compact
+              @update:model-value="onRemorqueChange"
+            />
           </div>
           <div>
             <label :class="L.fpFieldLabel">Date début *</label>
@@ -162,6 +160,8 @@
 <script setup lang="ts">
 import { ref, computed, reactive } from 'vue'
 import { Link2, Plus, History, Loader2 } from 'lucide-vue-next'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { useAttelagesStore } from '../../stores/attelages'
 import { useVehiculesStore } from '../../stores/vehicules'
 import type { Attelage } from '../../types'
@@ -191,18 +191,31 @@ const kpis = computed(() => [
 const tracteursLibres = computed(() => vehStore.getTracteurLibre())
 const remorquesLibres = computed(() => vehStore.getRemorqueLibre())
 
+const optionsTracteurs = computed<DropdownItem[]>(() =>
+  tracteursLibres.value.map(t => ({
+    id: t.id, label: t.plaque,
+    sublabel: [t.marque, t.modele].filter(Boolean).join(' '),
+  })))
+
+const optionsRemorques = computed<DropdownItem[]>(() =>
+  remorquesLibres.value.map(r => ({
+    id: r.id, label: r.plaque,
+    sublabel: [r.typeRemorque, r.capacite].filter(Boolean).join(' · '),
+  })))
+
+
 function getRemorqueType(remorqueId: string) {
   return vehStore.getById(remorqueId)?.typeRemorque ?? '-'
 }
 
-function onTracteurChange() {
-  const t = vehStore.getById(newAtt.tracteurId)
-  if (t) newAtt.tracteurPlaque = t.plaque
+function onTracteurChange(id: string) {
+  newAtt.tracteurId = id
+  newAtt.tracteurPlaque = vehStore.getById(id)?.plaque ?? ''
 }
 
-function onRemorqueChange() {
-  const r = vehStore.getById(newAtt.remorqueId)
-  if (r) newAtt.remorquePlaque = r.plaque
+function onRemorqueChange(id: string) {
+  newAtt.remorqueId = id
+  newAtt.remorquePlaque = vehStore.getById(id)?.plaque ?? ''
 }
 
 const canSubmit = computed(() => !!newAtt.tracteurId && !!newAtt.remorqueId && !!newAtt.dateDebut)

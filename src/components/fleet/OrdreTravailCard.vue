@@ -122,24 +122,27 @@
             <div class="grid grid-cols-3 gap-3 max-sm:grid-cols-1">
               <div :class="F.field">
                 <label :class="F.fieldLabel">Sous-système <span class="text-danger">*</span></label>
-                <select v-model="diag.sousSysteme" :class="F.fieldSelect">
-                  <option value="">Choisir…</option>
-                  <option v-for="(lib, k) in LIB_SOUS_SYSTEME" :key="k" :value="k">{{ lib }}</option>
-                </select>
+                <SearchableDropdown
+                  v-model="diag.sousSysteme"
+                  :items="optSousSystemes"
+                  placeholder="Sous-système…"
+                />
               </div>
               <div :class="F.field">
                 <label :class="F.fieldLabel">Mode de défaillance <span class="text-danger">*</span></label>
-                <select v-model="diag.modeDefaillance" :class="F.fieldSelect">
-                  <option value="">Choisir…</option>
-                  <option v-for="(lib, k) in LIB_MODE_DEFAILLANCE" :key="k" :value="k">{{ lib }}</option>
-                </select>
+                <SearchableDropdown
+                  v-model="diag.modeDefaillance"
+                  :items="optModes"
+                  placeholder="Mode de défaillance…"
+                />
               </div>
               <div :class="F.field">
                 <label :class="F.fieldLabel">Cause racine <span class="text-danger">*</span></label>
-                <select v-model="diag.causeRacine" :class="F.fieldSelect">
-                  <option value="">Choisir…</option>
-                  <option v-for="(lib, k) in LIB_CAUSE_RACINE" :key="k" :value="k">{{ lib }}</option>
-                </select>
+                <SearchableDropdown
+                  v-model="diag.causeRacine"
+                  :items="optCauses"
+                  placeholder="Cause racine…"
+                />
               </div>
             </div>
 
@@ -350,6 +353,8 @@
  * Fiche d'un ordre de travail.
  * Même coquille et même langage visuel que la fiche véhicule.
  */
+import SearchableDropdown from '../ui/SearchableDropdown.vue'
+import { optionsDeLibelles } from '../../lib/dropdownItems'
 import { ref, reactive, computed } from 'vue'
 import { AlertCircle, FileQuestion } from 'lucide-vue-next'
 import CardModalShell from '../shared/CardModalShell.vue'
@@ -439,4 +444,9 @@ function naviguer(delta: number) {
   const cible = ordresOrdonnes.value[indexCourant.value + delta]
   if (cible) emit('navigate', cible.id)
 }
+
+/* Options ISO 14224, recherchables plutôt que déroulantes. */
+const optSousSystemes = computed(() => optionsDeLibelles(LIB_SOUS_SYSTEME))
+const optModes        = computed(() => optionsDeLibelles(LIB_MODE_DEFAILLANCE))
+const optCauses       = computed(() => optionsDeLibelles(LIB_CAUSE_RACINE))
 </script>

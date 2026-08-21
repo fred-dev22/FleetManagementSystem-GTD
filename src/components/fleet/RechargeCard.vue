@@ -103,10 +103,6 @@
             </div>
           </div>
 
-          <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
-            Seuls les pleins complets servent au calcul de la consommation : entre deux pleins,
-            les litres délivrés correspondent exactement à ce qui a été consommé.
-          </p>
         </FormSection>
 
         <!-- ═══════════════════════════════════════════════════
@@ -130,11 +126,6 @@
             </li>
           </ul>
 
-          <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
-            Ces contrôles croisent trois informations que GTD possédait déjà séparément :
-            le relevé de recharge, la position du véhicule donnée par la télématique, et
-            l’affectation du chauffeur ce jour-là. Aucun capteur n’est nécessaire.
-          </p>
         </FormSection>
 
         <!-- ═══════════════════════════════════════════════════
@@ -214,10 +205,6 @@
             <button :class="Lc.btnPrimary" :disabled="!qualif" @click="qualifier">
               Enregistrer la qualification
             </button>
-            <p class="text-[11px] text-muted-foreground mt-2.5 leading-relaxed">
-              Toute refacturation suppose une qualification préalable et une double validation
-              hiérarchique. La grille doit être validée par la direction des ressources humaines.
-            </p>
           </template>
 
           <p v-else class="text-xs text-muted-foreground py-2">
@@ -286,8 +273,7 @@
           <p v-else-if="item.statut === 'refacture'"
             class="text-[11px] text-success mt-4 flex items-start gap-1.5">
             <CheckCircle2 class="w-3.5 h-3.5 shrink-0 mt-px" />
-            Les deux validations sont acquises. La retenue peut être transmise au circuit de paie
-            du module Ressources humaines.
+            Validations acquises : retenue transmissible à la paie.
           </p>
           <p v-else-if="item.statut === 'classe'"
             class="text-[11px] text-muted-foreground mt-4">

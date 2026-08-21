@@ -43,12 +43,12 @@
     <template #filters>
       <div>
         <label :class="L.fpFieldLabel">Type</label>
-        <select v-model="filterType" :class="L.fpSelect">
-          <option value="">Tous</option>
-          <option value="preventif">Préventif</option>
-          <option value="correctif">Correctif</option>
-          <option value="ameliorative">Améliorative</option>
-        </select>
+        <SearchableDropdown
+          v-model="filterType"
+          :items="optfilterType"
+          placeholder="Tous"
+          compact
+        />
       </div>
       <div>
         <label :class="L.fpFieldLabel">Sous-système</label>
@@ -59,12 +59,12 @@
       </div>
       <div>
         <label :class="L.fpFieldLabel">Gravité</label>
-        <select v-model="filterGravite" :class="L.fpSelect">
-          <option value="">Toutes</option>
-          <option value="mineure">Mineure</option>
-          <option value="majeure">Majeure</option>
-          <option value="critique">Critique</option>
-        </select>
+        <SearchableDropdown
+          v-model="filterGravite"
+          :items="optfilterGravite"
+          placeholder="Toutes"
+          compact
+        />
       </div>
       <button class="mt-auto py-[7px] bg-transparent border-0 text-xs text-muted-foreground cursor-pointer hover:text-primary"
         @click="resetFilters">
@@ -213,6 +213,8 @@
  * clic simple → aperçu, double-clic → fiche complète.
  */
 import { ref, computed, watch } from 'vue'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { useRouter } from 'vue-router'
 import { Wrench, Plus, Clock, PackageSearch, ShieldCheck, Coins } from 'lucide-vue-next'
 import { ListPageLayout } from '../../components'
@@ -339,4 +341,16 @@ function openCard(id: string) { selectedId.value = id }
 function voirVehicule(vehiculeId: string) {
   router.push({ name: 'fleet-vehicules', query: { vehicule: vehiculeId } })
 }
+
+const optfilterType: DropdownItem[] = [
+          { id: 'preventif', label: "Préventif" },
+          { id: 'correctif', label: "Correctif" },
+          { id: 'ameliorative', label: "Améliorative" },
+]
+
+const optfilterGravite: DropdownItem[] = [
+          { id: 'mineure', label: "Mineure" },
+          { id: 'majeure', label: "Majeure" },
+          { id: 'critique', label: "Critique" },
+]
 </script>

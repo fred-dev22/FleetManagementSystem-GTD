@@ -6,9 +6,6 @@
       <div class="flex items-center justify-between px-5 py-3.5 border-b border-border">
         <div>
           <h2 class="text-base font-semibold text-foreground">Nouveau voyage</h2>
-          <p class="text-[11px] text-muted-foreground">
-            Un voyage associe un véhicule et un trajet. Le chauffeur est déduit de l’affectation en cours.
-          </p>
         </div>
         <button :class="L.tbIconBtn" @click="emit('close')"><X class="w-4 h-4" /></button>
       </div>
@@ -19,12 +16,11 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div :class="F.field">
             <label :class="F.fieldLabel">Véhicule <span class="text-danger">*</span></label>
-            <select v-model="form.vehiculeId" :class="F.fieldSelect">
-              <option value="">Choisir…</option>
-              <option v-for="v in vehiculesDisponibles" :key="v.id" :value="v.id">
-                {{ v.plaque }} - {{ v.marque }} {{ v.modele }}
-              </option>
-            </select>
+            <SearchableDropdown
+              v-model="form.vehiculeId"
+              :items="optionsVehicules"
+              placeholder="Choisir…"
+            />
             <!-- Un véhicule absent de la liste doit s'expliquer, sinon
                  l'exploitant croit à un bug plutôt qu'à une règle. -->
             <p v-if="vehiculesEcartes.length" class="text-[11px] text-warning mt-1 leading-relaxed">
@@ -74,11 +70,11 @@
           </div>
           <div :class="F.field">
             <label :class="F.fieldLabel">Produit</label>
-            <select v-model="form.produit" :class="F.fieldSelect">
-              <option value="Gazole">Gazole (GO)</option>
-              <option value="SP95">Essence (SP95)</option>
-              <option value="Jet A1">Jet A1</option>
-            </select>
+            <SearchableDropdown
+              v-model="form.produit"
+              :items="optform_produit"
+              placeholder="Sélectionner…"
+            />
           </div>
           <div :class="F.field" class="md:col-span-2">
             <label :class="F.fieldLabel">Citerne attelée <span :class="F.fieldOptional">- déduite de l’attelage</span></label>
@@ -199,6 +195,12 @@ const vehiculesDisponibles = computed(() =>
   vehiculeStore.auParc.filter(v =>
     (v.statutAdmin === 'actif' || v.statutAdmin === 'affecte')
     && !docsStore.motifBlocage(v.id)))
+
+const optionsVehicules = computed<DropdownItem[]>(() =>
+  vehiculesDisponibles.value.map(v => ({
+    id: v.id, label: v.plaque,
+    sublabel: [v.marque, v.modele].filter(Boolean).join(' '),
+  })))
 
 /** Véhicules écartés pour pièce expirée, listés pour que l'absence s'explique. */
 const vehiculesEcartes = computed(() =>
@@ -332,4 +334,10 @@ function enregistrer() {
   emit('created', voyagesStore.voyages[0]?.id ?? '')
   emit('close')
 }
+
+const optform_produit: DropdownItem[] = [
+              { id: 'Gazole', label: "Gazole (GO)" },
+              { id: 'SP95', label: "Essence (SP95)" },
+              { id: 'Jet A1', label: "Jet A1" },
+]
 </script>

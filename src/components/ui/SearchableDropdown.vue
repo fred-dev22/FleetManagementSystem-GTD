@@ -4,8 +4,11 @@
     <!-- Trigger -->
     <button
       type="button"
-      class="flex items-center gap-2 w-full h-[38px] px-2.5 border rounded-md bg-background text-[13px] cursor-pointer transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed"
-      :class="open || selected ? 'border-primary bg-card' : 'border-border hover:border-primary'"
+      class="flex items-center gap-2 w-full border rounded-md bg-background cursor-pointer transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed"
+      :class="[
+        compact ? 'h-[30px] px-2 text-xs' : 'h-[38px] px-2.5 text-[13px]',
+        open || selected ? 'border-primary bg-card' : 'border-border hover:border-primary',
+      ]"
       :disabled="disabled"
       @click="toggle"
     >
@@ -13,8 +16,9 @@
         <span v-if="showAvatar" :class="avatarClass" :style="avatarStyle(selected)">
           {{ avatarText(selected) }}
         </span>
-        <span class="flex-1 text-foreground font-medium">{{ selected.label }}</span>
-        <button type="button" class="flex items-center justify-center w-5 h-5 border-0 bg-border rounded-full cursor-pointer text-muted-foreground shrink-0 transition-colors hover:bg-danger-bg hover:text-danger" @click.stop="clear">
+        <span class="flex-1 text-foreground font-medium truncate">{{ selected.label }}</span>
+        <ChevronDown v-if="!clearable" class="w-3 h-3 text-muted-foreground transition-transform shrink-0" :class="{ 'rotate-180': open }" />
+        <button v-if="clearable" type="button" class="flex items-center justify-center w-5 h-5 border-0 bg-border rounded-full cursor-pointer text-muted-foreground shrink-0 transition-colors hover:bg-danger-bg hover:text-danger" @click.stop="clear">
           <X class="w-3 h-3" />
         </button>
       </template>
@@ -90,14 +94,27 @@ export interface DropdownItem {
 
 const props = withDefaults(defineProps<{
   items:        DropdownItem[]
-  modelValue?:  string
+  modelValue?:  string | null
   placeholder?: string
   disabled?:    boolean
   showAvatar?:  boolean
+  /** Hauteur réduite, pour les barres de filtres et les tableaux */
+  compact?:     boolean
+  /** Autorise le retour à l'état vide via la croix */
+  clearable?:   boolean
+  /**
+   * Nombre d'options à partir duquel le champ de recherche apparaît.
+   * En deçà, la liste tient à l'écran et chercher coûte plus que lire :
+   * le champ serait un obstacle, pas une aide.
+   */
+  seuilRecherche?: number
 }>(), {
   placeholder: 'Sélectionner...',
   disabled:    false,
   showAvatar:  false,
+  compact:     false,
+  clearable:   true,
+  seuilRecherche: 8,
 })
 
 const emit = defineEmits<{ 'update:modelValue': [id: string] }>()
@@ -117,6 +134,8 @@ const PANEL_HEIGHT = 300
 const selected = computed(() =>
   props.modelValue ? props.items.find(i => i.id === props.modelValue) : undefined
 )
+
+const rechercheUtile = computed(() => props.items.length >= props.seuilRecherche)
 
 const filtered = computed(() => {
   const q = query.value.toLowerCase().trim()
@@ -156,7 +175,7 @@ function openDrop() {
   }
   open.value  = true
   query.value = ''
-  nextTick(() => searchEl.value?.focus())
+  if (rechercheUtile.value) nextTick(() => searchEl.value?.focus())
 }
 
 function close() {

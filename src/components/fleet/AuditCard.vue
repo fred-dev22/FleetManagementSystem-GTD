@@ -100,15 +100,14 @@
             <div>
               <p class="text-xs font-medium">Rapport archivé le {{ fmtDate(item.rapportArchiveLe) }}</p>
               <p class="text-[11px] leading-relaxed mt-0.5">
-                Il reste consultable indéfiniment et constitue la preuve à présenter lors d’un
-                vetting ou d’un audit de conformité.
+                Consultable indéfiniment, opposable en vetting.
               </p>
             </div>
           </div>
           <div v-else class="flex items-start gap-2.5 bg-warning-bg text-warning rounded-lg px-3.5 py-2.5">
             <AlertTriangle class="w-4 h-4 shrink-0 mt-px" />
             <p class="text-xs leading-relaxed">
-              Rapport non encore archivé. Un audit sans rapport archivé n’est pas opposable.
+              Rapport non archivé : l’audit n’est pas opposable.
             </p>
           </div>
         </FormSection>

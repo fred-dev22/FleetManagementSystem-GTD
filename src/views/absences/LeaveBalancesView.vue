@@ -36,10 +36,12 @@
     <template #filters>
       <div :class="L.fpField">
         <label :class="L.fpFieldLabel">Entité</label>
-        <select v-model="filterEntity" :class="L.fpSelect">
-          <option value="">Toutes les entités</option>
-          <option v-for="e in entityStore.approvedEntities" :key="e.id" :value="e.name">{{ e.name }}</option>
-        </select>
+        <SearchableDropdown
+          v-model="filterEntity"
+          :items="optionsEntites"
+          placeholder="Toutes les entités"
+          compact
+        />
       </div>
       <div :class="L.fpField">
         <label :class="L.fpFieldLabel">Type de congé</label>
@@ -101,10 +103,15 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { FileDown, Users, Sun, RefreshCw, Home, Clock } from 'lucide-vue-next'
 import { UserAvatar, ListPageLayout } from '../../components'
 import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
 import * as L from '../../lib/listClasses'
+
+const optionsEntites = computed<DropdownItem[]>(() =>
+  entityStore.approvedEntities.map(e => ({ id: e.name, label: e.name, sublabel: e.code })))
 import { useAbsenceStore } from '../../stores/absences'
 import { useEntityStore }  from '../../stores/entities'
 

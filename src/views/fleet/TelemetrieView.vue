@@ -12,12 +12,11 @@
     <!-- Tracteur selector -->
     <div class="selector-row">
       <label>Sélectionner un tracteur</label>
-      <select v-model="selectedTracteurId">
-        <option value="">-- Choisir un tracteur --</option>
-        <option v-for="t in tracteurs" :key="t.id" :value="t.id">
-          {{ t.plaque }} - {{ t.marque }} {{ t.modele }}
-        </option>
-      </select>
+      <SearchableDropdown
+        v-model="selectedTracteurId"
+        :items="optionsTracteurs"
+        placeholder="Choisir un tracteur"
+      />
     </div>
 
     <!-- Metric cards -->
@@ -100,6 +99,12 @@
       Sélectionnez un tracteur pour afficher les données de télémétrie.
     </div>
 
+    <!-- Un tracteur sans boîtier renvoyait un écran vide sans explication -->
+    <div v-else class="empty-state">
+      Aucune remontée pour {{ plaqueSelectionnee }} : ce tracteur n’a pas de boîtier
+      embarqué déclaré, ou son signal n’est jamais parvenu.
+    </div>
+
     <!-- Last 5 readings table -->
     <div v-if="currentHistory.length > 0" class="history-section">
       <h2>Dernières mesures</h2>
@@ -148,6 +153,9 @@
 </template>
 
 <script setup lang="ts">
+import { useVehiculesStore } from '../../stores/vehicules'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { ref, computed } from 'vue'
 
 interface TracteurOption {
@@ -177,13 +185,28 @@ interface TelemetrieVehicule {
   historique: TelemetrieRecord[]
 }
 
-const tracteurs: TracteurOption[] = [
-  { id: 'TRC-001', plaque: '1234 TAN A', marque: 'Volvo', modele: 'FH 460' },
-  { id: 'TRC-002', plaque: '2345 TNR B', marque: 'Mercedes', modele: 'Actros 1845' },
-  { id: 'TRC-003', plaque: '3456 TNR C', marque: 'MAN', modele: 'TGX 18.440' },
-  { id: 'TRC-004', plaque: '4567 TNR D', marque: 'Scania', modele: 'R 450' },
-  { id: 'TRC-005', plaque: '5678 TNR E', marque: 'Iveco', modele: 'Stralis 460' },
-]
+/**
+ * Tracteurs suivis, lus dans le parc.
+ *
+ * L'écran portait sa propre liste, avec des plaques qui n'existaient
+ * nulle part ailleurs : « 1234 TAN A » quand le parc immatricule
+ * « MG-7842-TX ». Un exploitant cherchant son camion ne le trouvait pas.
+ */
+const tracteurs = computed<TracteurOption[]>(() =>
+  vehiculesStore.auParc
+    .filter(v => v.typeVehicule === 'tracteur')
+    .map(v => ({
+      id: v.id,
+      plaque: v.plaque,
+      marque: v.marque ?? '',
+      modele: v.modele ?? '',
+    })))
+
+const optionsTracteurs = computed<DropdownItem[]>(() =>
+  tracteurs.value.map(t => ({
+    id: t.id, label: t.plaque,
+    sublabel: [t.marque, t.modele].filter(Boolean).join(' '),
+  })))
 
 const mockTelemetrie: Record<string, TelemetrieVehicule> = {
   'TRC-001': {
@@ -273,12 +296,43 @@ const mockTelemetrie: Record<string, TelemetrieVehicule> = {
   },
 }
 
+const vehiculesStore = useVehiculesStore()
+
 const selectedTracteurId = ref('')
 
+/**
+ * Relevés du tracteur sélectionné, recalés sur son compteur réel.
+ *
+ * La série de démonstration annonçait 312 450 km pour un camion que le
+ * parc compte à 187 340. Deux écrans donnaient deux kilométrages du même
+ * véhicule, et l'écart nourrissait les échéances d'entretien. La série
+ * est donc translatée pour se terminer sur le compteur du véhicule :
+ * sa forme est conservée, ses valeurs deviennent cohérentes.
+ */
 const currentData = computed<TelemetrieVehicule | null>(() => {
   if (!selectedTracteurId.value) return null
-  return mockTelemetrie[selectedTracteurId.value] ?? null
+  const brut = mockTelemetrie[selectedTracteurId.value]
+  if (!brut) return null
+
+  const vehicule = vehiculesStore.getById(selectedTracteurId.value)
+  const reel = vehicule?.kilometrage
+  if (reel == null) return brut
+
+  const decalage = reel - brut.kilometrage
+  if (!decalage) return brut
+
+  return {
+    ...brut,
+    kilometrage: reel,
+    historique: brut.historique.map(r => ({
+      ...r,
+      kilometrage: r.kilometrage + decalage,
+    })),
+  }
 })
+
+const plaqueSelectionnee = computed(() =>
+  tracteurs.value.find(t => t.id === selectedTracteurId.value)?.plaque ?? '')
 
 const currentHistory = computed<TelemetrieRecord[]>(() => {
   return currentData.value?.historique ?? []

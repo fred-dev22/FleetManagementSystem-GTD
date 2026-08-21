@@ -32,9 +32,7 @@
           class="flex items-start gap-2.5 bg-warning-bg text-warning rounded-lg px-3.5 py-2.5 mb-5">
           <Info class="w-4 h-4 shrink-0 mt-px" />
           <p class="text-xs leading-relaxed">
-            Cet écart est au statut <strong>« à qualifier »</strong>. Le système mesure un écart de trajectoire ;
-            il ne présume d’aucune intention. Seule une qualification en <strong>déviation non justifiée</strong>
-            alimente le score du conducteur et peut ouvrir un dossier disciplinaire.
+            Statut <strong>« à qualifier »</strong>. Seule une qualification en <strong>déviation non justifiée</strong> alimente le score du conducteur.
           </p>
         </div>
 
@@ -98,10 +96,6 @@
             :arrets="arretsCarte"
             height="320px"
           />
-          <p class="text-[11px] text-muted-foreground mt-2 leading-relaxed">
-            Le tracé bleu pointillé relie les sites affectés avant le départ. Le tracé rouge est le
-            trajet réellement enregistré par la télématique.
-          </p>
         </FormSection>
 
         <!-- ═══ 3. MESURES ═══ -->
@@ -185,11 +179,11 @@
 
             <div v-if="nature === 'non_justifiee'" :class="F.field" class="mb-2.5">
               <label :class="F.fieldLabel">Suite donnée</label>
-              <select v-model="decision" :class="F.fieldSelect">
-                <option value="classe">Classement sans suite</option>
-                <option value="avertissement">Avertissement</option>
-                <option value="codis">Saisine du comité de discipline</option>
-              </select>
+              <SearchableDropdown
+                v-model="decision"
+                :items="optdecision"
+                placeholder="Sélectionner…"
+              />
             </div>
 
             <p v-if="erreur" :class="F.fieldErrorBlock" class="mb-2">
@@ -239,6 +233,8 @@
  * Même coquille et même langage visuel que les fiches véhicule, voyage et recharge.
  */
 import { ref, computed } from 'vue'
+import SearchableDropdown from '../ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../ui/SearchableDropdown.vue'
 import { Info, AlertCircle } from 'lucide-vue-next'
 import CardModalShell from '../shared/CardModalShell.vue'
 import FormSection    from '../ui/form-field/FormSection.vue'
@@ -384,4 +380,10 @@ function naviguer(delta: number) {
   const cible = ecartsOrdonnes.value[indexCourant.value + delta]
   if (cible) emit('navigate', cible.id)
 }
+
+const optdecision: DropdownItem[] = [
+                { id: 'classe', label: "Classement sans suite" },
+                { id: 'avertissement', label: "Avertissement" },
+                { id: 'codis', label: "Saisine du comité de discipline" },
+]
 </script>

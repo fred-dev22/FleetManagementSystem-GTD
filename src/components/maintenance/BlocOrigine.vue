@@ -7,9 +7,6 @@
   </div>
 
   <div v-else-if="modifie" class="mt-3 flex items-center justify-between gap-2">
-    <p class="text-[11px] text-success leading-relaxed">
-      Valeur saisie par GTD. Elle fait foi dans tous les calculs.
-    </p>
     <button
       class="text-[11px] font-medium text-muted-foreground bg-transparent border-0 cursor-pointer p-0 inline-flex items-center gap-1 hover:text-primary shrink-0"
       title="Revenir à la valeur de départ"

@@ -47,13 +47,12 @@
     <template #filters>
       <div>
         <label :class="L.fpFieldLabel">Alerte réglementaire</label>
-        <select v-model="filterAlerte" :class="L.fpSelect">
-          <option value="">Aucun filtre</option>
-          <option value="bloquant">Pièce expirée, affectation refusée</option>
-          <option value="proche">Échéance proche</option>
-          <option value="permis">Permis expiré</option>
-          <option value="visite">Visite médicale expirée</option>
-        </select>
+        <SearchableDropdown
+          v-model="filterAlerte"
+          :items="optfilterAlerte"
+          placeholder="Aucun filtre"
+          compact
+        />
       </div>
       <div>
         <label :class="L.fpFieldLabel">Catégorie de permis</label>
@@ -217,6 +216,8 @@
  *     câblé : la page existait sans qu'aucun écran n'y mène.
  */
 import { ref, computed, watch } from 'vue'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { useRouter } from 'vue-router'
 import { User, ShieldAlert, ExternalLink } from 'lucide-vue-next'
 import { ListPageLayout } from '../../components'
@@ -440,4 +441,11 @@ function clsEcheance(date?: string) {
 
 const barreScore = (s: number) => s >= 80 ? 'bg-success' : s >= 60 ? 'bg-warning' : 'bg-danger'
 const texteScore = (s: number) => s >= 80 ? 'text-success' : s >= 60 ? 'text-warning' : 'text-danger'
+
+const optfilterAlerte: DropdownItem[] = [
+          { id: 'bloquant', label: "Pièce expirée, affectation refusée" },
+          { id: 'proche', label: "Échéance proche" },
+          { id: 'permis', label: "Permis expiré" },
+          { id: 'visite', label: "Visite médicale expirée" },
+]
 </script>

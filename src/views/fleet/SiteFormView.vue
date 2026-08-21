@@ -63,18 +63,11 @@
       <!-- Type -->
       <div>
         <label class="block text-sm font-medium text-slate-700 mb-1">Type <span class="text-red-500">*</span></label>
-        <select
+        <SearchableDropdown
           v-model="form.type"
-          required
-          class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="" disabled>Sélectionner un type</option>
-          <option value="Garage">Garage</option>
-          <option value="Dépôt chargement">Dépôt chargement</option>
-          <option value="Dépôt déchargement">Dépôt déchargement</option>
-          <option value="Zone à risque">Zone à risque</option>
-          <option value="Point de contrôle">Point de contrôle</option>
-        </select>
+          :items="optform_type"
+          placeholder="Sélectionner un type"
+        />
       </div>
 
       <!-- Latitude & Longitude -->
@@ -118,14 +111,11 @@
       <!-- Type alerte -->
       <div>
         <label class="block text-sm font-medium text-slate-700 mb-1">Type d'alerte</label>
-        <select
+        <SearchableDropdown
           v-model="form.typeAlerte"
-          class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="entree">Entrée seulement</option>
-          <option value="sortie">Sortie seulement</option>
-          <option value="entree_sortie">Entrée & Sortie</option>
-        </select>
+          :items="optform_typeAlerte"
+          placeholder="Sélectionner…"
+        />
       </div>
 
       <!-- Actif -->
@@ -161,6 +151,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { useRouter, useRoute } from 'vue-router'
 import { MapPinned, Save } from 'lucide-vue-next'
 import type { Site } from '../../types'
@@ -233,4 +225,18 @@ function handleSubmit() {
 
   router.push('/fleet/sites')
 }
+
+const optform_type: DropdownItem[] = [
+          { id: 'Garage', label: "Garage" },
+          { id: 'Dépôt chargement', label: "Dépôt chargement" },
+          { id: 'Dépôt déchargement', label: "Dépôt déchargement" },
+          { id: 'Zone à risque', label: "Zone à risque" },
+          { id: 'Point de contrôle', label: "Point de contrôle" },
+]
+
+const optform_typeAlerte: DropdownItem[] = [
+          { id: 'entree', label: "Entrée seulement" },
+          { id: 'sortie', label: "Sortie seulement" },
+          { id: 'entree_sortie', label: "Entrée & Sortie" },
+]
 </script>

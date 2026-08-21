@@ -23,7 +23,6 @@ export { default as Label }                from './ui/Label/Label.vue'
 export { default as Alert }                from './ui/alert/Alert.vue'
 export { default as AlertDescription }     from './ui/alert/AlertDescription.vue'
 export { default as BaseFormField }        from './ui/form-field/BaseFormField.vue'
-export { default as OptionsSelect }        from './ui/options-select/OptionsSelect.vue'
 
 export { default as StatusPill }           from './ui/StatusPill.vue'
 export { default as UserAvatar }           from './ui/UserAvatar.vue'

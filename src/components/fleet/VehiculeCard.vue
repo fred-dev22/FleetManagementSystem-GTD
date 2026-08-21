@@ -75,10 +75,12 @@
           <div class="grid grid-cols-2 gap-x-6 gap-y-4">
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Type de carburant</label>
-              <select v-if="isEditMode" v-model="form.typeCarburant" :class="cls.fieldInput">
-                <option value="">-</option>
-                <option v-for="c in ['Diesel','GNL','Essence','Électrique','Hybride']" :key="c" :value="c">{{ c }}</option>
-              </select>
+              <SearchableDropdown
+                v-if="isEditMode"
+                v-model="form.typeCarburant"
+                :items="optCarburants"
+                placeholder="Type de carburant…"
+              />
               <span v-else class="text-sm text-foreground">{{ vehicule.typeCarburant ?? '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
@@ -105,9 +107,12 @@
           <div class="grid grid-cols-2 gap-x-6 gap-y-4">
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Type de remorque</label>
-              <select v-if="isEditMode" v-model="form.typeRemorque" :class="cls.fieldInput">
-                <option v-for="t in ['Citerne','Bâchée','Frigorifique','Plateau','Autre']" :key="t" :value="t">{{ t }}</option>
-              </select>
+              <SearchableDropdown
+                v-if="isEditMode"
+                v-model="form.typeRemorque"
+                :items="optRemorques"
+                placeholder="Type de remorque…"
+              />
               <span v-else class="text-sm text-foreground">{{ vehicule.typeRemorque ?? '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
@@ -330,9 +335,11 @@
         <div class="p-5 flex flex-col gap-3.5">
           <div class="flex flex-col gap-1">
             <label :class="cls.fieldLabel">Motif de sortie *</label>
-            <select v-model="formSortie.motif" :class="cls.fieldInput">
-              <option v-for="(lib, m) in LIB_MOTIF_SORTIE" :key="m" :value="m">{{ lib }}</option>
-            </select>
+            <SearchableDropdown
+              v-model="formSortie.motif"
+              :items="optMotifsSortie"
+              placeholder="Motif de sortie…"
+            />
           </div>
 
           <div class="grid grid-cols-2 gap-3.5">
@@ -376,6 +383,8 @@
 </template>
 
 <script setup lang="ts">
+import SearchableDropdown from '../ui/SearchableDropdown.vue'
+import { optionsDeChaines, optionsDeLibelles } from '../../lib/dropdownItems'
 import { ref, reactive, computed, watch } from 'vue'
 import CardModalShell from '../shared/CardModalShell.vue'
 import FormSection    from '../ui/form-field/FormSection.vue'
@@ -529,9 +538,6 @@ function handleCancel() {
   isEditMode.value = false
 }
 
-function fmtDate(d?: string) {
-  return d ? new Date(d).toLocaleDateString('fr-FR') : '-'
-}
 function fmtMGA(n?: number) {
   return n != null ? n.toLocaleString('fr-FR') + ' MGA' : '-'
 }
@@ -556,4 +562,8 @@ const OP_MAP: Partial<Record<StatutOperationnelVehicule, { label: string; cls: s
 }
 const opLabel = (s?: StatutOperationnelVehicule) => s ? (OP_MAP[s]?.label ?? s) : '-'
 const opClass  = (s?: StatutOperationnelVehicule) => s ? (OP_MAP[s]?.cls ?? '') : ''
+
+const optCarburants   = optionsDeChaines(['Diesel', 'GNL', 'Essence', 'Électrique', 'Hybride'])
+const optRemorques    = optionsDeChaines(['Citerne', 'Bâchée', 'Frigorifique', 'Plateau', 'Autre'])
+const optMotifsSortie = computed(() => optionsDeLibelles(LIB_MOTIF_SORTIE))
 </script>

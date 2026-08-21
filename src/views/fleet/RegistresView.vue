@@ -51,11 +51,12 @@
       </div>
       <div v-if="vue === 'safe'">
         <label :class="L.fpFieldLabel">Moment</label>
-        <select v-model="filterMoment" :class="L.fpSelect">
-          <option value="">Tous</option>
-          <option value="chargement">Chargement</option>
-          <option value="dechargement">Déchargement</option>
-        </select>
+        <SearchableDropdown
+          v-model="filterMoment"
+          :items="optfilterMoment"
+          placeholder="Tous"
+          compact
+        />
       </div>
       <button class="mt-auto py-[7px] bg-transparent border-0 text-xs text-muted-foreground cursor-pointer hover:text-primary"
         @click="resetFilters">Réinitialiser</button>
@@ -284,6 +285,8 @@
  * ListPageLayout, indicateurs au-dessus, filtres, panneau d'aperçu à droite.
  */
 import { ref, computed, watch } from 'vue'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { ClipboardCheck, CheckCircle2, XCircle, Stethoscope, ShieldAlert, MessageSquare, FileWarning } from 'lucide-vue-next'
 import { ListPageLayout } from '../../components'
 import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
@@ -510,4 +513,9 @@ const CLS_STATUT_NCR: Record<StatutNCR, string> = {
   en_traitement: 'bg-warning-bg text-warning',
   close:         'bg-success-bg text-success',
 }
+
+const optfilterMoment: DropdownItem[] = [
+          { id: 'chargement', label: "Chargement" },
+          { id: 'dechargement', label: "Déchargement" },
+]
 </script>

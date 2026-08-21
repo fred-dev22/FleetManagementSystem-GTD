@@ -46,15 +46,12 @@
         <!-- Marque -->
         <div class="field" :class="{ 'field--error': errors.marque }">
           <label class="field__label" for="marque">Marque <span class="required">*</span></label>
-          <select
-            id="marque"
+          <SearchableDropdown
             v-model="form.marque"
-            class="field__select"
-            @blur="validateField('marque')"
-          >
-            <option value="" disabled>Sélectionner une marque</option>
-            <option v-for="m in marques" :key="m" :value="m">{{ m }}</option>
-          </select>
+            :items="optionsMarques"
+            placeholder="Sélectionner une marque"
+            @update:model-value="validateField('marque')"
+          />
           <p v-if="errors.marque" class="field__error">{{ errors.marque }}</p>
         </div>
 
@@ -93,10 +90,11 @@
         <!-- Statut administratif (EDIT only) -->
         <div v-if="isEdit" class="field" :class="{ 'field--error': errors.statutAdmin }">
           <label class="field__label" for="statutAdmin">Statut administratif</label>
-          <select id="statutAdmin" v-model="form.statutAdmin" class="field__select">
-            <option value="en_service">En service</option>
-            <option value="hors_service">Hors service</option>
-          </select>
+          <SearchableDropdown
+            v-model="form.statutAdmin"
+            :items="optform_statutAdmin"
+            placeholder="Sélectionner…"
+          />
           <p v-if="errors.statutAdmin" class="field__error">{{ errors.statutAdmin }}</p>
         </div>
 
@@ -133,6 +131,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTracteurStore } from '../../stores/tracteurs'
 import type { StatutAdminVehicule } from '../../types/index'
@@ -150,6 +150,8 @@ const tracteur = computed(() =>
 
 // ── Static data ───────────────────────────────────────────────────
 const marques = ['Volvo', 'Mercedes', 'MAN', 'Scania', 'DAF', 'Autre']
+
+const optionsMarques: DropdownItem[] = marques.map(m => ({ id: m, label: m }))
 const todayISO = new Date().toISOString().split('T')[0]
 
 // ── Form state ────────────────────────────────────────────────────
@@ -281,6 +283,11 @@ function goBack() {
     router.push({ name: 'fleet-dashboard' })
   }
 }
+
+const optform_statutAdmin: DropdownItem[] = [
+            { id: 'en_service', label: "En service" },
+            { id: 'hors_service', label: "Hors service" },
+]
 </script>
 
 <style scoped>

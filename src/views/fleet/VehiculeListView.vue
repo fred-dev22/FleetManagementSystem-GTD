@@ -65,22 +65,19 @@
     <template #filters>
       <div>
         <label :class="L.fpFieldLabel">Statut</label>
-        <select v-model="filterStatut" :class="L.fpSelect">
-          <option value="">Tous (parc courant)</option>
-          <option value="actif">Actif</option>
-          <option value="affecte">Affecté</option>
-          <option value="en_reparation">En réparation</option>
-          <option value="hors_service">Hors service</option>
-          <option value="vendu">Vendu</option>
-          <option value="archive">Archivés - sortis du parc</option>
-        </select>
+        <SearchableDropdown
+          v-model="filterStatut"
+          :items="optfilterStatut"
+          placeholder="Tous (parc courant)"
+          compact
+        />
       </div>
       <div>
         <label :class="L.fpFieldLabel">Site</label>
-        <select v-model="filterSite" :class="L.fpSelect">
-          <option value="">Tous les sites</option>
-          <option v-for="s in sites" :key="s" :value="s">{{ s }}</option>
-        </select>
+        <SearchableDropdown
+          v-model="filterSite" :items="optionsSites"
+          placeholder="Tous les sites" compact
+        />
       </div>
       <button class="mt-auto py-[7px] bg-transparent border-0 text-xs text-muted-foreground cursor-pointer hover:text-primary" @click="resetFilters">
         Réinitialiser
@@ -210,6 +207,8 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { AlertTriangle, Archive, Link2, Plus, Truck, Undo2, Upload } from 'lucide-vue-next'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { ListPageLayout } from '../../components'
 import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
 import VehiculeCard from '../../components/fleet/VehiculeCard.vue'
@@ -251,6 +250,9 @@ const sites = computed(() => {
   const s = new Set(store.auParc.map(v => v.siteAffectation).filter(Boolean) as string[])
   return [...s].sort()
 })
+
+const optionsSites = computed<DropdownItem[]>(() =>
+  sites.value.map(s => ({ id: s, label: s })))
 
 /* Les indicateurs portent sur le parc courant : compter un camion vendu
    dans le total du parc gonflerait la flotte d'un véhicule qui n'existe plus. */
@@ -359,4 +361,13 @@ const STATUT_MAP: Record<StatutAdminVehicule, { label: string; cls: string }> = 
 }
 const statutLabel = (s: StatutAdminVehicule) => STATUT_MAP[s]?.label ?? s
 const statutClass = (s: StatutAdminVehicule) => STATUT_MAP[s]?.cls ?? ''
+
+const optfilterStatut: DropdownItem[] = [
+          { id: 'actif', label: "Actif" },
+          { id: 'affecte', label: "Affecté" },
+          { id: 'en_reparation', label: "En réparation" },
+          { id: 'hors_service', label: "Hors service" },
+          { id: 'vendu', label: "Vendu" },
+          { id: 'archive', label: "Archivés - sortis du parc" },
+]
 </script>

@@ -42,10 +42,10 @@
     <template #filters>
       <div>
         <label :class="L.fpFieldLabel">Client</label>
-        <select v-model="filterClient" :class="L.fpSelect">
-          <option value="">Tous</option>
-          <option v-for="c in clients" :key="c" :value="c">{{ c }}</option>
-        </select>
+        <SearchableDropdown
+          v-model="filterClient" :items="optionsClients"
+          placeholder="Tous" compact
+        />
       </div>
       <button class="mt-auto py-[7px] bg-transparent border-0 text-xs text-muted-foreground cursor-pointer hover:text-primary"
         @click="resetFilters">
@@ -157,6 +157,8 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Route, Plus, MapPinned, Package, Truck } from 'lucide-vue-next'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { ListPageLayout } from '../../components'
 import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
 import TrajetCard from '../../components/fleet/TrajetCard.vue'
@@ -199,6 +201,9 @@ const compter = (t: Trajet, role: RoleEtape) =>
 
 const clients = computed(() =>
   [...new Set(store.trajets.map(t => t.clientNom).filter(Boolean))].sort() as string[])
+
+const optionsClients = computed<DropdownItem[]>(() =>
+  clients.value.map(c => ({ id: c, label: c })))
 
 const kpis = computed(() => [
   { label: 'Trajets actifs',    value: store.actifs.length,     icon: Route,     bg: 'bg-primary/10', iconColor: 'text-primary' },
