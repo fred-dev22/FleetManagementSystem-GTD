@@ -36,13 +36,9 @@
             </div>
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Type</label>
-              <select v-if="isEditMode" v-model="form.type" :class="cls.fieldInput">
-                <option value="Citerne">Citerne</option>
-                <option value="Bâchée">Bâchée</option>
-                <option value="Plateau">Plateau</option>
-                <option value="Frigorifique">Frigorifique</option>
-                <option value="Autre">Autre</option>
-              </select>
+              <template v-if="isEditMode">
+                <SearchableDropdown v-model="form.type" :items="optform_type" />
+              </template>
               <span v-else class="text-[13px] text-foreground">{{ current.type ?? '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
@@ -61,11 +57,9 @@
           <div class="grid grid-cols-2 gap-x-6 gap-y-4 max-sm:grid-cols-1">
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Statut administratif</label>
-              <select v-if="isEditMode" v-model="form.statutAdmin" :class="cls.fieldInput">
-                <option value="en_service">En service</option>
-                <option value="hors_service">Hors service</option>
-                <option value="archive">Archivée</option>
-              </select>
+              <template v-if="isEditMode">
+                <SearchableDropdown v-model="form.statutAdmin" :items="optform_statutAdmin" />
+              </template>
               <span v-else class="text-[13px]">
                 <span :class="['text-[11px] font-semibold px-2 py-0.5 rounded-full', statutClass(current.statutAdmin)]">{{ statutLabel(current.statutAdmin) }}</span>
               </span>
@@ -84,6 +78,8 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import SearchableDropdown from '../ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../ui/SearchableDropdown.vue'
 import CardModalShell from '../shared/CardModalShell.vue'
 import FormSection from '../ui/form-field/FormSection.vue'
 import * as cls from '../../lib/formClasses'
@@ -133,4 +129,18 @@ async function handleSave() {
 function fmtDate(d?: string) { return d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : '-' }
 function statutLabel(s?: string) { return ({ en_service: 'En service', hors_service: 'Hors service', archive: 'Archivée' } as any)[s ?? ''] ?? s ?? '-' }
 function statutClass(s?: string) { return ({ en_service: 'bg-success-bg text-success', hors_service: 'bg-warning-bg text-warning', archive: 'bg-background text-muted-foreground' } as any)[s ?? ''] ?? '' }
+
+const optform_statutAdmin: DropdownItem[] = [
+  { id: 'en_service', label: "En service" },
+  { id: 'hors_service', label: "Hors service" },
+  { id: 'archive', label: "Archivée" },
+]
+
+const optform_type: DropdownItem[] = [
+  { id: 'Citerne', label: "Citerne" },
+  { id: 'Bâchée', label: "Bâchée" },
+  { id: 'Plateau', label: "Plateau" },
+  { id: 'Frigorifique', label: "Frigorifique" },
+  { id: 'Autre', label: "Autre" },
+]
 </script>

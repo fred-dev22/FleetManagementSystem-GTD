@@ -143,9 +143,11 @@
           </div>
           <div :class="F.field" class="w-[150px]">
             <label :class="F.fieldLabel">Rôle</label>
-            <select v-model="roleAAjouter" :class="F.fieldSelect" class="!h-[32px] !text-xs">
-              <option v-for="(lib, r) in LIB_ROLE_ETAPE" :key="r" :value="r">{{ lib }}</option>
-            </select>
+            <SearchableDropdown
+              v-model="roleAAjouter"
+              :items="optLIB_ROLE_ETAPE"
+              placeholder="Sélectionner…"
+            />
           </div>
           <button :class="L.btnOutline" class="!h-[32px] !py-0" :disabled="!siteAAjouter" @click="ajouterEtape">
             <Plus class="w-3.5 h-3.5" /> Ajouter
@@ -481,9 +483,11 @@
         </div>
         <div :class="F.field">
           <label :class="F.fieldLabel">Catégorie *</label>
-          <select v-model="formType.categorie" :class="F.fieldSelect">
-            <option v-for="(lib, c) in LIB_CATEGORIE_ECART" :key="c" :value="c">{{ lib }}</option>
-          </select>
+          <SearchableDropdown
+            v-model="formType.categorie"
+            :items="optLIB_CATEGORIE_ECART"
+            placeholder="Sélectionner…"
+          />
         </div>
         <div :class="F.field" class="col-span-2">
           <label :class="F.fieldLabel">Libellé *</label>
@@ -928,4 +932,10 @@ const optformType_gravite: DropdownItem[] = [
             { id: 'majeur', label: "Majeur" },
             { id: 'critique', label: "Critique" },
 ]
+
+const optLIB_ROLE_ETAPE = computed<DropdownItem[]>(() =>
+  Object.entries(LIB_ROLE_ETAPE).map(([id, lib]) => ({ id, label: String(lib) })))
+
+const optLIB_CATEGORIE_ECART = computed<DropdownItem[]>(() =>
+  Object.entries(LIB_CATEGORIE_ECART).map(([id, lib]) => ({ id, label: String(lib) })))
 </script>

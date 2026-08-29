@@ -36,10 +36,12 @@
     <template #filters>
       <div>
         <label :class="L.fpFieldLabel">Type d’écart</label>
-        <select v-model="filterType" :class="L.fpSelect">
-          <option value="">Tous</option>
-          <option v-for="(lib, k) in LIB_TYPE_ECART" :key="k" :value="k">{{ lib }}</option>
-        </select>
+        <SearchableDropdown
+          v-model="filterType"
+          :items="optLIB_TYPE_ECART"
+          placeholder="Tous"
+          compact
+        />
       </div>
       <div>
         <label :class="L.fpFieldLabel">Gravité</label>
@@ -289,4 +291,7 @@ const optfilterGravite: DropdownItem[] = [
           { id: 'majeur', label: "Majeur" },
           { id: 'critique', label: "Critique" },
 ]
+
+const optLIB_TYPE_ECART = computed<DropdownItem[]>(() =>
+  Object.entries(LIB_TYPE_ECART).map(([id, lib]) => ({ id, label: String(lib) })))
 </script>

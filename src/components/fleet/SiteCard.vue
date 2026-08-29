@@ -30,13 +30,9 @@
             </div>
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Type</label>
-              <select v-if="isEditMode" v-model="form.type" :class="cls.fieldInput">
-                <option value="Garage">Garage</option>
-                <option value="Dépôt chargement">Dépôt chargement</option>
-                <option value="Dépôt déchargement">Dépôt déchargement</option>
-                <option value="Zone à risque">Zone à risque</option>
-                <option value="Point de contrôle">Point de contrôle</option>
-              </select>
+              <template v-if="isEditMode">
+                <SearchableDropdown v-model="form.type" :items="optform_type" />
+              </template>
               <span v-else class="text-[13px]">
                 <span :class="['text-[11px] font-semibold px-2 py-0.5 rounded-full', typeBadge(current.type)]">{{ current.type }}</span>
               </span>
@@ -73,6 +69,8 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import SearchableDropdown from '../ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../ui/SearchableDropdown.vue'
 import CardModalShell from '../shared/CardModalShell.vue'
 import FormSection from '../ui/form-field/FormSection.vue'
 import * as cls from '../../lib/formClasses'
@@ -127,4 +125,12 @@ function typeBadge(type: string) {
   }
   return m[type] ?? 'bg-background text-muted-foreground'
 }
+
+const optform_type: DropdownItem[] = [
+  { id: 'Garage', label: "Garage" },
+  { id: 'Dépôt chargement', label: "Dépôt chargement" },
+  { id: 'Dépôt déchargement', label: "Dépôt déchargement" },
+  { id: 'Zone à risque', label: "Zone à risque" },
+  { id: 'Point de contrôle', label: "Point de contrôle" },
+]
 </script>

@@ -129,13 +129,9 @@
               <label :class="cls.fieldLabel">Statut administratif</label>
               <!-- « Archivé » ne figure plus ici : une sortie du parc exige un
                    motif et une date, elle passe par le bouton dédié en bas de fiche. -->
-              <select v-if="isEditMode && !estSorti" v-model="form.statutAdmin" :class="cls.fieldInput">
-                <option value="actif">Actif</option>
-                <option value="affecte">Affecté</option>
-                <option value="en_reparation">En réparation</option>
-                <option value="hors_service">Hors service</option>
-                <option value="vendu">Vendu</option>
-              </select>
+              <template v-if="isEditMode && !estSorti">
+                <SearchableDropdown v-model="form.statutAdmin" :items="optform_statutAdmin" />
+              </template>
               <span v-else>
                 <span :class="statutClass(vehicule.statutAdmin)" class="text-xs font-medium px-2 py-0.5 rounded-full">
                   {{ statutLabel(vehicule.statutAdmin) }}
@@ -165,12 +161,9 @@
           <div class="grid grid-cols-2 gap-x-6 gap-y-4">
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Mode d'acquisition</label>
-              <select v-if="isEditMode" v-model="form.modeAcquisition" :class="cls.fieldInput">
-                <option value="">-</option>
-                <option value="achat">Achat</option>
-                <option value="leasing">Leasing</option>
-                <option value="location">Location</option>
-              </select>
+              <template v-if="isEditMode">
+                <SearchableDropdown v-model="form.modeAcquisition" :items="optform_modeAcquisition" />
+              </template>
               <span v-else class="text-sm capitalize text-foreground">{{ vehicule.modeAcquisition ?? '-' }}</span>
             </div>
             <div class="flex flex-col gap-1">
@@ -384,6 +377,7 @@
 
 <script setup lang="ts">
 import SearchableDropdown from '../ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../ui/SearchableDropdown.vue'
 import { optionsDeChaines, optionsDeLibelles } from '../../lib/dropdownItems'
 import { ref, reactive, computed, watch } from 'vue'
 import CardModalShell from '../shared/CardModalShell.vue'
@@ -566,4 +560,19 @@ const opClass  = (s?: StatutOperationnelVehicule) => s ? (OP_MAP[s]?.cls ?? '') 
 const optCarburants   = optionsDeChaines(['Diesel', 'GNL', 'Essence', 'Électrique', 'Hybride'])
 const optRemorques    = optionsDeChaines(['Citerne', 'Bâchée', 'Frigorifique', 'Plateau', 'Autre'])
 const optMotifsSortie = computed(() => optionsDeLibelles(LIB_MOTIF_SORTIE))
+
+const optform_modeAcquisition: DropdownItem[] = [
+  { id: '', label: "-" },
+  { id: 'achat', label: "Achat" },
+  { id: 'leasing', label: "Leasing" },
+  { id: 'location', label: "Location" },
+]
+
+const optform_statutAdmin: DropdownItem[] = [
+  { id: 'actif', label: "Actif" },
+  { id: 'affecte', label: "Affecté" },
+  { id: 'en_reparation', label: "En réparation" },
+  { id: 'hors_service', label: "Hors service" },
+  { id: 'vendu', label: "Vendu" },
+]
 </script>

@@ -47,7 +47,11 @@
           <tbody>
             <tr v-for="(line, idx) in form.lines" :key="line.id">
               <td class="border-b border-border px-1 py-1"><input v-model="line.date" class="cell-input w-full h-[30px] px-1.5 border border-border rounded text-[12px] bg-background text-foreground focus:outline-none focus:border-primary" type="date" /></td>
-              <td class="border-b border-border px-1 py-1"><select v-model="line.category" class="cell-input w-full h-[30px] px-1.5 border border-border rounded text-[12px] bg-background text-foreground focus:outline-none focus:border-primary"><option v-for="(label, key) in CATEGORY_LABELS" :key="key" :value="key">{{ label }}</option></select></td>
+              <td class="border-b border-border px-1 py-1"><SearchableDropdown
+  v-model="line.category"
+  :items="optCATEGORY_LABELS"
+  placeholder="Sélectionner…"
+/></td>
               <td class="border-b border-border px-1 py-1"><input v-model="line.description" class="cell-input w-full h-[30px] px-1.5 border border-border rounded text-[12px] bg-background text-foreground focus:outline-none focus:border-primary" type="text" placeholder="Description..." /></td>
               <td class="border-b border-border px-1 py-1"><input v-model.number="line.amount" class="cell-input w-full h-[30px] px-1.5 border border-border rounded text-[12px] bg-background text-foreground focus:outline-none focus:border-primary text-right" type="number" min="0" /></td>
               <td class="border-b border-border px-1 py-1 text-center"><input type="checkbox" v-model="line.receipt" /></td>
@@ -213,6 +217,9 @@ function submit() {
   if (r) expenseStore.submitReport(r.id)
   emit('submitted')
 }
+
+const optCATEGORY_LABELS = computed<DropdownItem[]>(() =>
+  Object.entries(CATEGORY_LABELS).map(([id, label]) => ({ id, label: String(label) })))
 </script>
 
 <style scoped>

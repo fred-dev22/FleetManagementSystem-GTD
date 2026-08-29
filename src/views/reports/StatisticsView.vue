@@ -7,10 +7,14 @@
             <div class="text-[13px] text-muted-foreground mt-0.5">Vue d'ensemble — {{ currentYear }}</div>
           </div>
           <div class="flex gap-2 items-center">
-            <select v-model="selectedYear" class="h-[34px] px-2.5 border border-border rounded-md bg-card text-[13px] text-foreground outline-none focus:border-primary">
-              <option :value="2026">2026</option>
-              <option :value="2025">2025</option>
-            </select>
+            <SearchableDropdown
+              :model-value="String(selectedYear)"
+              :items="optAnnees"
+              placeholder="Année"
+              compact
+              :clearable="false"
+              @update:model-value="v => selectedYear = Number(v)"
+            />
             <button :class="L.btnOutline"><FileDown class="w-4 h-4" /> Exporter</button>
           </div>
         </div>
@@ -124,6 +128,8 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { FileDown, Users, CalendarOff, Plane, Check, Network } from 'lucide-vue-next'
 import * as L from '../../lib/listClasses'
 import { useAuthStore }    from '../../stores/auth'
@@ -210,4 +216,9 @@ const missionAmounts = computed(() => {
 })
 
 function fmt(n: number) { return n.toLocaleString('fr-FR') }
+
+const optAnnees: DropdownItem[] = [
+  { id: '2026', label: '2026' },
+  { id: '2025', label: '2025' },
+]
 </script>

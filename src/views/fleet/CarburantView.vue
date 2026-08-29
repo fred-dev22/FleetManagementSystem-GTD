@@ -53,10 +53,12 @@
       </div>
       <div v-if="vue === 'recharges'">
         <label :class="L.fpFieldLabel">Canal</label>
-        <select v-model="filterCanal" :class="L.fpSelect">
-          <option value="">Tous</option>
-          <option v-for="(lib, k) in LIB_CANAL" :key="k" :value="k">{{ lib }}</option>
-        </select>
+        <SearchableDropdown
+          v-model="filterCanal"
+          :items="optLIB_CANAL"
+          placeholder="Tous"
+          compact
+        />
       </div>
       <div>
         <label :class="L.fpFieldLabel">Véhicule</label>
@@ -442,4 +444,7 @@ const optfilterStatut: DropdownItem[] = [
           { id: 'anomalie', label: "En anomalie" },
           { id: 'qualifie', label: "Qualifiée" },
 ]
+
+const optLIB_CANAL = computed<DropdownItem[]>(() =>
+  Object.entries(LIB_CANAL).map(([id, lib]) => ({ id, label: String(lib) })))
 </script>

@@ -56,10 +56,12 @@
       </div>
       <div>
         <label :class="L.fpFieldLabel">Catégorie de permis</label>
-        <select v-model="filterCategorie" :class="L.fpSelect">
-          <option value="">Toutes</option>
-          <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
-        </select>
+        <SearchableDropdown
+          v-model="filterCategorie"
+          :items="optcategories"
+          placeholder="Toutes"
+          compact
+        />
       </div>
       <button
         class="mt-auto py-[7px] bg-transparent border-0 text-xs text-muted-foreground cursor-pointer hover:text-primary"
@@ -448,4 +450,7 @@ const optfilterAlerte: DropdownItem[] = [
           { id: 'permis', label: "Permis expiré" },
           { id: 'visite', label: "Visite médicale expirée" },
 ]
+
+const optcategories = computed<DropdownItem[]>(() =>
+  categories.value.map(c => ({ id: c, label: c })))
 </script>

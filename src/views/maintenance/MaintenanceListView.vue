@@ -52,10 +52,12 @@
       </div>
       <div>
         <label :class="L.fpFieldLabel">Sous-système</label>
-        <select v-model="filterSousSysteme" :class="L.fpSelect">
-          <option value="">Tous</option>
-          <option v-for="(lib, k) in LIB_SOUS_SYSTEME" :key="k" :value="k">{{ lib }}</option>
-        </select>
+        <SearchableDropdown
+          v-model="filterSousSysteme"
+          :items="optLIB_SOUS_SYSTEME"
+          placeholder="Tous"
+          compact
+        />
       </div>
       <div>
         <label :class="L.fpFieldLabel">Gravité</label>
@@ -353,4 +355,7 @@ const optfilterGravite: DropdownItem[] = [
           { id: 'majeure', label: "Majeure" },
           { id: 'critique', label: "Critique" },
 ]
+
+const optLIB_SOUS_SYSTEME = computed<DropdownItem[]>(() =>
+  Object.entries(LIB_SOUS_SYSTEME).map(([id, lib]) => ({ id, label: String(lib) })))
 </script>

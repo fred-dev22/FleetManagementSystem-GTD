@@ -66,26 +66,29 @@
           <div :class="fieldGrid">
             <div :class="cls.field">
               <label :class="cls.fieldLabel">Fonction *</label>
-              <select v-model="form.fonction" :class="[cls.fieldSelect, err.fonction && cls.inputError]">
-                <option value="">-- Sélectionner --</option>
-                <option v-for="f in FONCTIONS" :key="f" :value="f">{{ f }}</option>
-              </select>
+              <SearchableDropdown
+                v-model="form.fonction"
+                :items="optFONCTIONS"
+                placeholder="Sélectionner"
+              />
               <div v-if="err.fonction" :class="cls.fieldError">{{ err.fonction }}</div>
             </div>
             <div :class="cls.field">
               <label :class="cls.fieldLabel">Société employeuse *</label>
-              <select v-model="form.societe" :class="[cls.fieldSelect, err.societe && cls.inputError]">
-                <option value="">-- Sélectionner --</option>
-                <option v-for="s in SOCIETES" :key="s" :value="s">{{ s }}</option>
-              </select>
+              <SearchableDropdown
+                v-model="form.societe"
+                :items="optSOCIETES"
+                placeholder="Sélectionner"
+              />
               <div v-if="err.societe" :class="cls.fieldError">{{ err.societe }}</div>
             </div>
             <div :class="cls.field">
               <label :class="cls.fieldLabel">Département</label>
-              <select v-model="form.departement" :class="cls.fieldSelect">
-                <option value="">-- Sélectionner --</option>
-                <option v-for="d in DEPARTEMENTS" :key="d" :value="d">{{ d }}</option>
-              </select>
+              <SearchableDropdown
+                v-model="form.departement"
+                :items="optDEPARTEMENTS"
+                placeholder="Sélectionner"
+              />
             </div>
             <div :class="cls.field">
               <label :class="cls.fieldLabel">Entité *</label>
@@ -565,4 +568,13 @@ const optform_status: DropdownItem[] = [
                 { id: 'suspendu', label: "Suspendu" },
                 { id: 'sorti', label: "Sorti" },
 ]
+
+const optFONCTIONS = computed<DropdownItem[]>(() =>
+  FONCTIONS.map(f => ({ id: f, label: f })))
+
+const optSOCIETES = computed<DropdownItem[]>(() =>
+  SOCIETES.map(s => ({ id: s, label: s })))
+
+const optDEPARTEMENTS = computed<DropdownItem[]>(() =>
+  DEPARTEMENTS.map(d => ({ id: d, label: d })))
 </script>

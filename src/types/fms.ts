@@ -77,6 +77,38 @@ export interface EtapeTrajet {
 export type ExamenType = 'visite_medicale' | 'permis' | 'formation_apth'
 export type AptitudeChauffeur = 'apte' | 'non_apte' | 'a_renouveler'
 
+/* ══════════════════════════════════════════════════════════════
+   Registres : catégories de remontée et natures de non-conformité
+   ══════════════════════════════════════════════════════════════
+   L'écran Registres importait `LIB_CATEGORIE_REMONTEE` et
+   `LIB_NATURE_NCR` depuis ce fichier, où ils n'existaient pas.
+   L'import échouait au chargement du module, l'écran restait blanc,
+   et l'erreur remontait au navigateur en perturbant la navigation
+   vers les écrans suivants. Les deux libellés sont définis ici.
+   ══════════════════════════════════════════════════════════════ */
+
+export type CategorieRemontee =
+  | 'technique' | 'securite' | 'route' | 'client' | 'autre'
+
+export const LIB_CATEGORIE_REMONTEE: Record<CategorieRemontee, string> = {
+  technique: 'Technique',
+  securite:  'Sécurité',
+  route:     'État de la route',
+  client:    'Client',
+  autre:     'Autre',
+}
+
+export type NatureNCR =
+  | 'procedure' | 'documentaire' | 'equipement' | 'comportement' | 'autre'
+
+export const LIB_NATURE_NCR: Record<NatureNCR, string> = {
+  procedure:    'Procédure non respectée',
+  documentaire: 'Pièce manquante ou expirée',
+  equipement:   'Équipement défaillant',
+  comportement: 'Comportement de conduite',
+  autre:        'Autre',
+}
+
 export const LIB_EXAMEN: Record<ExamenType, string> = {
   visite_medicale: 'Visite médicale',
   permis: 'Permis',

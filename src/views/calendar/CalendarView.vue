@@ -232,9 +232,11 @@
         <select :class="cls.fieldSelect" v-model="hForm.month">
           <option v-for="m in MONTHS" :key="m.v" :value="m.v">{{ m.l }}</option>
         </select>
-        <select :class="cls.fieldSelect" v-model="hForm.day">
-          <option v-for="d in DAYS" :key="d" :value="d">{{ d }}</option>
-        </select>
+        <SearchableDropdown
+          v-model="hForm.day"
+          :items="optDAYS"
+          placeholder="Sélectionner…"
+        />
       </div>
     </div>
     <template #footer>
@@ -262,6 +264,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, type Component } from 'vue'
+import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { storeToRefs } from 'pinia'
 import {
   ClockArrowDown, Save, Check, Clock, CalendarDays, ListChecks, Upload, Plus,
@@ -412,4 +416,7 @@ function deleteHoliday(id: string) { if (confirm('Supprimer ce jour férié ?'))
 const showAnnualImport   = ref(false)
 const showPonctualImport = ref(false)
 const showLeaveImport    = ref(false)
+
+const optDAYS = computed<DropdownItem[]>(() =>
+  DAYS.map(d => ({ id: d, label: d })))
 </script>

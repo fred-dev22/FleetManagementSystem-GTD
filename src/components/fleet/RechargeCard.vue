@@ -192,10 +192,11 @@
           <template v-else-if="item.statut === 'anomalie'">
             <div :class="F.field" class="mb-2.5">
               <label :class="F.fieldLabel">Cause de l’écart</label>
-              <select v-model="qualif" :class="F.fieldSelect">
-                <option value="">Choisir…</option>
-                <option v-for="(lib, k) in LIB_QUALIF" :key="k" :value="k">{{ lib }}</option>
-              </select>
+              <SearchableDropdown
+                v-model="qualif"
+                :items="optLIB_QUALIF"
+                placeholder="Choisir…"
+              />
             </div>
             <div :class="F.field" class="mb-2.5">
               <label :class="F.fieldLabel">Éléments recueillis</label>
@@ -292,6 +293,8 @@
  * Même coquille et même langage visuel que la fiche véhicule.
  */
 import { ref, computed } from 'vue'
+import SearchableDropdown from '../ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../ui/SearchableDropdown.vue'
 import { CheckCircle2, XCircle, ShieldAlert } from 'lucide-vue-next'
 import CardModalShell from '../shared/CardModalShell.vue'
 import FormSection    from '../ui/form-field/FormSection.vue'
@@ -450,4 +453,7 @@ function naviguer(delta: number) {
   const cible = rechargesOrdonnees.value[indexCourant.value + delta]
   if (cible) emit('navigate', cible.id)
 }
+
+const optLIB_QUALIF = computed<DropdownItem[]>(() =>
+  Object.entries(LIB_QUALIF).map(([id, lib]) => ({ id, label: String(lib) })))
 </script>

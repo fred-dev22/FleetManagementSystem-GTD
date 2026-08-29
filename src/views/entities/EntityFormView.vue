@@ -103,28 +103,14 @@
                   </div>
                   <div class="flex-1 flex items-center gap-2">
                     <template v-if="getPool(level)">
-                      <select
-                        :class="cls.fieldSelect"
-                        :value="getPool(level)!.employeeId ?? ''"
-                        @change="updatePoolEmployee(level, ($event.target as HTMLSelectElement).value)"
-                      >
-                        <option value="">-- Choisir un employé --</option>
-                        <optgroup label="Directeurs RH">
-                          <option v-for="e in empStore.employees.filter(x => x.role === 'hr_director')" :key="e.id" :value="e.id">
-                            {{ e.name }} · {{ e.jobTitle }}
-                          </option>
-                        </optgroup>
-                        <optgroup label="Admins RH">
-                          <option v-for="e in empStore.employees.filter(x => x.role === 'hr_admin')" :key="e.id" :value="e.id">
-                            {{ e.name }} · {{ e.jobTitle }}
-                          </option>
-                        </optgroup>
-                        <optgroup label="Managers / Validateurs">
-                          <option v-for="e in empStore.employees.filter(x => x.role === 'validator')" :key="e.id" :value="e.id">
-                            {{ e.name }} · {{ e.jobTitle }}
-                          </option>
-                        </optgroup>
-                      </select>
+                      <SearchableDropdown
+                        class="flex-1"
+                        :model-value="getPool(level)!.employeeId ?? ''"
+                        :items="optionsApprobateurs"
+                        placeholder="Choisir un employé"
+                        show-avatar
+                        @update:model-value="v => updatePoolEmployee(level, v ?? '')"
+                      />
                       <div class="w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0" :style="{ background: getPool(level)!.validatorColor }">
                         {{ getPool(level)!.validatorInitials }}
                       </div>
@@ -343,4 +329,24 @@ const optform_type: DropdownItem[] = [
                     { id: 'department', label: "Département" },
                     { id: 'service', label: "Service" },
 ]
+
+/* Le rôle passe en sous-libellé : le composant ne gère pas les groupes,
+   mais le rôle devient cherchable, ce qu'un optgroup n'offrait pas. */
+const LIB_ROLE_APPRO: Record<string, string> = {
+  hr_director: 'Directeur RH',
+  hr_admin:    'Admin RH',
+  validator:   'Manager / Validateur',
+}
+
+const optionsApprobateurs = computed<DropdownItem[]>(() =>
+  ['hr_director', 'hr_admin', 'validator'].flatMap(role =>
+    (empStore.employees ?? [])
+      .filter(e => e.role === role)
+      .map(e => ({
+        id: e.id,
+        label: e.name,
+        sublabel: `${LIB_ROLE_APPRO[role]} · ${e.jobTitle}`,
+        initials: e.initials,
+        avatarColor: e.avatarBg,
+      }))))
 </script>

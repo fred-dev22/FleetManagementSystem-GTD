@@ -56,11 +56,9 @@
           <div class="grid grid-cols-2 gap-x-6 gap-y-4 max-sm:grid-cols-1">
             <div class="flex flex-col gap-1">
               <label :class="cls.fieldLabel">Statut administratif</label>
-              <select v-if="isEditMode" v-model="form.statutAdmin" :class="cls.fieldInput">
-                <option value="en_service">En service</option>
-                <option value="hors_service">Hors service</option>
-                <option value="archive">Archivé</option>
-              </select>
+              <template v-if="isEditMode">
+                <SearchableDropdown v-model="form.statutAdmin" :items="optform_statutAdmin" />
+              </template>
               <span v-else class="text-[13px]">
                 <span :class="['text-[11px] font-semibold px-2 py-0.5 rounded-full', statutAdminClass(current.statutAdmin)]">{{ statutAdminLabel(current.statutAdmin) }}</span>
               </span>
@@ -107,6 +105,8 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import SearchableDropdown from '../ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../ui/SearchableDropdown.vue'
 import CardModalShell from '../shared/CardModalShell.vue'
 import FormSection from '../ui/form-field/FormSection.vue'
 import * as cls from '../../lib/formClasses'
@@ -176,4 +176,10 @@ function statutOpLabel(s?: string) {
 function statutOpClass(s?: string) {
   return ({ en_mouvement: 'bg-success-bg text-success', arrete: 'bg-primary/10 text-primary', allume_immobile: 'bg-warning-bg text-warning', signal_perdu: 'bg-danger-bg text-danger' } as any)[s ?? ''] ?? ''
 }
+
+const optform_statutAdmin: DropdownItem[] = [
+  { id: 'en_service', label: "En service" },
+  { id: 'hors_service', label: "Hors service" },
+  { id: 'archive', label: "Archivé" },
+]
 </script>

@@ -42,10 +42,11 @@
                   <span v-if="ch.requis" class="text-danger">*</span>
                   <span v-else :class="F.fieldOptional">- facultatif</span>
                 </label>
-                <select v-model="mapping[ch.cle]" :class="F.fieldSelect">
-                  <option value="">- ignorer -</option>
-                  <option v-for="e in entetes" :key="e" :value="e">{{ e }}</option>
-                </select>
+                <SearchableDropdown
+                  v-model="mapping[ch.cle]"
+                  :items="optentetes"
+                  placeholder="- ignorer -"
+                />
               </div>
             </div>
           </div>
@@ -124,6 +125,8 @@
  * automatique quand le nom est reconnaissable, et laisse l'utilisateur corriger.
  */
 import { ref, reactive, computed } from 'vue'
+import SearchableDropdown from '../ui/SearchableDropdown.vue'
+import type { DropdownItem } from '../ui/SearchableDropdown.vue'
 import Papa from 'papaparse'
 import { X, Upload, AlertCircle, CheckCircle2 } from 'lucide-vue-next'
 import { useCarburantStore } from '../../stores/carburant'
@@ -269,4 +272,7 @@ function importer() {
   entetes.value = []
   nomFichier.value = ''
 }
+
+const optentetes = computed<DropdownItem[]>(() =>
+  entetes.value.map(e => ({ id: e, label: e })))
 </script>

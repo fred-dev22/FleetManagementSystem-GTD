@@ -69,12 +69,14 @@
         <div v-for="level in ([1, 2, 3, 4] as const)" :key="level" class="flex items-center gap-2">
           <span class="text-[11px] font-semibold text-muted-foreground bg-background border border-border rounded px-2 py-0.5 min-w-[36px] text-center shrink-0">N+{{ level }}</span>
           <template v-if="getPool(level)">
-            <select class="flex-1 h-[36px] px-2.5 border border-border rounded-md bg-background text-[13px] text-foreground outline-none transition-colors focus:border-primary focus:bg-card cursor-pointer" :value="getPool(level)!.employeeId ?? ''" @change="updatePoolEmployee(level, ($event.target as HTMLSelectElement).value)">
-              <option value="">-- Choisir --</option>
-              <optgroup label="Directeurs RH"><option v-for="e in empStore.employees.filter(x => x.role === 'hr_director')" :key="e.id" :value="e.id">{{ e.name }} · {{ e.jobTitle }}</option></optgroup>
-              <optgroup label="Admins RH"><option v-for="e in empStore.employees.filter(x => x.role === 'hr_admin')" :key="e.id" :value="e.id">{{ e.name }} · {{ e.jobTitle }}</option></optgroup>
-              <optgroup label="Validateurs"><option v-for="e in empStore.employees.filter(x => x.role === 'validator')" :key="e.id" :value="e.id">{{ e.name }} · {{ e.jobTitle }}</option></optgroup>
-            </select>
+            <SearchableDropdown
+              class="flex-1"
+              :model-value="getPool(level)!.employeeId ?? ''"
+              :items="optionsApprobateurs"
+              placeholder="Choisir un approbateur"
+              show-avatar
+              @update:model-value="v => updatePoolEmployee(level, v ?? '')"
+            />
             <div class="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0" :style="{ background: getPool(level)!.validatorColor }">{{ getPool(level)!.validatorInitials }}</div>
             <button class="w-7 h-7 flex items-center justify-center rounded text-danger hover:bg-danger-bg transition-colors cursor-pointer shrink-0 border-0 bg-transparent" @click="removePool(level)" title="Supprimer"><Trash2 class="w-3.5 h-3.5" /></button>
           </template>
@@ -290,4 +292,22 @@ const optform_type: DropdownItem[] = [
             { id: 'department', label: "Département" },
             { id: 'service', label: "Service" },
 ]
+
+const LIB_ROLE_APPRO: Record<string, string> = {
+  hr_director: 'Directeur RH',
+  hr_admin:    'Admin RH',
+  validator:   'Validateur',
+}
+
+const optionsApprobateurs = computed<DropdownItem[]>(() =>
+  ['hr_director', 'hr_admin', 'validator'].flatMap(role =>
+    (empStore.employees ?? [])
+      .filter(e => e.role === role)
+      .map(e => ({
+        id: e.id,
+        label: e.name,
+        sublabel: `${LIB_ROLE_APPRO[role]} · ${e.jobTitle}`,
+        initials: e.initials,
+        avatarColor: e.avatarBg,
+      }))))
 </script>

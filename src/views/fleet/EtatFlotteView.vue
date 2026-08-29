@@ -19,12 +19,10 @@
     @reset-filters="resetFilters"
   >
     <template #header-actions>
-      <select v-model="dateAffichee" :class="L.fpSelect" class="mr-2">
-        <option value="">Situation du jour</option>
-        <!-- Un jour rectifié compte plusieurs versions : le sélecteur
-             liste les jours, la version faisant foi est la plus récente. -->
-        <option v-for="o in optionsJours" :key="o.id" :value="o.id">{{ o.label }}</option>
-      </select>
+      <SearchableDropdown
+        v-model="dateAffichee" :items="optionsJours"
+        placeholder="Situation du jour" compact class="mr-2"
+      />
       <button :class="L.btnOutline" @click="archiver">
         <Archive class="w-4 h-4" />
         Archiver
@@ -86,12 +84,10 @@
     <template #filters>
       <div>
         <label :class="L.fpFieldLabel">État</label>
-        <select v-model="filterEtat" :class="L.fpSelect">
-          <option value="">Tous</option>
-          <option v-for="e in ETATS_FLOTTE" :key="e.code" :value="e.code">
-            {{ e.code }} - {{ e.libelle }}
-          </option>
-        </select>
+        <SearchableDropdown
+          v-model="filterEtat" :items="optEtats"
+          placeholder="Tous" compact
+        />
       </div>
       <div>
         <label :class="L.fpFieldLabel">Immobilisation</label>
@@ -427,4 +423,8 @@ const optfilterImmo: DropdownItem[] = [
           { id: 'oui', label: "Immobilisés" },
           { id: 'non', label: "Disponibles" },
 ]
+
+/* Le code identifie l'état, le libellé l'explique : les deux sont cherchables. */
+const optEtats = computed<DropdownItem[]>(() =>
+  ETATS_FLOTTE.map(e => ({ id: e.code, label: e.code, sublabel: e.libelle })))
 </script>

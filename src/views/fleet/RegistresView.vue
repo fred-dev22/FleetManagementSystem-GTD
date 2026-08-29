@@ -35,10 +35,12 @@
     <template #filters>
       <div v-if="vue === 'medical'">
         <label :class="L.fpFieldLabel">Type d’examen</label>
-        <select v-model="filterType" :class="L.fpSelect">
-          <option value="">Tous</option>
-          <option v-for="(lib, k) in LIB_EXAMEN" :key="k" :value="k">{{ lib }}</option>
-        </select>
+        <SearchableDropdown
+          v-model="filterType"
+          :items="optLIB_EXAMEN"
+          placeholder="Tous"
+          compact
+        />
       </div>
       <div v-if="vue === 'remontees' || vue === 'ncr'">
         <label :class="L.fpFieldLabel">Statut</label>
@@ -518,4 +520,7 @@ const optfilterMoment: DropdownItem[] = [
           { id: 'chargement', label: "Chargement" },
           { id: 'dechargement', label: "Déchargement" },
 ]
+
+const optLIB_EXAMEN = computed<DropdownItem[]>(() =>
+  Object.entries(LIB_EXAMEN).map(([id, lib]) => ({ id, label: String(lib) })))
 </script>
