@@ -336,20 +336,19 @@ export function analyserTempsConduite(
   etapes: Array<{ role: string; heureArrivee?: string; heureDepart?: string; pausePrevueMin?: number; siteNom?: string }>,
   params: TempsConduiteAnalyse,
 ): AnalyseTempsConduiteResult {
-  const segments = etapes
+  const segments: Array<{ arrivee: number; depart: number; dureeMin: number; siteNom?: string }> = etapes
     .filter(e => e.role === 'livraison' || e.role === 'chargement')
-    .map(e => {
+    .flatMap(e => {
       const arrivee = e.heureArrivee ? new Date(e.heureArrivee).getTime() : null
       const depart = e.heureDepart ? new Date(e.heureDepart).getTime() : null
-      if (arrivee == null || depart == null) return null
-      return {
+      if (arrivee == null || depart == null) return []
+      return [{
         arrivee,
         depart,
         dureeMin: Math.max(0, Math.round((depart - arrivee) / 60000)),
         siteNom: e.siteNom,
-      }
+      }]
     })
-    .filter((x): x is { arrivee: number; depart: number; dureeMin: number; siteNom?: string } => x !== null)
 
   const conduiteTotaleMin = segments.reduce((s, x) => s + x.dureeMin, 0)
   const conduiteContinueMaxMin = segments.reduce((m, x) => Math.max(m, x.dureeMin), 0)

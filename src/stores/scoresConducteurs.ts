@@ -14,8 +14,18 @@ export const PONDERATIONS: Record<FamilleScore, { libelle: string; poids: number
   discipline:    { libelle: 'Discipline administrative', poids: 10, couleur: '#7c3aed' },
 }
 
-/** Grille de prime indexée sur le score — à valider par la direction et les RH. */
-export const GRILLE_PRIME: { min: number; montant: number; libelle: string }[] = [
+/** Grille de prime indexée sur le score. */
+export interface PalierPrime { min: number; montant: number; libelle: string }
+
+/**
+ * Valeurs de départ de la grille de prime — GTD n'a communiqué aucun
+ * montant dans les documents transmis (contrairement aux poids des
+ * familles de score, eux confirmés). Ces chiffres sont un exemple de
+ * calibrage, modifiable sans développeur depuis Flotte → Paramétrage,
+ * onglet Paramètres → « Grille de prime », et à valider par la
+ * Direction et les Ressources Humaines avant toute activation réelle.
+ */
+export const GRILLE_PRIME_DEFAUT: PalierPrime[] = [
   { min: 90, montant: 450_000, libelle: 'Excellence' },
   { min: 80, montant: 300_000, libelle: 'Confirmé'   },
   { min: 70, montant: 150_000, libelle: 'Standard'   },
@@ -33,9 +43,19 @@ export function scoreGlobal(familles: DetailFamilleScore[]): number {
   return Math.round(familles.reduce((s, f) => s + f.note * f.poids, 0) / total)
 }
 
-export function primePour(score: number, eligible: boolean): { montant: number; libelle: string } {
+/**
+ * Palier atteint par un score donné, indépendamment de l'éligibilité.
+ * La grille passée en paramètre doit être triée du seuil le plus haut
+ * au plus bas (c'est le cas de `GRILLE_PRIME_DEFAUT` et de la version
+ * modifiable exposée par le store).
+ */
+export function palierAtteint(score: number, grille: PalierPrime[]): PalierPrime {
+  return grille.find(g => score >= g.min) ?? grille[grille.length - 1]!
+}
+
+export function primeAvecGrille(score: number, eligible: boolean, grille: PalierPrime[]): { montant: number; libelle: string } {
   if (!eligible) return { montant: 0, libelle: 'Non éligible' }
-  const p = GRILLE_PRIME.find(g => score >= g.min)!
+  const p = palierAtteint(score, grille)
   return { montant: p.montant, libelle: p.libelle }
 }
 
@@ -48,6 +68,14 @@ export function primePour(score: number, eligible: boolean): { montant: number; 
  *  · traçabilité — les pondérations sont versionnées et non rétroactives.
  */
 export const useScoresConducteursStore = defineStore('scoresConducteurs', () => {
+
+  /**
+   * Copie modifiable de la grille de prime, éditable depuis Flotte →
+   * Paramétrage. `GRILLE_PRIME_DEFAUT` reste la valeur de référence,
+   * jamais mutée directement.
+   */
+  const grillePrime = ref<PalierPrime[]>(
+    GRILLE_PRIME_DEFAUT.map(p => ({ ...p })))
 
   const scores = ref<ScoreConducteur[]>([
     {
@@ -128,7 +156,7 @@ export const useScoresConducteursStore = defineStore('scoresConducteurs', () => 
   /* Calcul dérivé : score global + prime, appliqués une fois au chargement. */
   scores.value.forEach(s => {
     s.score = scoreGlobal(s.familles)
-    s.primeMontant = primePour(s.score, s.primeEligible).montant
+    s.primeMontant = primeAvecGrille(s.score, s.primeEligible, grillePrime.value).montant
   })
 
   /* ══ Getters ═══════════════════════════════════════════════ */
@@ -186,7 +214,7 @@ export const useScoresConducteursStore = defineStore('scoresConducteurs', () => 
         x.famille === f ? { ...x, poids } : { ...x, poids: PONDERATIONS[x.famille].poids },
       )
       s.score = scoreGlobal(s.familles)
-      s.primeMontant = primePour(s.score, s.primeEligible).montant
+      s.primeMontant = primeAvecGrille(s.score, s.primeEligible, grillePrime.value).montant
     })
   }
 
@@ -194,13 +222,38 @@ export const useScoresConducteursStore = defineStore('scoresConducteurs', () => 
     const s = getById(chauffeurId)
     if (!s) return
     s.score = scoreGlobal(s.familles)
-    s.primeMontant = primePour(s.score, s.primeEligible).montant
+    s.primeMontant = primeAvecGrille(s.score, s.primeEligible, grillePrime.value).montant
+  }
+
+  function recalculerTous() {
+    scores.value.forEach(s => {
+      s.score = scoreGlobal(s.familles)
+      s.primeMontant = primeAvecGrille(s.score, s.primeEligible, grillePrime.value).montant
+    })
+  }
+
+  /**
+   * Modifie un palier de la grille de prime (montant, seuil ou libellé),
+   * puis revalorise immédiatement la prime de tous les conducteurs -
+   * la grille affichée sur chaque fiche reste toujours à jour.
+   */
+  function modifierPalier(index: number, data: Partial<PalierPrime>) {
+    const palier = grillePrime.value[index]
+    if (!palier) return
+    Object.assign(palier, data)
+    grillePrime.value.sort((a, b) => b.min - a.min)
+    recalculerTous()
+  }
+
+  function reinitialiserGrillePrime() {
+    grillePrime.value = GRILLE_PRIME_DEFAUT.map(p => ({ ...p }))
+    recalculerTous()
   }
 
   return {
-    scores,
+    scores, grillePrime,
     classement, scoreMoyen, totalKm, infractionsPour1000km,
     getById, percentile, echeancesProches,
-    ajusterPonderation, recalculer,
+    ajusterPonderation, recalculer, modifierPalier, reinitialiserGrillePrime,
   }
 })

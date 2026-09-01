@@ -397,7 +397,7 @@ const friseRefact = computed<ValidationStep[]>(() => {
     actorInitials: 'EX',
     action: 'submitted',
     date: r.date,
-    comment: r.commentaire || `Écart qualifié « ${LIB_QUALIF[r.qualification!] ?? '-'} »`,
+    comment: r.commentaire || `Écart qualifié « ${LIB_QUALIF[r.qualification ?? 'conduite'] ?? '-'} »`,
   }]
 
   const faites = r.validations ?? []
@@ -434,7 +434,7 @@ const montantPropose = ref<number | undefined>(undefined)
 
 function qualifier() {
   if (!qualif.value) return
-  store.qualifier(item.value.id, qualif.value, commentaire.value, montantPropose.value)
+  store.qualifier(item.value.id, qualif.value, commentaire.value)
   qualif.value = ''
   commentaire.value = ''
 }

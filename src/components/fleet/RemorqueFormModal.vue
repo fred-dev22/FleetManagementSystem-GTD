@@ -132,6 +132,7 @@ async function handleSubmit() {
       })
     } else {
       store.createRemorque({
+        typeVehicule: 'remorque',
         vin: form.vin,
         plaque: form.plaque,
         type: form.type as TypeRemorque,

@@ -10,6 +10,7 @@ import type {
 } from '../types/maintenance'
 import { familleDuCode } from '../types/maintenance'
 import { useConfigurationStore } from './configuration'
+import { useAchatsStore } from './achats'
 
 /**
  * Maintenance & Interventions - module 3.
@@ -1180,11 +1181,23 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     return true
   }
 
+  /**
+   * Ajoute une pièce à l'ordre de travail. Une pièce d'origine « stock »
+   * déclenche une sortie de magasin réelle (store achats) : le stock est
+   * décrémenté et le mouvement porte l'OT, le véhicule et le kilométrage -
+   * la chaîne Fournisseur ↔ Produit ↔ Stock ↔ Intervention demandée par
+   * le client. Une pièce sans référence catalogue n'est pas bloquée pour
+   * autant : elle reste seulement hors suivi de stock.
+   */
   function ajouterPiece(id: string, p: Omit<PieceConsommee, 'id'>) {
     const o = getById(id)
     if (!o) return
     o.pieces.push({ ...p, id: `PC-${Date.now()}` })
     if (p.origine === 'achat') o.statut = 'attente_piece'
+    if (p.origine === 'stock') {
+      const achatsStore = useAchatsStore()
+      achatsStore.sortirDuStock(p.reference, p.quantite, id, o.vehiculePlaque, o.kilometrage)
+    }
   }
 
   /** Clôture - exige diagnostic complet et travaux décrits (US 3.2.4). */

@@ -19,6 +19,12 @@ const store = useEmployeeStore()
 const entityStore = useEntityStore()
 
 const ROLE_LABELS: Record<string, string> = { employee: 'Employé', validator: 'Validateur / Manager', hr_admin: 'Administrateur RH', hr_director: 'Directeur RH' }
+const STATUS_LABELS: Record<string, string> = {
+  actif: 'Actif',
+  en_conge: 'En congé',
+  suspendu: 'Suspendu',
+  sorti: 'Sorti',
+}
 
 const entityColumns = [{ key: 'code', label: 'Code', width: '90px' }, { key: 'name', label: 'Nom' }]
 function fetchEntities({ searchQuery }: LookupFetchParams) {

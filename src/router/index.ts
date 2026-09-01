@@ -58,6 +58,8 @@ const router = createRouter({
     { path: '/maintenance/equipe-mobile',    name: 'maintenance-equipe-mobile',    component: () => import('../views/maintenance/EquipeMobileView.vue'),         meta: { requiresAuth: true, layout: 'dashboard' } },
     { path: '/maintenance/indisponibilites', name: 'maintenance-indisponibilites', component: () => import('../views/maintenance/IndisponibilitesView.vue'),     meta: { requiresAuth: true, layout: 'dashboard' } },
     { path: '/maintenance/plans',            name: 'maintenance-plans',            component: () => import('../views/maintenance/PlansEntretienView.vue'),       meta: { requiresAuth: true, layout: 'dashboard' } },
+    { path: '/maintenance/achats', name: 'maintenance-achats', component: () => import('../views/maintenance/AchatsStockView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },
+    
     { path: '/maintenance/parametres',       name: 'maintenance-parametres',       component: () => import('../views/maintenance/ParametresAtelierView.vue'),    meta: { requiresAuth: true, layout: 'dashboard' } },
 
     { path: '/fleet/vehicules', name: 'fleet-vehicules', component: () => import('../views/fleet/VehiculeListView.vue'), meta: { requiresAuth: true, layout: 'dashboard' } },

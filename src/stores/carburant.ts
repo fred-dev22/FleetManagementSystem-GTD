@@ -354,11 +354,52 @@ export const useCarburantStore = defineStore('carburant', () => {
   const totalBons = computed(() =>
     recharges.value.reduce((s, r) => s + (r.nombreBons ?? 0), 0))
 
+  function niveauAttendu(id: string): 1 | 2 | null {
+    const r = getById(id)
+    if (!r) return null
+    if (r.statut === 'qualifie') return 1
+    if (r.statut === 'validation_1') return 2
+    return null
+  }
+
+  function valider(
+    id: string,
+    niveau: 1 | 2,
+    valideur: string,
+    role: string,
+    decision: 'approuve' | 'rejete',
+    commentaire?: string,
+  ) {
+    const r = getById(id)
+    if (!r) return
+
+    r.validations = [...(r.validations ?? []), {
+      niveau,
+      valideur,
+      role,
+      decision,
+      commentaire,
+      date: new Date().toISOString(),
+    }]
+
+    if (decision === 'rejete') {
+      r.statut = 'classe'
+      return
+    }
+
+    if (niveau === 1) {
+      r.statut = 'validation_2'
+      return
+    }
+
+    r.statut = 'refacture'
+  }
+
   return {
     recharges,
     anomalies, periodesConso, bonsParVehicule, totalBons,
     getById, rechargesDuVehicule, rechargesDuChauffeur,
     litresDelivres, montantTotal, evaluerControles, rafraichirControles,
-    create, ouvrirQualification, qualifier,
+    create, ouvrirQualification, qualifier, niveauAttendu, valider,
   }
 })

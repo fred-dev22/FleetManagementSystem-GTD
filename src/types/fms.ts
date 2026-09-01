@@ -76,6 +76,21 @@ export interface EtapeTrajet {
 
 export type ExamenType = 'visite_medicale' | 'permis' | 'formation_apth'
 export type AptitudeChauffeur = 'apte' | 'non_apte' | 'a_renouveler'
+export type TypeExamen = ExamenType
+export type ResultatAptitude = AptitudeChauffeur
+
+export type StatutRemontee = 'ouverte' | 'en_cours' | 'close'
+
+export type GraviteNCR = 'mineure' | 'majeure' | 'critique'
+export type StatutNCR = 'ouverte' | 'en_traitement' | 'close'
+export type MomentSafeCheck = 'chargement' | 'dechargement'
+
+export interface PointSafeCheck {
+  code: string
+  libelle: string
+  observation?: string
+  conforme?: boolean
+}
 
 /* ══════════════════════════════════════════════════════════════
    Registres : catégories de remontée et natures de non-conformité
@@ -85,7 +100,7 @@ export type AptitudeChauffeur = 'apte' | 'non_apte' | 'a_renouveler'
    L'import échouait au chargement du module, l'écran restait blanc,
    et l'erreur remontait au navigateur en perturbant la navigation
    vers les écrans suivants. Les deux libellés sont définis ici.
-   ══════════════════════════════════════════════════════════════ */
+   ══════════════════════════════════════════════ */
 
 export type CategorieRemontee =
   | 'technique' | 'securite' | 'route' | 'client' | 'autre'
@@ -436,8 +451,20 @@ export interface ControleVraisemblance {
   detail?: string
 }
 
-export type StatutRecharge = 'valide' | 'anomalie' | 'en_qualification' | 'qualifie'
+export type StatutRecharge =
+  | 'valide' | 'anomalie' | 'en_qualification' | 'qualifie'
+  | 'validation_1' | 'validation_2' | 'refacture' | 'classe'
+
 export type QualifEcartCarburant = 'technique' | 'conduite' | 'prelevement' | 'saisie'
+
+export interface ValidationCarburant {
+  niveau: 1 | 2
+  valideur: string
+  role: string
+  decision: 'approuve' | 'rejete'
+  commentaire?: string
+  date: string
+}
 
 export interface RechargeCarburant {
   id: string
@@ -452,6 +479,7 @@ export interface RechargeCarburant {
   litres: number
   prixLitre: number
   montant: number             // Ariary
+  montantRefacture?: number
   odometre: number
 
   /** Suivi par bons — le client délivre des bons d'un litrage fixe (ex. 500 L).
@@ -474,6 +502,7 @@ export interface RechargeCarburant {
   statut: StatutRecharge
   qualification?: QualifEcartCarburant
   commentaire?: string
+  validations?: ValidationCarburant[]
 }
 
 /** Consommation calculée entre deux pleins complets successifs. */

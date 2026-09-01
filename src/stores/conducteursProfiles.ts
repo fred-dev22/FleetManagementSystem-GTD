@@ -109,10 +109,10 @@ export const useConduceteursProfilesStore = defineStore('conducteursProfiles', (
 
   function update(id: string, data: Partial<ConducteurProfil>) {
     const idx = profils.value.findIndex(p => p.id === id)
-    if (idx !== -1) Object.assign(profils.value[idx], data)
+    if (idx !== -1) Object.assign(profils.value[idx]!, data)
   }
 
-  function ajouterInfraction(id: string, infraction: ConducteurProfil['infractions'][0]) {
+  function ajouterInfraction(id: string, infraction: NonNullable<ConducteurProfil['infractions']>[number]) {
     const p = profils.value.find(pr => pr.id === id)
     if (p) {
       p.infractions = [...(p.infractions ?? []), infraction]

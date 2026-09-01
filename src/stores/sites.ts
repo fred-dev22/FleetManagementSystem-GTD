@@ -246,7 +246,7 @@ export const useSitesStore = defineStore('sites', {
     updateSite(id: string, payload: Partial<Omit<Site, 'id'>>): boolean {
       const index = this.sites.findIndex((s) => s.id === id)
       if (index === -1) return false
-      this.sites[index] = { ...this.sites[index], ...payload }
+      this.sites[index] = { ...this.sites[index]!, ...payload } as Site
       return true
     },
 

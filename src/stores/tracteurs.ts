@@ -214,14 +214,14 @@ export const useTracteurStore = defineStore('tracteurs', () => {
   function updateTracteur(id: string, payload: Partial<Omit<Tracteur, 'id' | 'createdAt'>>): void {
     const idx = tracteurs.value.findIndex(t => t.id === id)
     if (idx === -1) throw new Error(`Tracteur "${id}" introuvable.`)
-    tracteurs.value[idx] = { ...tracteurs.value[idx], ...payload }
+    tracteurs.value[idx] = { ...tracteurs.value[idx]!, ...payload } as Tracteur
   }
 
   function changerPlaque(id: string, nouvellePlaque: string, parUserId = 'system'): void {
     const idx = tracteurs.value.findIndex(t => t.id === id)
     if (idx === -1) throw new Error(`Tracteur "${id}" introuvable.`)
 
-    const tracteur = tracteurs.value[idx]
+    const tracteur = tracteurs.value[idx]!
     const entree: HistoriquePlaque = {
       anciennePlaque: tracteur.plaque,
       nouvellePlaque,
@@ -233,14 +233,14 @@ export const useTracteurStore = defineStore('tracteurs', () => {
       ...tracteur,
       plaque: nouvellePlaque,
       historiquePlayque: [...(tracteur.historiquePlayque ?? []), entree],
-    }
+    } as Tracteur
   }
 
   function archiverTracteur(id: string): void {
     const idx = tracteurs.value.findIndex(t => t.id === id)
     if (idx === -1) throw new Error(`Tracteur "${id}" introuvable.`)
 
-    const tracteur = tracteurs.value[idx]
+    const tracteur = tracteurs.value[idx]!
     tracteurs.value[idx] = {
       ...tracteur,
       statutAdmin: 'archive',
@@ -249,46 +249,47 @@ export const useTracteurStore = defineStore('tracteurs', () => {
       chauffeurNom: undefined,
       remorqueId: undefined,
       remorquePlaque: undefined,
-    }
+    } as Tracteur
   }
 
   function updateStatutOp(id: string, statut: StatutOperationnelVehicule): void {
     const idx = tracteurs.value.findIndex(t => t.id === id)
     if (idx === -1) throw new Error(`Tracteur "${id}" introuvable.`)
-    tracteurs.value[idx] = { ...tracteurs.value[idx], statutOp: statut }
+    tracteurs.value[idx] = { ...tracteurs.value[idx]!, statutOp: statut } as Tracteur
   }
 
   function updatePosition(id: string, position: GpsPosition): void {
     const idx = tracteurs.value.findIndex(t => t.id === id)
     if (idx === -1) throw new Error(`Tracteur "${id}" introuvable.`)
 
+    const vitesse = position.vitesse ?? 0
     let statutOp: StatutOperationnelVehicule
-    if (position.vitesse > 5) {
+    if (vitesse > 5) {
       statutOp = 'en_mouvement'
-    } else if (position.vitesse > 0) {
+    } else if (vitesse > 0) {
       statutOp = 'allume_immobile'
     } else {
       statutOp = 'arrete'
     }
 
-    tracteurs.value[idx] = { ...tracteurs.value[idx], position, statutOp }
+    tracteurs.value[idx] = { ...tracteurs.value[idx]!, position, statutOp } as Tracteur
   }
 
   function assignerChauffeur(id: string, chauffeurId: string, chauffeurNom: string): void {
     const idx = tracteurs.value.findIndex(t => t.id === id)
     if (idx === -1) throw new Error(`Tracteur "${id}" introuvable.`)
-    tracteurs.value[idx] = { ...tracteurs.value[idx], chauffeurId, chauffeurNom }
+    tracteurs.value[idx] = { ...tracteurs.value[idx]!, chauffeurId, chauffeurNom } as Tracteur
   }
 
   function desassignerChauffeur(id: string): void {
     const idx = tracteurs.value.findIndex(t => t.id === id)
     if (idx === -1) throw new Error(`Tracteur "${id}" introuvable.`)
-    const tracteur = tracteurs.value[idx]
+    const tracteur = tracteurs.value[idx]!
     tracteurs.value[idx] = {
       ...tracteur,
       chauffeurId: undefined,
       chauffeurNom: undefined,
-    }
+    } as Tracteur
   }
 
   return {

@@ -17,7 +17,12 @@ defineProps<{
 const emit = defineEmits<{ close: []; create: [] }>()
 
 const onKeydown = (e: KeyboardEvent) => { if (e.key === 'Escape') emit('close') }
-onMounted(() => document.addEventListener('keydown', onKeydown))
+// Même correctif que CardModalShell : la coquille se positionne en
+// absolute sur #below-topbar, pas en fixed sur le viewport.
+onMounted(() => {
+  document.addEventListener('keydown', onKeydown)
+  window.scrollTo({ top: 0 })
+})
 onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 </script>
 

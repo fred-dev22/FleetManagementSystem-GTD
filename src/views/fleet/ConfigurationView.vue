@@ -421,6 +421,49 @@
         </div>
 
       </div>
+
+      <!-- ═══════════════════════════════════════════════════════
+           Grille de prime conducteur - US 10.3 / demande UCODIS n°5
+           GTD n'a communiqué aucun montant dans les documents transmis :
+           ces valeurs sont un exemple de calibrage, à ajuster ici sans
+           développeur, et à valider par la Direction et les RH avant
+           toute activation réelle (versement effectif d'une prime).
+           ═══════════════════════════════════════════════════════ -->
+      <div :class="L.card" class="lg:col-span-2">
+        <div :class="L.cardHeader">
+          <h2 :class="L.cardTitle"><Award class="w-4 h-4 text-primary" /> Grille de prime conducteur</h2>
+          <button class="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer bg-transparent border-0"
+            @click="scoresStore.reinitialiserGrillePrime()">
+            Réinitialiser
+          </button>
+        </div>
+        <!-- <p class="text-[11px] text-warning bg-warning-bg rounded-md px-2.5 py-2 mb-3">
+          Montants indicatifs, non communiqués par GTD - à valider par la Direction et les
+          Ressources Humaines avant toute activation réelle.
+        </p> -->
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <div v-for="(palier, i) in scoresStore.grillePrime" :key="i" class="flex flex-col gap-2 rounded-lg border border-border p-3">
+            <div :class="F.field">
+              <label :class="F.fieldLabel">Libellé</label>
+              <input :value="palier.libelle" type="text" :class="F.fieldInput"
+                @change="scoresStore.modifierPalier(i, { libelle: ($event.target as HTMLInputElement).value })" />
+            </div>
+            <div :class="F.field">
+              <label :class="F.fieldLabel">Score minimum</label>
+              <input :value="palier.min" type="number" min="0" max="100" :class="F.fieldInput"
+                @change="scoresStore.modifierPalier(i, { min: Number(($event.target as HTMLInputElement).value) })" />
+            </div>
+            <div :class="F.field">
+              <label :class="F.fieldLabel">Montant (Ar)</label>
+              <input :value="palier.montant" type="number" min="0" step="10000" :class="F.fieldInput"
+                @change="scoresStore.modifierPalier(i, { montant: Number(($event.target as HTMLInputElement).value) })" />
+            </div>
+            <p class="text-[11px] text-muted-foreground text-center">
+              {{ palier.montant ? fmtAr(palier.montant) : 'Aucune prime' }}
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   <!-- ══ Trajet de référence : création et modification ═══════ -->
@@ -590,9 +633,11 @@
  */
 import { ref, computed } from 'vue'
 import {
-  Info, Route, Clock, SlidersHorizontal, BellRing, AlertCircle,
+  Info, Route, Clock, SlidersHorizontal, BellRing, AlertCircle, Award,
   Plus, Pencil, Archive, Undo2, ChevronUp, ChevronDown, X,
 } from 'lucide-vue-next'
+import { useScoresConducteursStore } from '../../stores/scoresConducteurs'
+import { fmtDuree, fmtAr } from '../../lib/fmsUtils'
 import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
 import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import FleetMap from '../../components/fleet/FleetMap.vue'
@@ -606,12 +651,12 @@ import type {
   GraviteEcart, MapMarker, RoleEtape, Trajet, EtapeTrajet,
   TypeEcartConfig, CategorieEcart, Client,
 } from '../../types/fms'
-import { fmtDuree } from '../../lib/fmsUtils'
 import * as L from '../../lib/listClasses'
 import * as F from '../../lib/formClasses'
 
 const trajetsStore = useTrajetsStore()
 const configStore = useConfigurationStore()
+const scoresStore = useScoresConducteursStore()
 const sitesStore   = useSitesStore()
 const clientsStore = useClientsStore()
 const voyagesStore = useVoyagesStore()

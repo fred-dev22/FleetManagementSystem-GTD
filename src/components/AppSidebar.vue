@@ -105,6 +105,7 @@
 
   <SidebarSection label="Paramétrage">
     <SidebarItem :icon="ClipboardList"  label="Plans d'entretien" :to="{ name: 'maintenance-plans' }" />
+    <SidebarItem :icon="PackageSearch" label="Achats & stock" :to="{ name: 'maintenance-achats' }" />
     <SidebarItem :icon="Settings"       label="Paramètres atelier" :to="{ name: 'maintenance-parametres' }" />
   </SidebarSection>
 </template>
@@ -140,7 +141,7 @@
 import { computed, defineComponent, h, type Component, type PropType } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import {
-  Building, CalendarClock, CalendarDays, CalendarOff, CalendarRange, ClipboardCheck, ClipboardList, Coins, Cpu, FileText, Fuel, Gauge, LayoutDashboard, LayoutGrid, Link2, MapPin, MapPinned, Network, Package, PieChart, Plane, Receipt, Route, Settings, ShieldAlert, ShieldCheck, Truck, UserCheck, UserCheck2, Users, Wrench,
+  Building, CalendarClock, CalendarDays, CalendarOff, PackageSearch, CalendarRange, ClipboardCheck, ClipboardList, Coins, Cpu, FileText, Fuel, Gauge, LayoutDashboard, LayoutGrid, Link2, MapPin, MapPinned, Network, Package, PieChart, Plane, Receipt, Route, Settings, ShieldAlert, ShieldCheck, Truck, UserCheck, UserCheck2, Users, Wrench,
 } from 'lucide-vue-next'
 import { useAuthStore }       from '../stores/auth'
 import { useNavigationStore } from '../stores/navigation'

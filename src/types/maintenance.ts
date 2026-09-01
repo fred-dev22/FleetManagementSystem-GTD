@@ -502,3 +502,66 @@ export interface InterventionMobile {
   testsPositifs?: number
   observation?: string
 }
+
+/* ══════════════════════════════════════════════════════════════
+   Achats & stock de pièces
+
+   Jusqu'ici, une pièce consommée sur un ordre de travail (PieceConsommee)
+   n'était identifiée que par une référence en texte libre, sans catalogue
+   partagé, sans fournisseur réutilisable ni stock réellement décrémenté.
+   Le tableau de synthèse du client (« Achats & stock pièces : Demandes
+   d'achat, BC, bon de sortie magasin, Fournisseurs, Produits, Entrées/
+   Sorties stock — Fournisseur ↔ Produit ↔ Stock ↔ Intervention,
+   Kilométrage ») demande ce niveau de traçabilité : c'est ce que ces
+   types ajoutent, sans rien retirer à `DemandeAchat` ni `PieceConsommee`.
+   ══════════════════════════════════════════════════════════════ */
+
+export interface Fournisseur {
+  id: string
+  nom: string
+  contact?: string
+  telephone?: string
+  /** Délai de livraison moyen constaté, en jours - alimente les BC. */
+  delaiLivraisonJoursMoyen?: number
+  actif: boolean
+}
+
+/** Article du catalogue pièces, avec son niveau de stock courant. */
+export interface ProduitStock {
+  id: string
+  reference: string
+  designation: string
+  sousSysteme?: SousSysteme
+  fournisseurPrincipalId?: string
+  prixUnitaireAr: number
+  stockActuel: number
+  /** En dessous de ce seuil, le produit apparaît en réapprovisionnement à prévoir. */
+  seuilAlerte: number
+}
+
+export type TypeMouvementStock = 'entree' | 'sortie'
+
+/**
+ * Une ligne par mouvement de stock : une entrée (réception d'un bon de
+ * commande) ou une sortie (bon de sortie magasin). Une sortie liée à une
+ * intervention porte l'ordre de travail, le véhicule et le kilométrage
+ * du moment - c'est ce qui referme la chaîne Fournisseur ↔ Produit ↔
+ * Stock ↔ Intervention ↔ Kilométrage.
+ */
+export interface MouvementStock {
+  id: string
+  produitId: string
+  type: TypeMouvementStock
+  quantite: number
+  date: string
+  motif: string
+  /** Renseigné pour une sortie consommée par une intervention. */
+  ordreTravailId?: string
+  vehiculePlaque?: string
+  kilometrage?: number
+  /** Renseigné pour une entrée issue d'une réception de commande. */
+  fournisseurId?: string
+  numeroBonCommande?: string
+  /** Stock du produit immédiatement après ce mouvement, pour audit. */
+  stockApres: number
+}

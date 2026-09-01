@@ -19,13 +19,13 @@
         />
 
         <!-- Banner avertissement -->
-        <div class="flex items-start gap-2.5 bg-warning-bg border-l-4 border-warning rounded-md px-4 py-3 text-[13px] text-foreground leading-relaxed">
+        <!-- <div class="flex items-start gap-2.5 bg-warning-bg border-l-4 border-warning rounded-md px-4 py-3 text-[13px] text-foreground leading-relaxed">
           <TriangleAlert class="w-4 h-4 text-warning shrink-0 mt-px" />
           <span>
             Les catégories et montants affichés sont <strong>provisoires</strong>.
             Ils doivent être validés avec la direction avant la mise en production.
           </span>
-        </div>
+        </div> -->
 
         <!-- Toast -->
         <div v-if="showToast" class="fixed bottom-6 right-6 bg-success text-white px-5 py-3 rounded-lg text-[13px] font-medium flex items-center gap-2 z-[2000] shadow-[0_4px_16px_rgba(0,0,0,0.16)]">
@@ -38,7 +38,7 @@
           <div class="flex items-start justify-between px-5 pt-4 gap-3">
             <div>
               <h2 class="text-[15px] font-semibold text-foreground">Catégories d'employés</h2>
-              <p class="text-[11px] text-warning mt-0.5">⚠️ À valider avec la direction — les catégories sont provisoires</p>
+              <!-- <p class="text-[11px] text-warning mt-0.5">⚠️ À valider avec la direction - les catégories sont provisoires</p> -->
             </div>
             <div class="flex gap-2 items-center">
               <button :class="[L.btnOutline, '!px-3 !py-1.5 !text-xs']" @click="showCatImport = true">

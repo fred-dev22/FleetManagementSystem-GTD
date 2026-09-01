@@ -179,7 +179,7 @@ interface FormState {
   vin: string
   plaque: string
   type: string
-  capacite: number | null
+  capacite: string
   uniteCapacite: 'T' | 'L'
   marque: string
   modele: string
@@ -191,7 +191,7 @@ const form = reactive<FormState>({
   vin: '',
   plaque: '',
   type: '',
-  capacite: null,
+  capacite: '',
   uniteCapacite: 'T',
   marque: '',
   modele: '',
@@ -210,8 +210,8 @@ onMounted(() => {
     form.vin = r.vin ?? ''
     form.plaque = r.plaque ?? ''
     form.type = r.type ?? ''
-    form.capacite = r.capacite ?? null
-    form.uniteCapacite = r.uniteCapacite ?? 'T'
+    form.capacite = String(r.capacite ?? '')
+    form.uniteCapacite = (r.uniteCapacite === 'L' ? 'L' : 'T')
     form.marque = r.marque ?? ''
     form.modele = r.modele ?? ''
     form.dateMiseEnCirculation = r.dateMiseEnCirculation ?? ''
@@ -245,11 +245,11 @@ function validateField(field: keyof FormState): boolean {
     type: 'Le type',
     capacite: 'La capacité',
   }
-  if (val === null || val === undefined || (typeof val === 'string' && !val.trim())) {
+  if (typeof val === 'string' && !val.trim()) {
     errors[field] = `${labels[field] ?? field} est obligatoire.`
     return false
   }
-  if (field === 'capacite' && (val as number) <= 0) {
+  if (field === 'capacite' && Number(val) <= 0) {
     errors[field] = 'La capacité doit être supérieure à 0.'
     return false
   }

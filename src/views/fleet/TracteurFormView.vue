@@ -183,12 +183,12 @@ const submitting = ref(false)
 onMounted(() => {
   if (isEdit.value && tracteur.value) {
     const t = tracteur.value
-    form.vin = t.vin
-    form.plaque = t.plaque
-    form.marque = t.marque
-    form.modele = t.modele
-    form.dateMiseEnCirculation = t.dateMiseEnCirculation
-    form.statutAdmin = t.statutAdmin as StatutAdminVehicule
+    form.vin = t.vin ?? ''
+    form.plaque = t.plaque ?? ''
+    form.marque = t.marque ?? ''
+    form.modele = t.modele ?? ''
+    form.dateMiseEnCirculation = t.dateMiseEnCirculation ?? ''
+    form.statutAdmin = (t.statutAdmin ?? 'en_service') as StatutAdminVehicule
     form.notes = (t as any).notes ?? ''
   }
 })

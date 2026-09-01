@@ -117,7 +117,13 @@ const onKeydown = (e: KeyboardEvent) => {
   if (showUnsavedDiscardDialog.value) { cancelLeaveWithoutSaving(); return }
   attemptClose()
 }
-onMounted(() => document.addEventListener('keydown', onKeydown))
+// La coquille se positionne en absolute sur #below-topbar, pas en fixed
+// sur le viewport : si la page était scrollée, le popup apparaît décalé
+// et son pied (boutons) part hors champ. On force le retour en haut.
+onMounted(() => {
+  document.addEventListener('keydown', onKeydown)
+  window.scrollTo({ top: 0 })
+})
 onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 </script>
 

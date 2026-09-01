@@ -50,6 +50,15 @@ export type LeaveType =
 
 export interface LeaveRequest {
   id:               number
+  /**
+   * Identifiant stable de l'employé (ex. « emp-010 »). Le rapprochement
+   * entre une absence et un conducteur se faisait jusqu'ici sur
+   * `employeeName` : deux employés homonymes (ex. deux « Nadia Oozeer »
+   * dans des services différents) rendaient ce rapprochement ambigu.
+   * Optionnel pour ne pas casser les enregistrements existants qui n'ont
+   * pas encore été rapprochés.
+   */
+  employeeId?:      string
   employeeName:     string
   employeeInitials: string
   avatarColor:      string

@@ -369,7 +369,7 @@ export const useEmployeeStore = defineStore('employees', () => {
 
   const activeEmployees    = computed(() => employees.value.filter(e => e.status === 'actif'))
   const validatorEmployees = computed(() => employees.value.filter(e =>
-    e.role === 'operations' || e.role === 'rh' || e.role === 'rh'
+    e.role === 'admin' || e.role === 'hr_admin' || e.role === 'hr_director' || e.role === 'validator'
   ))
 
   // Chauffeurs actifs

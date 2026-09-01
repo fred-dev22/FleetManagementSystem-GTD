@@ -156,7 +156,7 @@ const cardTitle = 'text-[13px] font-semibold text-foreground mb-3.5'
 const selectedYear = ref(2026)
 const currentYear  = computed(() => selectedYear.value)
 
-const totalEmployees = computed(() => employeeStore.employees.filter(e => e.status === 'active').length)
+const totalEmployees = computed(() => employeeStore.employees.filter(e => e.status === 'actif').length)
 
 const absenteeismRate = computed(() => {
   const approved = absenceStore.allLeaves.filter(l => l.status === 'approved').length

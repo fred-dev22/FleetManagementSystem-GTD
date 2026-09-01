@@ -52,7 +52,7 @@ export const useAbsenceStore = defineStore('absences', () => {
       ],
     },
     {
-      id: 3, employeeName: 'Fiona Mungroo', employeeInitials: 'FM',
+      id: 3, employeeId: 'emp-011', employeeName: 'Fiona Mungroo', employeeInitials: 'FM',
       avatarColor: '#F4C0D1', avatarTextColor: '#72243E',
       type: 'Récupération', startDate: '2026-07-08', endDate: '2026-07-08',
       workingDays: 1, status: 'approved', submittedAt: '2026-06-25',
@@ -62,7 +62,7 @@ export const useAbsenceStore = defineStore('absences', () => {
       ],
     },
     {
-      id: 4, employeeName: 'Jean-Claude Rakotomalala', employeeInitials: 'JR',
+      id: 4, employeeId: 'emp-006', employeeName: 'Jean-Claude Rakotomalala', employeeInitials: 'JR',
       avatarColor: '#FAC775', avatarTextColor: '#633806',
       type: 'Télétravail', startDate: '2026-07-07', endDate: '2026-07-11',
       workingDays: 5, status: 'pending', submittedAt: '2026-06-28',
@@ -83,7 +83,7 @@ export const useAbsenceStore = defineStore('absences', () => {
       ],
     },
     {
-      id: 6, employeeName: 'Ashvin Pertab', employeeInitials: 'AP',
+      id: 6, employeeId: 'emp-013', employeeName: 'Ashvin Pertab', employeeInitials: 'AP',
       avatarColor: '#B5D4F4', avatarTextColor: '#0C447C',
       type: 'Congé annuel', startDate: '2026-08-04', endDate: '2026-08-15',
       workingDays: 10, status: 'pending', submittedAt: '2026-06-30',
@@ -104,7 +104,7 @@ export const useAbsenceStore = defineStore('absences', () => {
       ],
     },
     {
-      id: 8, employeeName: 'Thierry Randriamanga', employeeInitials: 'TR',
+      id: 8, employeeId: 'emp-010', employeeName: 'Thierry Randriamanga', employeeInitials: 'TR',
       avatarColor: '#FAC775', avatarTextColor: '#633806',
       type: 'Récupération', startDate: '2026-06-22', endDate: '2026-06-22',
       workingDays: 1, status: 'approved', submittedAt: '2026-06-18',
@@ -134,7 +134,7 @@ export const useAbsenceStore = defineStore('absences', () => {
 
   const myLeaves = ref<LeaveRequest[]>([
     {
-      id: 101, employeeName: 'Rabe Ndriantsoa', employeeInitials: 'RN',
+      id: 101, employeeId: 'emp-003', employeeName: 'Rabe Ndriantsoa', employeeInitials: 'RN',
       avatarColor: '#FAC775', avatarTextColor: '#633806',
       type: 'Congé annuel', startDate: '2026-07-10', endDate: '2026-07-17',
       workingDays: 6, status: 'pending', submittedAt: '2026-06-20',
@@ -144,7 +144,7 @@ export const useAbsenceStore = defineStore('absences', () => {
       ],
     },
     {
-      id: 102, employeeName: 'Rabe Ndriantsoa', employeeInitials: 'RN',
+      id: 102, employeeId: 'emp-003', employeeName: 'Rabe Ndriantsoa', employeeInitials: 'RN',
       avatarColor: '#FAC775', avatarTextColor: '#633806',
       type: 'Récupération', startDate: '2026-06-22', endDate: '2026-06-22',
       workingDays: 1, status: 'approved', submittedAt: '2026-06-18',
@@ -154,7 +154,7 @@ export const useAbsenceStore = defineStore('absences', () => {
       ],
     },
     {
-      id: 103, employeeName: 'Rabe Ndriantsoa', employeeInitials: 'RN',
+      id: 103, employeeId: 'emp-003', employeeName: 'Rabe Ndriantsoa', employeeInitials: 'RN',
       avatarColor: '#FAC775', avatarTextColor: '#633806',
       type: 'Congé maladie', startDate: '2026-05-05', endDate: '2026-05-07',
       workingDays: 3, status: 'approved', submittedAt: '2026-05-04',

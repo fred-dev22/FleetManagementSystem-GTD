@@ -33,7 +33,8 @@
             </button>
           </div>
 
-          <!-- <div class="text-right">
+          <!-- Score global, décomposé sur l'onglet Score plutôt qu'affiché seul ici -->
+          <div class="text-right">
             <p class="text-3xl font-bold leading-none" :class="couleurScore(score.score)">{{ score.score }}</p>
             <p class="text-[11px] text-muted-foreground">
               sur 100
@@ -41,7 +42,7 @@
                 ({{ delta >= 0 ? '+' : '' }}{{ delta }})
               </span>
             </p>
-          </div> -->
+          </div>
         </div>
       </div>
 
@@ -68,6 +69,94 @@
           {{ t.label }}
           <span v-if="t.badge" class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-danger-bg text-danger">{{ t.badge }}</span>
         </button>
+      </div>
+
+      <!-- ══ SCORE & PRIME ══════════════════════════════════════ -->
+      <div v-if="tab === 'score'" class="flex flex-col gap-3.5">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+          <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3">
+            <p class="text-xl font-bold leading-none" :class="couleurScore(score.score)">{{ score.score }} / 100</p>
+            <p class="text-[11px] text-gray-500 mt-1">
+              Score global
+              <span :class="delta >= 0 ? 'text-success' : 'text-danger'">({{ delta >= 0 ? '+' : '' }}{{ delta }} vs mois précédent)</span>
+            </p>
+          </div>
+          <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3">
+            <p class="text-xl font-bold leading-none">{{ scoresStore.percentile(chauffeurId) }} %</p>
+            <p class="text-[11px] text-gray-500 mt-1">Mieux classé que ce pourcentage des conducteurs</p>
+          </div>
+          <div class="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3">
+            <p class="text-xl font-bold leading-none" :class="score.primeEligible ? 'text-success' : 'text-muted-foreground'">
+              {{ score.primeEligible ? fmtAr(score.primeMontant) : 'Non éligible' }}
+            </p>
+            <p class="text-[11px] text-gray-500 mt-1">Prime de la période ({{ palierPrime.libelle }})</p>
+          </div>
+        </div>
+
+        <div v-if="!score.primeEligible && score.motifNonEligibilite"
+          class="flex items-start gap-2.5 rounded-lg px-3.5 py-2.5 bg-warning-bg text-warning text-xs">
+          <AlertTriangle class="w-4 h-4 shrink-0 mt-px" />
+          <span><strong>Prime non versée :</strong> {{ score.motifNonEligibilite }}</span>
+        </div>
+
+        <!-- Décomposition par famille -->
+        <div :class="L.card">
+          <div :class="L.cardHeader">
+            <h2 :class="L.cardTitle"><Gauge class="w-4 h-4 text-primary" /> Décomposition du score</h2>
+          </div>
+          <p class="text-[11px] text-muted-foreground mb-3 -mt-1">
+            Pondérations fixées par la direction - modifiables depuis Flotte → Paramétrage.
+          </p>
+          <div class="flex flex-col gap-3">
+            <div v-for="f in score.familles" :key="f.famille">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-medium text-foreground">{{ f.libelle }}</span>
+                <span class="text-[11px] text-muted-foreground">
+                  {{ f.note }} / 100 · poids {{ f.poids }} % · {{ f.evenements }} événement(s)
+                </span>
+              </div>
+              <div class="h-1.5 bg-border rounded-sm overflow-hidden">
+                <div class="h-full rounded-sm" :style="{ width: f.note + '%', background: PONDERATIONS[f.famille].couleur }"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Historique 12 mois -->
+        <!-- <div :class="L.card">
+          <div :class="L.cardHeader">
+            <h2 :class="L.cardTitle"><TrendingUp class="w-4 h-4 text-primary" /> Évolution sur 12 mois</h2>
+          </div>
+          <div class="flex items-end gap-1.5 h-20">
+            <div v-for="(v, i) in score.historique12m" :key="i" class="flex-1 flex flex-col items-center justify-end h-full">
+              <div class="w-full rounded-t-sm" :class="couleurScore(v).replace('text-', 'bg-')" :style="{ height: v + '%' }"></div>
+            </div>
+          </div>
+        </div> -->
+
+        <!-- Grille de prime - à valider par la direction et les RH -->
+        <div :class="L.card">
+          <div :class="L.cardHeader">
+            <h2 :class="L.cardTitle"><Award class="w-4 h-4 text-primary" /> Grille de prime</h2>
+            <router-link :to="{ name: 'fleet-configuration' }" class="text-[11px] text-primary hover:underline">
+              Modifier dans Paramétrage
+            </router-link>
+          </div>
+          <p class="text-[11px] text-warning bg-warning-bg rounded-md px-2.5 py-2 mb-3">
+            Montants indicatifs (GTD ne les a pas communiqués) - à valider par la Direction et les
+            Ressources Humaines avant activation. Modifiables sans développeur depuis Flotte →
+            Paramétrage, onglet Paramètres.
+          </p>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div v-for="p in scoresStore.grillePrime" :key="p.libelle"
+              class="rounded-lg border px-3 py-2 text-center"
+              :class="palierPrime.libelle === p.libelle ? 'border-primary bg-primary/5' : 'border-border'">
+              <p class="text-[11px] text-muted-foreground">{{ p.libelle }}</p>
+              <p class="text-sm font-semibold text-foreground">{{ p.montant ? fmtAr(p.montant) : '-' }}</p>
+              <p class="text-[10px] text-muted-foreground">score ≥ {{ p.min }}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- ══ SYNTHÈSE ═══════════════════════════════════════════ -->
@@ -410,29 +499,78 @@
         </div>
       </div>
 
-      <div v-else-if="tab === 'rh'" :class="L.card">
-        <div :class="L.cardHeader">
-          <h2 :class="L.cardTitle"><IdCard class="w-4 h-4 text-primary" /> Données administratives</h2>
+      <div v-else-if="tab === 'rh'" class="flex flex-col gap-3.5">
+        <div :class="L.card">
+          <div :class="L.cardHeader">
+            <h2 :class="L.cardTitle"><IdCard class="w-4 h-4 text-primary" /> Données administratives</h2>
+          </div>
+          <dl class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3 text-xs">
+            <div><dt class="text-muted-foreground text-[11px]">Permis de conduire</dt>
+              <dd :class="estProche(score.permisExpireLe) ? 'text-danger font-medium' : ''">
+                expire le {{ fmtDate(score.permisExpireLe) }}</dd></div>
+            <div><dt class="text-muted-foreground text-[11px]">Visite médicale</dt>
+              <dd :class="estProche(score.visiteMedicaleExpireLe) ? 'text-danger font-medium' : ''">
+                expire le {{ fmtDate(score.visiteMedicaleExpireLe) }}</dd></div>
+            <div><dt class="text-muted-foreground text-[11px]">Voyages sur la période</dt>
+              <dd>{{ score.voyagesPeriode }}</dd></div>
+            <div><dt class="text-muted-foreground text-[11px]">Kilométrage cumulé</dt>
+              <dd>{{ score.kmPeriode.toLocaleString('fr-FR') }} km</dd></div>
+            <div><dt class="text-muted-foreground text-[11px]">Infractions de conduite</dt><dd>{{ score.infractions }}</dd></div>
+            <div><dt class="text-muted-foreground text-[11px]">Excès de vitesse</dt><dd>{{ score.exces }}</dd></div>
+          </dl>
         </div>
-        <dl class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3 text-xs">
-          <div><dt class="text-muted-foreground text-[11px]">Permis de conduire</dt>
-            <dd :class="estProche(score.permisExpireLe) ? 'text-danger font-medium' : ''">
-              expire le {{ fmtDate(score.permisExpireLe) }}</dd></div>
-          <div><dt class="text-muted-foreground text-[11px]">Visite médicale</dt>
-            <dd :class="estProche(score.visiteMedicaleExpireLe) ? 'text-danger font-medium' : ''">
-              expire le {{ fmtDate(score.visiteMedicaleExpireLe) }}</dd></div>
-          <div><dt class="text-muted-foreground text-[11px]">Voyages sur la période</dt>
-            <dd>{{ score.voyagesPeriode }}</dd></div>
-          <div><dt class="text-muted-foreground text-[11px]">Kilométrage cumulé</dt>
-            <dd>{{ score.kmPeriode.toLocaleString('fr-FR') }} km</dd></div>
-          <div><dt class="text-muted-foreground text-[11px]">Infractions</dt><dd>{{ score.infractions }}</dd></div>
-          <div><dt class="text-muted-foreground text-[11px]">Excès de vitesse</dt><dd>{{ score.exces }}</dd></div>
-        </dl>
 
-        <p class="text-[11px] text-muted-foreground mt-3.5 leading-relaxed">
-          Congés, absences, soldes et formations sont gérés dans le module Administration.
-          Cet onglet en présentera la synthèse une fois le rapprochement des référentiels employé et conducteur effectué.
-        </p>
+        <!-- Absences - déjà suivies dans le module Congés (stores/absences.ts) -->
+        <div :class="L.card">
+          <div :class="L.cardHeader">
+            <h2 :class="L.cardTitle"><CalendarOff class="w-4 h-4 text-primary" /> Absences</h2>
+            <span class="text-[11px] text-muted-foreground">{{ absencesConducteur.length }} demande(s)</span>
+          </div>
+          <div v-if="!absencesConducteur.length" class="text-xs text-muted-foreground py-2">Aucune absence enregistrée.</div>
+          <ul v-else class="flex flex-col gap-1.5">
+            <li v-for="a in absencesConducteur.slice(0, 5)" :key="a.id" class="flex items-center justify-between text-xs">
+              <span>{{ a.type }} · {{ a.startDate }} → {{ a.endDate }}</span>
+              <StatusPill :status="a.status" />
+            </li>
+          </ul>
+        </div>
+
+        <!-- Infractions internes & sanctions - registre structuré (US RH),
+             distinct des infractions de conduite (ci-dessus, liées au trajet). -->
+        <div :class="L.card">
+          <div :class="L.cardHeader">
+            <h2 :class="L.cardTitle"><AlertCircle class="w-4 h-4 text-primary" /> Infractions internes & sanctions</h2>
+            <span v-if="sanctionsEnCoursConducteur.length" class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-warning-bg text-warning">
+              {{ sanctionsEnCoursConducteur.length }} en cours
+            </span>
+          </div>
+
+          <div v-if="!sanctionsConducteur.length" class="text-xs text-muted-foreground py-2">
+            Aucune infraction interne enregistrée pour ce conducteur.
+          </div>
+
+          <ul v-else class="flex flex-col gap-2.5">
+            <li v-for="s in sanctionsConducteur" :key="s.id" class="rounded-lg border border-border px-3 py-2.5">
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                  <p class="text-xs font-semibold text-foreground">{{ LIB_NATURE_SANCTION[s.nature] }}</p>
+                  <p class="text-[11px] text-muted-foreground">{{ fmtDate(s.date) }} · signalé par {{ s.responsable }}</p>
+                </div>
+                <span class="text-[11px] font-medium px-2 py-0.5 rounded-full shrink-0" :class="CLS_STATUT_SANCTION[s.statut]">
+                  {{ LIB_STATUT_SANCTION[s.statut] }}
+                </span>
+              </div>
+              <p class="text-xs text-foreground mt-1.5 leading-relaxed">{{ s.description }}</p>
+              <div class="flex items-center gap-3 mt-1.5 flex-wrap">
+                <span v-if="s.sanction" class="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                  {{ LIB_TYPE_SANCTION[s.sanction] }}
+                </span>
+                <span v-if="s.voyageRef" class="text-[11px] font-mono text-muted-foreground">Voyage {{ s.voyageRef }}</span>
+                <span v-if="s.dateCloture" class="text-[11px] text-muted-foreground">Clôturée le {{ fmtDate(s.dateCloture) }}</span>
+              </div>
+            </li>
+          </ul>
+        </div>
       </div>
     </template>
 </div>
@@ -452,7 +590,7 @@ import {
   ChevronLeft, ChevronRight,
 } from 'lucide-vue-next'
 import {
-  useScoresConducteursStore,
+  useScoresConducteursStore, PONDERATIONS,
 } from '../../stores/scoresConducteurs'
 import type { LeaveRequest } from '../../types'
 import { useEcartsStore, LIB_TYPE_ECART, LIB_NATURE } from '../../stores/ecarts'
@@ -462,6 +600,9 @@ import { useConduceteursProfilesStore } from '../../stores/conducteursProfiles'
 import { useVoyagesStore } from '../../stores/voyages'
 import { useConfigurationStore } from '../../stores/configuration'
 import { useAbsenceStore } from '../../stores/absences'
+import { useSanctionsRHStore } from '../../stores/sanctionsRH'
+import { LIB_NATURE_SANCTION, LIB_TYPE_SANCTION, LIB_STATUT_SANCTION, CLS_STATUT_SANCTION } from '../../types/rh'
+import { StatusPill } from '../../components'
 import { fmtAr, fmtL, fmtDate, fmtDateTime } from '../../lib/fmsUtils'
 import * as L from '../../lib/listClasses'
 
@@ -474,17 +615,25 @@ const docsStore      = useDocumentsVehiculesStore()
 const profilsStore   = useConduceteursProfilesStore()
 const voyagesStore   = useVoyagesStore()
 const absencesStore  = useAbsenceStore()
+const sanctionsStore = useSanctionsRHStore()
 
 const chauffeurId = computed(() => String(route.params.id))
 const score = computed(() => scoresStore.getById(chauffeurId.value))
 
-type OngletFiche = 'itineraires' | 'carburant' | 'documents' | 'formations' | 'planning' | 'rh'
+const sanctionsConducteur = computed(() => sanctionsStore.sanctionsDeLEmploye(chauffeurId.value))
+const sanctionsEnCoursConducteur = computed(() => sanctionsConducteur.value.filter(s => s.statut === 'en_cours'))
 
-const tab = ref<OngletFiche>('itineraires')
+type OngletFiche = 'score' | 'itineraires' | 'carburant' | 'documents' | 'formations' | 'planning' | 'rh'
+
+const tab = ref<OngletFiche>('score')
 
 /* Les six onglets exigés par le cahier des charges FMS Trucks :
-   « Fiche conducteur : profil, documents, infractions, score, formations, planning ». */
+   « Fiche conducteur : profil, documents, infractions, score, formations, planning ».
+   L'onglet Score était manquant : le score global s'affichait sans décomposition
+   ni lien vers la prime, alors que c'est justement l'écran où le client doit
+   pouvoir expliquer au chauffeur d'où viennent ses points perdus (US 10.3.1/10.3.2). */
 const tabs = computed(() => [
+  { key: 'score' as const,       label: 'Score & prime', badge: 0 },
   { key: 'itineraires' as const, label: 'Itinéraires', badge: 0 },
   { key: 'carburant' as const,   label: 'Carburant',   badge: 0 },
   { key: 'documents' as const,   label: 'Documents',   badge: docsAlerte.value },
@@ -494,6 +643,12 @@ const tabs = computed(() => [
 ])
 
 const delta = computed(() => (score.value?.score ?? 0) - (score.value?.scoreMoisPrecedent ?? 0))
+
+/** Palier de la grille de prime correspondant au score, indépendamment de l'éligibilité. */
+const palierPrime = computed(() => {
+  const grille = scoresStore.grillePrime
+  return grille.find(g => (score.value?.score ?? 0) >= g.min) ?? grille[grille.length - 1]!
+})
 
 /* ── Navigation d'un conducteur à l'autre, sans repasser par la liste ── */
 const indexCourant = computed(() =>
@@ -659,11 +814,14 @@ const CLS_STATUT_VOYAGE: Record<string, string> = {
   annule:   'bg-gray-100 text-gray-400',
 }
 
-/** Absences du conducteur, rapprochées par le nom de l'employé. */
-const absencesConducteur = computed<LeaveRequest[]>(() => {
-  const nom = score.value?.chauffeurNom ?? ''
-  return absencesStore.allLeaves.filter((l: LeaveRequest) => l.employeeName === nom)
-})
+/**
+ * Absences du conducteur. Rapprochées par `employeeId` — la clé stable
+ * (emp-0xx) — plutôt que par le nom : deux employés homonymes dans des
+ * services différents (ex. deux « Nadia Oozeer ») rendraient un
+ * rapprochement par nom ambigu, alors que l'ID ne l'est jamais.
+ */
+const absencesConducteur = computed<LeaveRequest[]>(() =>
+  absencesStore.allLeaves.filter((l: LeaveRequest) => l.employeeId === chauffeurId.value))
 
 const voyagesAVenir = computed(() =>
   voyagesConducteur.value.filter(v => v.statut === 'planifie' || v.statut === 'affecte').length)

@@ -139,7 +139,14 @@ const form = ref({ vin: '', plaque: '', marque: '', modele: '', dateMiseEnCircul
 
 function loadForm() {
   const t = current.value
-  form.value = { vin: t.vin, plaque: t.plaque, marque: t.marque, modele: t.modele, dateMiseEnCirculation: t.dateMiseEnCirculation, statutAdmin: t.statutAdmin }
+  form.value = {
+    vin: t.vin ?? '',
+    plaque: t.plaque ?? '',
+    marque: t.marque ?? '',
+    modele: t.modele ?? '',
+    dateMiseEnCirculation: t.dateMiseEnCirculation ?? '',
+    statutAdmin: t.statutAdmin,
+  }
 }
 
 watch(() => current.value, loadForm, { immediate: true })
