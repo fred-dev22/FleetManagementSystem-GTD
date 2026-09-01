@@ -163,7 +163,7 @@ const avgAnnualBalance = computed(() => {
 const absentToday = computed(() =>
   teamMembers.value.filter(m =>
     absenceStore.allLeaves.some(l =>
-      l.employeeName === m.name &&
+      l.employeeId === m.id &&
       l.status === 'approved' &&
       l.startDate <= TODAY &&
       l.endDate   >= TODAY

@@ -214,7 +214,7 @@ const roleLabel = computed(() => {
 })
 
 const myBalances = computed(() => {
-  const row = absenceStore.employeeBalances.find(b => b.employeeName === employee.value?.name)
+  const row = absenceStore.employeeBalances.find(b => b.employeeId === employee.value?.id)
   if (!row) return []
   return Object.entries(row.balances)
     .filter(([, b]) => b.total > 0)

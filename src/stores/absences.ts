@@ -32,7 +32,7 @@ export const useAbsenceStore = defineStore('absences', () => {
 
   const allLeaves = ref<LeaveRequest[]>([
     {
-      id: 1, employeeName: 'Priya Ramlugun', employeeInitials: 'PR',
+      id: 1, employeeId: 'emp-004', employeeName: 'Priya Ramlugun', employeeInitials: 'PR',
       avatarColor: '#B5D4F4', avatarTextColor: '#0C447C',
       type: 'Congé annuel', startDate: '2026-07-10', endDate: '2026-07-17',
       workingDays: 6, status: 'pending', submittedAt: '2026-06-20',
@@ -42,7 +42,7 @@ export const useAbsenceStore = defineStore('absences', () => {
       ],
     },
     {
-      id: 2, employeeName: 'Hery Andrianaivo', employeeInitials: 'HA',
+      id: 2, employeeId: 'emp-007', employeeName: 'Hery Andrianaivo', employeeInitials: 'HA',
       avatarColor: '#C0DD97', avatarTextColor: '#3B6D11',
       type: 'Congé maladie', startDate: '2026-07-02', endDate: '2026-07-05',
       workingDays: 4, status: 'pending', submittedAt: '2026-07-01',
@@ -72,7 +72,7 @@ export const useAbsenceStore = defineStore('absences', () => {
       ],
     },
     {
-      id: 5, employeeName: 'Nadia Oozeer', employeeInitials: 'NO',
+      id: 5, employeeId: 'emp-012', employeeName: 'Nadia Oozeer', employeeInitials: 'NO',
       avatarColor: '#AFA9EC', avatarTextColor: '#3C3489',
       type: 'Congé maternité', startDate: '2026-07-01', endDate: '2026-09-30',
       workingDays: 65, status: 'approved', submittedAt: '2026-05-15',
@@ -93,7 +93,7 @@ export const useAbsenceStore = defineStore('absences', () => {
       ],
     },
     {
-      id: 7, employeeName: 'Marie-France Leclézio', employeeInitials: 'ML',
+      id: 7, employeeId: 'emp-015', employeeName: 'Marie-France Leclézio', employeeInitials: 'ML',
       avatarColor: '#C0DD97', avatarTextColor: '#3B6D11',
       type: 'Congé maladie', startDate: '2026-06-15', endDate: '2026-06-17',
       workingDays: 3, status: 'rejected', rejectionReason: 'Certificat médical manquant',
@@ -114,7 +114,7 @@ export const useAbsenceStore = defineStore('absences', () => {
       ],
     },
     {
-      id: 9, employeeName: 'Morad Cassam', employeeInitials: 'MC',
+      id: 9, employeeId: 'emp-009', employeeName: 'Morad Cassam', employeeInitials: 'MC',
       avatarColor: '#F4C0D1', avatarTextColor: '#72243E',
       type: 'Télétravail', startDate: '2026-07-14', endDate: '2026-07-18',
       workingDays: 5, status: 'cancelled', submittedAt: '2026-06-29',
@@ -124,7 +124,7 @@ export const useAbsenceStore = defineStore('absences', () => {
       ],
     },
     {
-      id: 10, employeeName: 'Kumar Gunness', employeeInitials: 'KG',
+      id: 10, employeeId: 'emp-008', employeeName: 'Kumar Gunness', employeeInitials: 'KG',
       avatarColor: '#AFA9EC', avatarTextColor: '#3C3489',
       type: 'Congé annuel', startDate: '2026-09-01', endDate: '2026-09-12',
       workingDays: 10, status: 'draft', submittedAt: '2026-06-01',
@@ -180,10 +180,10 @@ export const useAbsenceStore = defineStore('absences', () => {
     { employeeId: 'emp-010', employeeName: 'Thierry Randriamanga',         entityName: 'Service Maintenance & Atelier', balances: { 'Congé annuel': { used: 18, total: 24, remaining: 6 }, 'Congé maladie': { used: 1, total: 30, remaining: 29 }, 'Récupération': { used: 7, total: 10, remaining: 3 }, 'Télétravail': { used: 19, total: 20, remaining: 1 }, 'Congé maternité': { used: 0, total: 0, remaining: 0 }, 'Permission exceptionnelle': { used: 0, total: 5, remaining: 5 } } },
     // ── Équipe Direction RH (e2) — pour la vue Soldes équipe du validateur ──
     { employeeId: 'emp-002', employeeName: 'Sariaka Bezandry',    entityName: 'Direction RH', balances: { 'Congé annuel': { used: 18, total: 24, remaining: 6 }, 'Récupération': { used: 2, total: 10, remaining: 8 }, 'Congé maladie': { used: 0, total: 8, remaining: 8 }, 'Télétravail': { used: 3, total: 20, remaining: 17 }, 'Congé maternité': { used: 0, total: 0, remaining: 0 }, 'Permission exceptionnelle': { used: 0, total: 5, remaining: 5 } } },
-    { employeeId: 'emp-016', employeeName: 'Nadia Oozeer',     entityName: 'Direction RH', balances: { 'Congé annuel': { used: 8, total: 24, remaining: 16 }, 'Récupération': { used: 0, total: 10, remaining: 10 }, 'Congé maladie': { used: 1, total: 8, remaining: 7 }, 'Télétravail': { used: 12, total: 20, remaining: 8 }, 'Congé maternité': { used: 0, total: 0, remaining: 0 }, 'Permission exceptionnelle': { used: 0, total: 5, remaining: 5 } } },
-    { employeeId: 'emp-017', employeeName: 'Hery Andrianaivo', entityName: 'Direction RH', balances: { 'Congé annuel': { used: 14, total: 24, remaining: 10 }, 'Récupération': { used: 5, total: 10, remaining: 5 }, 'Congé maladie': { used: 3, total: 8, remaining: 5 }, 'Télétravail': { used: 10, total: 20, remaining: 10 }, 'Congé maternité': { used: 0, total: 0, remaining: 0 }, 'Permission exceptionnelle': { used: 1, total: 5, remaining: 4 } } },
-    { employeeId: 'emp-018', employeeName: 'Fiona Mungroo',    entityName: 'Direction RH', balances: { 'Congé annuel': { used: 20, total: 24, remaining: 4 }, 'Récupération': { used: 9, total: 10, remaining: 1 }, 'Congé maladie': { used: 0, total: 8, remaining: 8 }, 'Télétravail': { used: 5, total: 20, remaining: 15 }, 'Congé maternité': { used: 0, total: 0, remaining: 0 }, 'Permission exceptionnelle': { used: 2, total: 5, remaining: 3 } } },
-    { employeeId: 'emp-019', employeeName: 'Anjara Dimby',   entityName: 'Direction RH', balances: { 'Congé annuel': { used: 5, total: 24, remaining: 19 }, 'Récupération': { used: 1, total: 10, remaining: 9 }, 'Congé maladie': { used: 0, total: 8, remaining: 8 }, 'Télétravail': { used: 8, total: 20, remaining: 12 }, 'Congé maternité': { used: 0, total: 0, remaining: 0 }, 'Permission exceptionnelle': { used: 0, total: 5, remaining: 5 } } },
+    { employeeId: 'emp-016', employeeName: 'Anjara Dimby',     entityName: 'Direction RH', balances: { 'Congé annuel': { used: 8, total: 24, remaining: 16 }, 'Récupération': { used: 0, total: 10, remaining: 10 }, 'Congé maladie': { used: 1, total: 8, remaining: 7 }, 'Télétravail': { used: 12, total: 20, remaining: 8 }, 'Congé maternité': { used: 0, total: 0, remaining: 0 }, 'Permission exceptionnelle': { used: 0, total: 5, remaining: 5 } } },
+    { employeeId: 'emp-017', employeeName: 'Henri Razafy', entityName: 'Direction RH', balances: { 'Congé annuel': { used: 14, total: 24, remaining: 10 }, 'Récupération': { used: 5, total: 10, remaining: 5 }, 'Congé maladie': { used: 3, total: 8, remaining: 5 }, 'Télétravail': { used: 10, total: 20, remaining: 10 }, 'Congé maternité': { used: 0, total: 0, remaining: 0 }, 'Permission exceptionnelle': { used: 1, total: 5, remaining: 4 } } },
+    { employeeId: 'emp-018', employeeName: 'Chantal Miandrisoa',    entityName: 'Direction RH', balances: { 'Congé annuel': { used: 20, total: 24, remaining: 4 }, 'Récupération': { used: 9, total: 10, remaining: 1 }, 'Congé maladie': { used: 0, total: 8, remaining: 8 }, 'Télétravail': { used: 5, total: 20, remaining: 15 }, 'Congé maternité': { used: 0, total: 0, remaining: 0 }, 'Permission exceptionnelle': { used: 2, total: 5, remaining: 3 } } },
+    { employeeId: 'emp-019', employeeName: 'Solo Rakoto',   entityName: 'Direction RH', balances: { 'Congé annuel': { used: 5, total: 24, remaining: 19 }, 'Récupération': { used: 1, total: 10, remaining: 9 }, 'Congé maladie': { used: 0, total: 8, remaining: 8 }, 'Télétravail': { used: 8, total: 20, remaining: 12 }, 'Congé maternité': { used: 0, total: 0, remaining: 0 }, 'Permission exceptionnelle': { used: 0, total: 5, remaining: 5 } } },
   ])
 
   function leavesByStatus(status: LeaveStatus) {

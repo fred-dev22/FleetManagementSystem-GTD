@@ -45,8 +45,8 @@ const SEED: SeedEmployee[] = [
   },
   {
     id: 'emp-002', code: 'EMP002',
-    name: 'Sariaka Bezandry', firstName: 'Sonia', lastName: 'Boodhun',
-    email: 'sonia.boodhun@gtd.mg',
+    name: 'Sariaka Bezandry', firstName: 'Sariaka', lastName: 'Bezandry',
+    email: 'sariaka.bezandry@gtd.mg',
     entityId: 'e2', entityName: 'Direction RH',
     jobTitle: 'Directrice RH', role: 'rh',
     contractType: 'CDI', hireDate: '2019-03-15', status: 'actif',
@@ -59,8 +59,8 @@ const SEED: SeedEmployee[] = [
   },
   {
     id: 'emp-003', code: 'EMP003',
-    name: 'Rabe Ndriantsoa', firstName: 'Ravi', lastName: 'Nundlall',
-    email: 'ravi.nundlall@gtd.mg',
+    name: 'Rabe Ndriantsoa', firstName: 'Rabe', lastName: 'Ndriantsoa',
+    email: 'rabe.ndriantsoa@gtd.mg',
     entityId: 'e3', entityName: 'Service Administration',
     jobTitle: 'Responsable Administration', role: 'operations',
     contractType: 'CDI', hireDate: '2020-06-01', status: 'actif',
@@ -302,8 +302,8 @@ const SEED: SeedEmployee[] = [
   // â”€â”€ Équipe supplémentaire â”€â”€
   {
     id: 'emp-016', code: 'EMP016',
-    name: 'Anjara Dimby', firstName: 'Aminata', lastName: 'Diallo',
-    email: 'a.diallo@gtd.mg',
+    name: 'Anjara Dimby', firstName: 'Anjara', lastName: 'Dimby',
+    email: 'a.dimby@gtd.mg',
     entityId: 'e2', entityName: 'Direction RH',
     jobTitle: 'Chargée de Recrutement', role: 'employee',
     contractType: 'CDI', hireDate: '2023-03-01', status: 'actif',
@@ -356,6 +356,62 @@ const SEED: SeedEmployee[] = [
     departement: 'Maintenance',
     dateNaissance: '1989-03-31',
     motifStatut: 'Absence injustifiée répétée â€” procédure disciplinaire en cours',
+  },
+  /* emp-020 et emp-021 : ces deux chauffeurs étaient déjà référencés sur des
+     tracteurs (TRC-004 et TRC-006 - chauffeurId, chauffeurNom) mais
+     n'existaient dans aucune fiche employé. Toute fiche conducteur pour
+     ces deux tracteurs aurait affiché « Conducteur introuvable ». */
+  {
+    id: 'emp-020', code: 'EMP020',
+    name: 'Randrianarisoa Serge', firstName: 'Serge', lastName: 'Randrianarisoa',
+    email: 'serge.randrianarisoa@gtd.mg',
+    entityId: 'e13', entityName: 'Service Opérations',
+    jobTitle: 'Chauffeur PL', role: 'employee',
+    contractType: 'CDI', hireDate: '2019-09-01', status: 'actif',
+    hasSystemAccess: false, category: 'cat_c',
+    cin: '101 789 034',
+    societe: 'GTD',
+    fonction: 'Chauffeur',
+    departement: 'Opérations',
+    dateNaissance: '1988-02-11',
+    permis: {
+      numero: 'MG-2019-00874',
+      dateExpiration: '2027-09-01',
+      categories: ['B', 'C', 'CE'],
+      alerteEnvoyee: false,
+    },
+    visiteMedicale: {
+      dateVisite: '2025-11-03',
+      dateExpiration: '2026-11-03',
+      apte: true,
+      alerteEnvoyee: false,
+    },
+  },
+  {
+    id: 'emp-021', code: 'EMP021',
+    name: 'Rakotondrabe Fidy', firstName: 'Fidy', lastName: 'Rakotondrabe',
+    email: 'fidy.rakotondrabe@gtd.mg',
+    entityId: 'e13', entityName: 'Service Opérations',
+    jobTitle: 'Chauffeur PL', role: 'employee',
+    contractType: 'CDD', hireDate: '2022-02-14', status: 'actif',
+    hasSystemAccess: false, category: 'cat_c',
+    cin: '101 789 099',
+    societe: 'GTD',
+    fonction: 'Chauffeur',
+    departement: 'Opérations',
+    dateNaissance: '1991-10-27',
+    permis: {
+      numero: 'MG-2022-00251',
+      dateExpiration: '2029-02-14',
+      categories: ['B', 'C'],
+      alerteEnvoyee: false,
+    },
+    visiteMedicale: {
+      dateVisite: '2025-08-19',
+      dateExpiration: '2026-08-19',
+      apte: true,
+      alerteEnvoyee: false,
+    },
   },
 ]
 
@@ -560,4 +616,3 @@ export const useEmployeeStore = defineStore('employees', () => {
     changeStatut,
   }
 })
-
