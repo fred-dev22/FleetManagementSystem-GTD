@@ -6,11 +6,6 @@
             <div class="text-lg font-semibold">{{ t('dashboard.welcome') }}</div>
             <div class="text-[13px] text-muted-foreground mt-px">{{ t('dashboard.greeting') }} {{ auth.user?.name }} — {{ today }}</div>
           </div>
-          <div class="flex gap-2">
-            <button :class="btnPrimary" @click="absenceModalOpen = true">
-              <Plus class="w-4 h-4" /> Nouvelle demande de congé
-            </button>
-          </div>
         </div>
 
         <!-- KPIs -->
@@ -217,12 +212,6 @@
     </div>
   </Teleport>
 
-  <!-- Fiche de création -->
-  <AbsenceRequestModal
-    v-model="absenceModalOpen"
-    @submitted="onAbsenceSubmitted"
-  />
-
   <!-- Modale de retour -->
   <ModalShell :open="returnModal.open" :title="`Retourner la demande de ${returnModal.employeeName}`" max-width="max-w-[420px]" @close="closeReturnModal">
     <label :class="cls.fieldLabel">Commentaire *</label>
@@ -258,7 +247,6 @@ import {
   FileDown, Plus, Users, Clock, Check, UserX, Network, ChevronRight, ChevronLeft,
   CalendarClock, BarChart3, GripVertical, Calendar, Undo2, ArrowUp, ArrowDown, ArrowUpDown,
 } from 'lucide-vue-next'
-import AbsenceRequestModal from '../components/AbsenceRequestModal.vue'
 import ModalShell from '../components/ui/ModalShell.vue'
 import * as cls from '../lib/formClasses'
 import { useAuthStore } from '../stores/auth'
@@ -325,13 +313,6 @@ const typeI18nKey: Record<string, string> = {
 function typeLabel(type: string): string {
   const key = typeI18nKey[type]
   return key ? t(key) : type
-}
-
-// ── AbsenceRequestModal ──────────────────────────────────────
-const absenceModalOpen = ref(false)
-
-function onAbsenceSubmitted() {
-  absenceModalOpen.value = false
 }
 
 // ── Demandes ─────────────────────────────────────────────────

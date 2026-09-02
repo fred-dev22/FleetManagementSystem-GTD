@@ -48,6 +48,17 @@ export const filterPanel = 'w-[220px] min-w-[220px] border-r border-border p-3.5
 export const fpField = 'flex flex-col gap-1'
 export const fpFieldLabel = 'text-[11px] text-muted-foreground'
 export const fpSelect = 'h-[30px] px-2 border border-border rounded-md text-xs text-foreground bg-card outline-none w-full focus:border-primary'
+/**
+ * Style d'un <input> texte/date/nombre dans un formulaire compact -
+ * même apparence que fpSelect (bordure, fond, hauteur), pour les champs
+ * qui ne sont pas des menus déroulants. `fpField` (ci-dessus) est un
+ * conteneur (label + champ empilés), pas un style de champ : il avait
+ * été appliqué par erreur directement sur des <input>, qui se
+ * retrouvaient sans bordure ni fond, donc quasi invisibles et peu
+ * cliquables (US 2.3.1 / 2.4.1 - formulaires Attelage, Affectation,
+ * Documents véhicule).
+ */
+export const fpFieldInput = 'h-[30px] px-2 border border-border rounded-md text-xs text-foreground bg-card outline-none w-full focus:border-primary'
 
 /* Pagination */
 export const pagination = 'flex items-center gap-3 px-3.5 py-2.5 border-t border-border text-xs text-muted-foreground'

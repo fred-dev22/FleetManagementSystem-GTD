@@ -68,20 +68,14 @@ function saveDraft() {
   >
     <template #form>
       <div class="flex-1 overflow-auto px-6 py-5">
-        <div class="max-w-3xl">
+        <div class="max-w-3xl mx-auto">
           <FormSection title="Détails de la demande">
-          <div class="grid grid-cols-2 gap-x-6 gap-y-4 max-sm:grid-cols-1">
+          <div class="flex flex-col gap-4">
             <div :class="cls.field">
               <label :class="cls.fieldLabel">Type d'absence <span class="text-danger">*</span></label>
               <select v-model="form.type" :class="cls.fieldSelect">
                 <option v-for="t in TYPE_OPTIONS" :key="t" :value="t">{{ t }}</option>
               </select>
-            </div>
-            <div :class="cls.field">
-              <label :class="cls.fieldLabel">Jours ouvrés</label>
-              <div class="text-[13px] text-foreground bg-background border border-border rounded-md px-2.5 h-[38px] flex items-center">
-                {{ workingDays }} jour(s)
-              </div>
             </div>
             <div :class="cls.field">
               <label :class="cls.fieldLabel">Date de début <span class="text-danger">*</span></label>
@@ -90,6 +84,12 @@ function saveDraft() {
             <div :class="cls.field">
               <label :class="cls.fieldLabel">Date de fin <span class="text-danger">*</span></label>
               <input type="date" v-model="form.endDate" :min="form.startDate" :class="cls.fieldInput" />
+            </div>
+            <div :class="cls.field">
+              <label :class="cls.fieldLabel">Jours ouvrés</label>
+              <div class="text-[13px] text-foreground bg-background border border-border rounded-md px-2.5 h-[38px] flex items-center">
+                {{ workingDays }} jour(s)
+              </div>
             </div>
             <div :class="cls.field">
               <label :class="cls.fieldLabel">Motif</label>

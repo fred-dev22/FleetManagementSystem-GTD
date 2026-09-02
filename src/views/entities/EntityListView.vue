@@ -40,10 +40,12 @@
         <div :class="kpiItem"><div :class="kpiIcon" class="bg-primary/10"><Check class="w-[18px] h-[18px] text-primary" /></div><div><div :class="kpiVal">{{ store.approvedEntities.length }}</div><div :class="kpiLbl">Approuvées</div></div></div>
         <div :class="kpiItem"><div :class="[kpiIcon, store.pendingEntities.length > 0 ? 'bg-warning-bg' : 'bg-background']"><Clock class="w-[18px] h-[18px]" :class="store.pendingEntities.length > 0 ? 'text-warning' : 'text-muted-foreground'" /></div><div><div :class="kpiVal">{{ store.pendingEntities.length }}</div><div :class="kpiLbl">En attente</div></div></div>
       </div>
-      <ImportComingSoon
-        :is-visible="showImport"
-        message="L'import en masse des entités depuis un fichier Excel/CSV sera disponible prochainement. Cette fonctionnalité permettra d'initialiser rapidement toute votre structure organisationnelle."
+      <ImportWizardModal
+        v-if="showImport"
+        :open="showImport"
+        :config="entityImportConfig"
         @close="showImport = false"
+        @imported="showImport = false"
       />
     </template>
 
@@ -141,7 +143,8 @@ import { useRouter } from 'vue-router'
 import {
   Plus, Upload, List, ListTree, Network, Building, Users, Check, Clock, Maximize2, Minimize2, Info,
 } from 'lucide-vue-next'
-import ImportComingSoon from '../../components/ui/ImportComingSoon.vue'
+import ImportWizardModal from '../../components/shared/import/ImportWizardModal.vue'
+import { buildEntityImportConfig } from '../../components/shared/import/configs/entityImportConfig'
 import { StatusPill, ListPageLayout } from '../../components'
 import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
 import EntityCard from '../../components/entities/EntityCard.vue'
@@ -172,6 +175,7 @@ const viewMode = ref('tree')
 /* ── Fiche & création ───────────────────────────────────────── */
 const showCreate = ref(false)
 const showImport = ref(false)
+const entityImportConfig = buildEntityImportConfig()
 const openCardId = ref<string | null>(null)
 function openCard(id: string) { router.push({ name: 'hr-entity-detail', params: { id } }) }
 

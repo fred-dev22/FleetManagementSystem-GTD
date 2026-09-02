@@ -29,7 +29,7 @@
 
         <SidebarSection label="Configuration">
           <SidebarItem :icon="CalendarDays" label="Calendrier"      :to="{ name: 'hr-config-calendar' }" />
-          <SidebarItem :icon="Coins"        label="Frais & Per diem" :to="{ name: 'hr-config-mission-fees' }" />
+          <SidebarItem :icon="Coins"        label="Frais de mission" :to="{ name: 'hr-config-mission-fees' }" />
         </SidebarSection>
       </template>
 

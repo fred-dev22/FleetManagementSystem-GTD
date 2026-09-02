@@ -23,8 +23,8 @@ const mockTracteurs: Tracteur[] = [
     statutOp: 'en_mouvement',
     chauffeurId: 'emp-010',
     chauffeurNom: 'Thierry Randriamanga',
-    remorqueId: 'REM-003',
-    remorquePlaque: '5678 TNR',
+    remorqueId: 'REM-001',
+    remorquePlaque: '1234 TAR',
     kilometrage: 312450,
     niveauCarburant: 72,
     historiquePlayque: [],
@@ -61,8 +61,8 @@ const mockTracteurs: Tracteur[] = [
     statutOp: 'allume_immobile',
     chauffeurId: 'emp-012',
     chauffeurNom: 'Nadia Oozeer',
-    remorqueId: 'REM-007',
-    remorquePlaque: '9012 MJN',
+    remorqueId: 'REM-003',
+    remorquePlaque: '3456 TAR',
     kilometrage: 145230,
     niveauCarburant: 88,
     historiquePlayque: [],
@@ -122,8 +122,8 @@ const mockTracteurs: Tracteur[] = [
     statutOp: 'arrete',
     chauffeurId: 'emp-021',
     chauffeurNom: 'Rakotondrabe Fidy',
-    remorqueId: 'REM-008',
-    remorquePlaque: '8901 TAR',
+    remorqueId: 'REM-004',
+    remorquePlaque: '4567 TNR',
     kilometrage: 389200,
     niveauCarburant: 63,
     historiquePlayque: [],
@@ -292,6 +292,27 @@ export const useTracteurStore = defineStore('tracteurs', () => {
     } as Tracteur
   }
 
+  /**
+   * Attelage/dételage - miroir de `remorques.assignerTracteur` /
+   * `desassignerTracteur`, pour que le tracteur et la remorque restent
+   * synchronisés des deux côtés (US 2.3.1/2.3.2).
+   */
+  function assignerRemorque(id: string, remorqueId: string, remorquePlaque: string): void {
+    const idx = tracteurs.value.findIndex(t => t.id === id)
+    if (idx === -1) throw new Error(`Tracteur "${id}" introuvable.`)
+    tracteurs.value[idx] = { ...tracteurs.value[idx]!, remorqueId, remorquePlaque } as Tracteur
+  }
+
+  function desassignerRemorque(id: string): void {
+    const idx = tracteurs.value.findIndex(t => t.id === id)
+    if (idx === -1) throw new Error(`Tracteur "${id}" introuvable.`)
+    tracteurs.value[idx] = {
+      ...tracteurs.value[idx]!,
+      remorqueId: undefined,
+      remorquePlaque: undefined,
+    } as Tracteur
+  }
+
   return {
     // state
     tracteurs,
@@ -309,5 +330,7 @@ export const useTracteurStore = defineStore('tracteurs', () => {
     updatePosition,
     assignerChauffeur,
     desassignerChauffeur,
+    assignerRemorque,
+    desassignerRemorque,
   }
 })

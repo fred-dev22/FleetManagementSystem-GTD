@@ -8,6 +8,7 @@ export const useAttelagesStore = defineStore('attelages', {
       { id: 'ATT-002', tracteurId: 'TRC-003', tracteurPlaque: 'MG-5671-TX', remorqueId: 'REM-003', remorquePlaque: 'MG-1102-TR', dateDebut: '2024-03-20', createdAt: '2024-03-20T08:00:00Z' },
       { id: 'ATT-003', tracteurId: 'TRC-001', tracteurPlaque: 'MG-7842-TX', remorqueId: 'REM-005', remorquePlaque: 'MG-1104-TR', dateDebut: '2023-06-01', dateFin: '2023-12-31', createdAt: '2023-06-01T08:00:00Z' },
       { id: 'ATT-004', tracteurId: 'TRC-002', tracteurPlaque: 'MG-3356-TX', remorqueId: 'REM-002', remorquePlaque: 'MG-1101-TR', dateDebut: '2023-08-15', dateFin: '2024-01-20', createdAt: '2023-08-15T08:00:00Z' },
+      { id: 'ATT-005', tracteurId: 'TRC-006', tracteurPlaque: '6789 TNR', remorqueId: 'REM-004', remorquePlaque: '4567 TNR', dateDebut: '2026-08-01', createdAt: '2026-08-01T08:00:00Z' },
     ] as Attelage[],
   }),
 

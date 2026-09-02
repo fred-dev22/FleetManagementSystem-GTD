@@ -7,16 +7,7 @@
             <h1 class="text-xl font-bold text-foreground">Configuration des missions</h1>
             <p class="text-[13px] text-muted-foreground mt-0.5">Définissez les types de frais et leurs règles par catégorie d'employé</p>
           </div>
-          <button :class="L.btnOutline" @click="showTopImport = true">
-            <Upload class="w-4 h-4" />
-            Importer
-          </button>
         </div>
-        <ImportComingSoon
-          :is-visible="showTopImport"
-          message="L'import de la configuration des missions depuis un fichier Excel/CSV sera disponible prochainement."
-          @close="showTopImport = false"
-        />
 
         <!-- Banner avertissement -->
         <!-- <div class="flex items-start gap-2.5 bg-warning-bg border-l-4 border-warning rounded-md px-4 py-3 text-[13px] text-foreground leading-relaxed">
@@ -38,7 +29,7 @@
           <div class="flex items-start justify-between px-5 pt-4 gap-3">
             <div>
               <h2 class="text-[15px] font-semibold text-foreground">Catégories d'employés</h2>
-              <!-- <p class="text-[11px] text-warning mt-0.5">⚠️ À valider avec la direction - les catégories sont provisoires</p> -->
+              <!-- <p class="text-[11px] text-warning mt-0.5">⚠️ À valider avec la direction — les catégories sont provisoires</p> -->
             </div>
             <div class="flex gap-2 items-center">
               <button :class="[L.btnOutline, '!px-3 !py-1.5 !text-xs']" @click="showCatImport = true">
@@ -50,10 +41,12 @@
             </div>
           </div>
           <div class="px-5 pb-1">
-            <ImportComingSoon
-              :is-visible="showCatImport"
-              message="L'import en masse des catégories d'employés depuis un fichier Excel/CSV sera disponible prochainement."
+            <ImportWizardModal
+              v-if="showCatImport"
+              :open="showCatImport"
+              :config="catImportConfig"
               @close="showCatImport = false"
+              @imported="showCatImport = false"
             />
           </div>
 
@@ -82,10 +75,12 @@
             </div>
           </div>
           <div class="px-5 pb-1">
-            <ImportComingSoon
-              :is-visible="showFeeImport"
-              message="L'import en masse des types de frais depuis un fichier Excel/CSV sera disponible prochainement."
+            <ImportWizardModal
+              v-if="showFeeImport"
+              :open="showFeeImport"
+              :config="feeImportConfig"
               @close="showFeeImport = false"
+              @imported="showFeeImport = false"
             />
           </div>
 
@@ -219,7 +214,9 @@ import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { Upload, TriangleAlert, Check, Plus, Pencil, Trash2, Minus } from 'lucide-vue-next'
 import DataTable        from '../../components/ui/DataTable.vue'
 import ModalShell       from '../../components/ui/ModalShell.vue'
-import ImportComingSoon from '../../components/ui/ImportComingSoon.vue'
+import ImportWizardModal from '../../components/shared/import/ImportWizardModal.vue'
+import { buildEmpCategoryImportConfig } from '../../components/shared/import/configs/empCategoryImportConfig'
+import { buildFeeTypeImportConfig } from '../../components/shared/import/configs/feeTypeImportConfig'
 import * as cls from '../../lib/formClasses'
 import * as L from '../../lib/listClasses'
 import { useAuthStore }         from '../../stores/auth'
@@ -247,6 +244,8 @@ function triggerToast(msg: string) {
 const showTopImport = ref(false)
 const showCatImport = ref(false)
 const showFeeImport = ref(false)
+const catImportConfig = buildEmpCategoryImportConfig()
+const feeImportConfig = buildFeeTypeImportConfig()
 
 function fmt(n: number): string { return n.toLocaleString('fr-FR') }
 function unitLabel(unit: string): string {

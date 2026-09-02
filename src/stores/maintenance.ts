@@ -146,7 +146,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
   const ordres = ref<OrdreTravail[]>([
     {
       id: 'OT-2026-0041', reference: 'OT-2026-0041',
-      vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX',
+      vehiculeId: 'TRC-001', vehiculePlaque: '1234 TAN',
       origine: 'remontee_chauffeur', declarePar: 'Thierry Randriamanga',
       declareLe: '2026-07-28T06:40:00Z',
       symptome: 'Perte de pression d’air constatée à la pause de Moramanga. Le manomètre descend sous 6 bars au ralenti.',
@@ -165,7 +165,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     },
     {
       id: 'OT-2026-0040', reference: 'OT-2026-0040',
-      vehiculeId: 'TRC-002', vehiculePlaque: 'MG-5671-TX',
+      vehiculeId: 'TRC-002', vehiculePlaque: '2345 TNR',
       origine: 'alerte_preventive', declarePar: 'Système',
       declareLe: '2026-07-24T05:00:00Z',
       symptome: 'Échéance des 45 000 km atteinte : vidange moteur, filtres à huile, à air et à carburant.',
@@ -200,7 +200,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
        ────────────────────────────────────────────────────────── */
     {
       id: 'OT-2026-0045', reference: 'OT-2026-0045',
-      vehiculeId: 'TRC-004', vehiculePlaque: 'MG-9023-TX',
+      vehiculeId: 'TRC-004', vehiculePlaque: '4567 FIA',
       origine: 'alerte_preventive', declarePar: 'Système',
       declareLe: '2026-08-03T05:00:00Z',
       symptome: 'Échéance dépassée : vidange moteur et filtres. Dernier passage à 350 000 km, compteur à 412 000.',
@@ -215,7 +215,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     },
     {
       id: 'OT-2026-0044', reference: 'OT-2026-0044',
-      vehiculeId: 'REM-002', vehiculePlaque: 'MG-1101-TR',
+      vehiculeId: 'REM-002', vehiculePlaque: '2345 TAR',
       origine: 'constat_garage', declarePar: 'Hery Ratsimba',
       declareLe: '2026-08-02T08:10:00Z',
       symptome: 'Soupape de sécurité de citerne dure à la manœuvre, tarage à contrôler avant le prochain chargement.',
@@ -230,7 +230,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     },
     {
       id: 'OT-2026-0043', reference: 'OT-2026-0043',
-      vehiculeId: 'TRC-002', vehiculePlaque: 'MG-3356-TX',
+      vehiculeId: 'TRC-002', vehiculePlaque: '2345 TNR',
       origine: 'remontee_chauffeur', declarePar: 'Fiona Mungroo',
       declareLe: '2026-08-01T16:45:00Z',
       symptome: 'Alternateur : voyant de charge intermittent au ralenti, batterie faible au démarrage à froid.',
@@ -246,7 +246,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     },
     {
       id: 'OT-2026-0042', reference: 'OT-2026-0042',
-      vehiculeId: 'TRC-003', vehiculePlaque: 'MG-5671-TX',
+      vehiculeId: 'TRC-003', vehiculePlaque: '3456 MJN',
       origine: 'checklist', declarePar: 'Thierry Randriamanga',
       declareLe: '2026-07-31T12:00:00Z',
       symptome: 'Usure irrégulière du train avant relevée à la checklist, tirage à droite signalé par le chauffeur.',
@@ -261,7 +261,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     },
     {
       id: 'OT-2026-0039', reference: 'OT-2026-0039',
-      vehiculeId: 'TRC-003', vehiculePlaque: 'MG-4410-TX',
+      vehiculeId: 'TRC-003', vehiculePlaque: '3456 MJN',
       origine: 'checklist', declarePar: 'Jean-Luc Ravelo',
       declareLe: '2026-07-20T11:20:00Z',
       symptome: 'Frein de stationnement signalé défectueux à la checklist de la pause 3.',
@@ -281,7 +281,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     },
     {
       id: 'OT-2026-0038', reference: 'OT-2026-0038',
-      vehiculeId: 'REM-001', vehiculePlaque: 'MG-1100-TR',
+      vehiculeId: 'REM-001', vehiculePlaque: '1234 TAR',
       origine: 'constat_garage', declarePar: 'Hery Ratsimba',
       declareLe: '2026-07-15T09:00:00Z',
       symptome: 'Suintement au niveau de la vanne de fond de citerne, constaté au dépotage.',
@@ -381,22 +381,22 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
 
   /* ══ Indisponibilités - US 3.3.1 ═══════════════════════════ */
   const indisponibilites = ref<Indisponibilite[]>([
-    { id: 'IND-001', vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX',
+    { id: 'IND-001', vehiculeId: 'TRC-001', vehiculePlaque: '1234 TAN',
       code: 'PNN', famille: 'technique', debut: '2026-07-28T06:40:00Z',
       ordreTravailId: 'OT-2026-0041',
       commentaire: 'Immobilisé en attente du dessiccateur.' },
-    { id: 'IND-002', vehiculeId: 'TRC-004', vehiculePlaque: 'MG-3356-TX',
+    { id: 'IND-002', vehiculeId: 'TRC-004', vehiculePlaque: '4567 FIA',
       code: 'VET', famille: 'reglementaire', debut: '2026-07-22T08:00:00Z',
       commentaire: 'Vetting expiré, audit de conformité programmé.' },
-    { id: 'IND-003', vehiculeId: 'TRC-002', vehiculePlaque: 'MG-5671-TX',
+    { id: 'IND-003', vehiculeId: 'TRC-002', vehiculePlaque: '2345 TNR',
       code: 'MTN', famille: 'technique',
       debut: '2026-07-24T05:00:00Z', fin: '2026-07-24T15:30:00Z', dureeJours: 1,
       ordreTravailId: 'OT-2026-0040' },
-    { id: 'IND-004', vehiculeId: 'TRC-003', vehiculePlaque: 'MG-4410-TX',
+    { id: 'IND-004', vehiculeId: 'TRC-003', vehiculePlaque: '3456 MJN',
       code: 'PNN', famille: 'technique',
       debut: '2026-07-20T11:20:00Z', fin: '2026-07-21T17:00:00Z', dureeJours: 2,
       ordreTravailId: 'OT-2026-0039' },
-    { id: 'IND-005', vehiculeId: 'REM-001', vehiculePlaque: 'MG-1100-TR',
+    { id: 'IND-005', vehiculeId: 'REM-001', vehiculePlaque: '1234 TAR',
       code: 'ACC', famille: 'technique',
       debut: '2026-07-15T09:00:00Z', fin: '2026-07-19T16:00:00Z', dureeJours: 5,
       ordreTravailId: 'OT-2026-0038' },
@@ -812,7 +812,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
   /* ══ Interventions de l'équipe mobile - US 3.3.2 ═══════════ */
   const interventionsMobiles = ref<InterventionMobile[]>([
     { id: 'IM-001', reference: 'IM-2026-0012', type: 'depannage_mecanique',
-      vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX',
+      vehiculeId: 'TRC-001', vehiculePlaque: '1234 TAN',
       lieu: 'RN2, PK 296 - Ampasimadinika', lat: -18.52, lng: 49.05,
       declencheLe: '2026-07-28T07:10:00Z', arriveeLe: '2026-07-28T08:35:00Z',
       clotureLe: '2026-07-28T10:20:00Z',

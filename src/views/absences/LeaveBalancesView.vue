@@ -15,7 +15,7 @@
   >
     <!-- Export -->
     <template #header-actions>
-      <button :class="L.btnOutline" @click="() => {}"><FileDown class="w-4 h-4" /> Exporter</button>
+      <button :class="L.btnOutline" @click="exporter"><FileDown class="w-4 h-4" /> Exporter</button>
     </template>
 
     <!-- KPIs -->
@@ -180,6 +180,30 @@ const totals = computed(() => {
 })
 
 interface BalanceCell { used: number; total: number; remaining: number }
+
+/** Export CSV - une ligne par employé, une colonne par type de congé. */
+function exporter() {
+  const entetes = ['Employé', 'Entité', ...TYPE_COLS.map(c => `${c.label} (utilisé/total/restant)`)]
+  const lignes = filteredBalances.value.map(r => [
+    r.employeeName, r.entityName,
+    ...TYPE_COLS.map(c => {
+      const b = (r.balances as Record<string, BalanceCell>)[c.type]
+      return b && b.total > 0 ? `${b.used}/${b.total}/${b.remaining}` : ''
+    }),
+  ])
+  const csv = [entetes, ...lignes]
+    .map(row => row.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';'))
+    .join('\n')
+
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `soldes-conges-${new Date().toISOString().slice(0, 10)}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 function barStyle(b: BalanceCell) {
   if (!b || b.total === 0) return {}
   const pct    = (b.used / b.total) * 100

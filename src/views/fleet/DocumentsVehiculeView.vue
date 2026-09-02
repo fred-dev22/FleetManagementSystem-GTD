@@ -161,11 +161,11 @@
                 {{ et }}
               </button>
             </div>
-            <input v-model="form.entityId" :class="L.fpField" placeholder="ID (ex: TRC-001 ou CP-001)" />
+            <input v-model="form.entityId" :class="L.fpFieldInput" placeholder="ID (ex: TRC-001 ou CP-001)" />
           </div>
           <div>
             <label :class="L.fpFieldLabel">Type de document *</label>
-            <input v-model="form.type" list="types-list" :class="L.fpField" placeholder="Carte grise, Assurance…" />
+            <input v-model="form.type" list="types-list" :class="L.fpFieldInput" placeholder="Carte grise, Assurance…" />
             <datalist id="types-list">
               <option v-for="t in typesDoc" :key="t" :value="t" />
             </datalist>
@@ -173,11 +173,11 @@
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label :class="L.fpFieldLabel">Date d'émission *</label>
-              <input v-model="form.dateEmission" type="date" :class="L.fpField" />
+              <input v-model="form.dateEmission" type="date" :class="L.fpFieldInput" />
             </div>
             <div>
               <label :class="L.fpFieldLabel">Date d'expiration</label>
-              <input v-model="form.dateExpiration" type="date" :class="L.fpField" />
+              <input v-model="form.dateExpiration" type="date" :class="L.fpFieldInput" />
             </div>
           </div>
           <div>

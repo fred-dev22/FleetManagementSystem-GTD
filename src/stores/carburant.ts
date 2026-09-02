@@ -48,7 +48,7 @@ export const useCarburantStore = defineStore('carburant', () => {
   const recharges = ref<RechargeCarburant[]>([
     {
       id: 'RCH-001', date: '2026-07-24T05:20:00Z',
-      vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX',
+      vehiculeId: 'TRC-001', vehiculePlaque: '1234 TAN',
       chauffeurId: 'emp-010', chauffeurNom: 'Thierry Randriamanga',
       voyageId: 'VOY-001', voyageRef: 'VOY-2026-0148',
       litres: 580, prixLitre: 5_400, montant: 3_132_000,nombreBons: 1, litresParBon: 500,
@@ -60,7 +60,7 @@ export const useCarburantStore = defineStore('carburant', () => {
     },
     {
       id: 'RCH-002', date: '2026-07-24T14:32:00Z',
-      vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX',
+      vehiculeId: 'TRC-001', vehiculePlaque: '1234 TAN',
       chauffeurId: 'emp-010', chauffeurNom: 'Thierry Randriamanga',
       voyageId: 'VOY-001', voyageRef: 'VOY-2026-0148',
       litres: 210, prixLitre: 5_650, montant: 1_186_500,nombreBons: 1, litresParBon: 500,
@@ -73,7 +73,7 @@ export const useCarburantStore = defineStore('carburant', () => {
     },
     {
       id: 'RCH-003', date: '2026-07-24T18:40:00Z',
-      vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX',
+      vehiculeId: 'TRC-001', vehiculePlaque: '1234 TAN',
       chauffeurId: 'emp-010', chauffeurNom: 'Thierry Randriamanga',
       voyageId: 'VOY-001', voyageRef: 'VOY-2026-0148',
       litres: 420, prixLitre: 5_650, montant: 2_373_000,nombreBons: 1, litresParBon: 500,
@@ -85,7 +85,7 @@ export const useCarburantStore = defineStore('carburant', () => {
     },
     {
       id: 'RCH-004', date: '2026-07-20T04:50:00Z',
-      vehiculeId: 'TRC-002', vehiculePlaque: 'MG-3356-TX',
+      vehiculeId: 'TRC-002', vehiculePlaque: '2345 TNR',
       chauffeurId: 'emp-012', chauffeurNom: 'Hery Rasoanaivo',
       voyageId: 'VOY-003', voyageRef: 'VOY-2026-0147',
       litres: 590, prixLitre: 5_400, montant: 3_186_000,nombreBons: 1, litresParBon: 500,
@@ -97,7 +97,7 @@ export const useCarburantStore = defineStore('carburant', () => {
     },
     {
       id: 'RCH-005', date: '2026-07-20T18:10:00Z',
-      vehiculeId: 'TRC-002', vehiculePlaque: 'MG-3356-TX',
+      vehiculeId: 'TRC-002', vehiculePlaque: '2345 TNR',
       chauffeurId: 'emp-012', chauffeurNom: 'Hery Rasoanaivo',
       voyageId: 'VOY-003', voyageRef: 'VOY-2026-0147',
       litres: 465, prixLitre: 5_700, montant: 2_650_500,nombreBons: 1, litresParBon: 500,
@@ -109,7 +109,7 @@ export const useCarburantStore = defineStore('carburant', () => {
     },
     {
       id: 'RCH-006', date: '2026-07-26T05:55:00Z',
-      vehiculeId: 'TRC-004', vehiculePlaque: 'MG-4410-TX',
+      vehiculeId: 'TRC-004', vehiculePlaque: '4567 FIA',
       chauffeurId: 'emp-013', chauffeurNom: 'Jean-Luc Ravelo',
       voyageId: 'VOY-005', voyageRef: 'VOY-2026-0146',
       litres: 640, prixLitre: 5_400, montant: 3_456_000,nombreBons: 1, litresParBon: 500,
@@ -121,7 +121,7 @@ export const useCarburantStore = defineStore('carburant', () => {
     },
     {
       id: 'RCH-007', date: '2026-07-26T14:20:00Z',
-      vehiculeId: 'TRC-004', vehiculePlaque: 'MG-4410-TX',
+      vehiculeId: 'TRC-004', vehiculePlaque: '4567 FIA',
       chauffeurId: 'emp-013', chauffeurNom: 'Jean-Luc Ravelo',
       voyageId: 'VOY-005', voyageRef: 'VOY-2026-0146',
       litres: 285, prixLitre: 5_700, montant: 1_624_500,nombreBons: 1, litresParBon: 500,
@@ -133,7 +133,7 @@ export const useCarburantStore = defineStore('carburant', () => {
     },
     {
       id: 'RCH-008', date: '2026-07-29T06:00:00Z',
-      vehiculeId: 'TRC-003', vehiculePlaque: 'MG-5671-TX',
+      vehiculeId: 'TRC-003', vehiculePlaque: '3456 MJN',
       chauffeurId: 'emp-011', chauffeurNom: 'Fiona Mungroo',
       voyageId: 'VOY-002', voyageRef: 'VOY-2026-0149',
       litres: 690, prixLitre: 5_400, montant: 3_726_000,nombreBons: 1, litresParBon: 500,

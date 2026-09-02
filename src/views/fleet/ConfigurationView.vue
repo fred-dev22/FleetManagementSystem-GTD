@@ -249,6 +249,12 @@
       </div>
 
       <div :class="L.card">
+        <div class="flex items-center justify-between mb-3">
+          <h2 :class="L.cardTitle">Clients</h2>
+          <button :class="L.btnPrimary" @click="ouvrirNouveauClient">
+            <Plus class="w-4 h-4" /> Nouveau client
+          </button>
+        </div>
         <table :class="L.table">
           <thead><tr>
             <th :class="L.th" class="cursor-default">Code</th>

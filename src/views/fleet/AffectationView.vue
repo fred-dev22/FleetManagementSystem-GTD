@@ -110,9 +110,12 @@
           </div>
           <div>
             <label :class="L.fpFieldLabel">Date début *</label>
-            <input v-model="newAff.dateDebut" type="date" :class="L.fpField" />
+            <input v-model="newAff.dateDebut" type="date" :class="L.fpFieldInput" />
           </div>
         </div>
+        <p v-if="submitError" class="flex items-center gap-1.5 text-xs text-danger mt-3">
+          <AlertCircle class="w-3.5 h-3.5" /> {{ submitError }}
+        </p>
         <div class="flex gap-3 mt-4 justify-end">
           <button :class="L.btnOutline" @click="showForm = false; resetForm()">Annuler</button>
           <button :class="L.btnPrimary" :disabled="!canSubmit || !!alerteBlockage" @click="submitAff">
@@ -165,7 +168,7 @@
         <p class="text-sm text-gray-600 mb-4">Chauffeur : <strong>{{ terminerAff?.chauffeurNom }}</strong></p>
         <div class="mb-4">
           <label :class="L.fpFieldLabel">Date de fin *</label>
-          <input v-model="dateFin" type="date" :class="L.fpField" />
+          <input v-model="dateFin" type="date" :class="L.fpFieldInput" />
         </div>
         <div class="flex gap-3 justify-end">
           <button :class="L.btnOutline" @click="showTerminer = false">Annuler</button>
@@ -189,15 +192,19 @@ import { useDocumentsVehiculesStore } from '../../stores/documentsVehicules'
 import type { AffectationChauffeur } from '../../types'
 import * as L from '../../lib/listClasses'
 
-const affStore  = useAffectationsChauffeursStore()
-const vehStore  = useVehiculesStore()
-const empStore = useEmployeeStore()
-const profStore = useConduceteursProfilesStore()
-const docsStore = useDocumentsVehiculesStore()
+const affStore   = useAffectationsChauffeursStore()
+/* Comme pour AttelageView : `stores/vehicules.ts` est la source lue par
+   les 16 autres écrans (Véhicules, Voyages, Maintenance, Carte…) - c'est
+   elle qu'il faut mettre à jour ici. */
+const vehStore   = useVehiculesStore()
+const empStore   = useEmployeeStore()
+const profStore  = useConduceteursProfilesStore()
+const docsStore  = useDocumentsVehiculesStore()
 
 const showForm     = ref(false)
 const showTerminer = ref(false)
-const loading      = ref(false)
+const loading       = ref(false)
+const submitError   = ref('')
 const terminerAff  = ref<AffectationChauffeur | null>(null)
 const dateFin      = ref('')
 const alerteBlockage = ref('')
@@ -209,17 +216,23 @@ const historique = computed(() => affStore.affectations.filter(a => !!a.dateFin)
 
 const kpis = computed(() => [
   { label: 'Affectations actives', value: actives.value.length,                                              color: 'text-primary'  },
-  { label: 'Tracteurs libres',     value: vehStore.getTracteurLibre().length,                                 color: 'text-success'  },
+  { label: 'Tracteurs libres',     value: tracteursLibres.value.length,                                       color: 'text-success'  },
   { label: 'Total historique',     value: historique.value.length,                                            color: 'text-gray-800' },
   { label: 'Alertes permis',       value: actives.value.filter(a => getAlertePermis(a.chauffeurId)).length,   color: 'text-danger'   },
 ])
 
 const conducteursDisponibles = computed(() => {
   const affectesIds = new Set(actives.value.map(a => a.chauffeurId))
-  return (empStore.employees ?? []).filter((e: any) => e.fonction === 'Chauffeur' && !affectesIds.has(e.id))
+  return (empStore.employees ?? []).filter((e: any) => e.fonction === 'Chauffeur' && e.status === 'actif' && !affectesIds.has(e.id))
 })
 
-const tracteursLibres = computed(() => vehStore.getTracteurLibre())
+/* Un tracteur déjà affecté à un chauffeur (`chauffeurId` sur sa fiche) ou
+   déjà couvert par une affectation active dans ce registre n'est plus
+   proposé - les deux sources doivent rester cohérentes. */
+const tracteursLibres = computed(() => {
+  const affectesIds = new Set(actives.value.map(a => a.tracteurId))
+  return vehStore.getTracteurLibre().filter(t => !affectesIds.has(t.id))
+})
 
 /* La plaque identifie le camion, la marque et le modèle le confirment :
    le sous-titre évite d'allonger le libellé et reste cherchable. */
@@ -281,11 +294,14 @@ const canSubmit = computed(() => !!newAff.chauffeurId && !!newAff.tracteurId && 
 function submitAff() {
   if (!canSubmit.value || alerteBlockage.value) return
   loading.value = true
+  submitError.value = ''
   try {
     affStore.affecter(newAff.chauffeurId, newAff.chauffeurNom, newAff.tracteurId, newAff.tracteurPlaque, newAff.dateDebut)
     vehStore.affecter(newAff.tracteurId, newAff.chauffeurId, newAff.chauffeurNom)
     resetForm()
     showForm.value = false
+  } catch (err: any) {
+    submitError.value = err?.message ?? "Une erreur est survenue, l'affectation n'a pas été enregistrée."
   } finally {
     loading.value = false
   }
@@ -294,15 +310,20 @@ function submitAff() {
 function resetForm() {
   Object.assign(newAff, { chauffeurId: '', chauffeurNom: '', tracteurId: '', tracteurPlaque: '', dateDebut: '' })
   alerteBlockage.value = ''
+  submitError.value = ''
 }
 
 function confirmTerminer() {
   if (!terminerAff.value || !dateFin.value) return
-  affStore.terminerAffectation(terminerAff.value.id, dateFin.value)
-  vehStore.desaffecter(terminerAff.value.tracteurId)
-  showTerminer.value = false
-  dateFin.value = ''
-  terminerAff.value = null
+  try {
+    affStore.terminerAffectation(terminerAff.value.id, dateFin.value)
+    vehStore.desaffecter(terminerAff.value.tracteurId)
+    showTerminer.value = false
+    dateFin.value = ''
+    terminerAff.value = null
+  } catch (err: any) {
+    submitError.value = err?.message ?? "La fin d'affectation a échoué."
+  }
 }
 
 function getAlertePermis(chauffeurId: string) {

@@ -11,7 +11,7 @@
               Dernière mise à jour : {{ calendar.updatedAt }} par {{ calendar.updatedBy }}
             </span>
           </div>
-          <button :class="L.btnPrimary" class="disabled:opacity-45 disabled:cursor-not-allowed" :disabled="saveDisabled" @click="saveChanges">
+          <button v-if="activeTab === 'leave-rules'" :class="L.btnPrimary" class="disabled:opacity-45 disabled:cursor-not-allowed" :disabled="saveDisabled" @click="saveChanges">
             <Save class="w-4 h-4" />
             Enregistrer les modifications
           </button>
@@ -59,10 +59,12 @@
                 </button>
               </div>
             </div>
-            <ImportComingSoon
-              :is-visible="showAnnualImport"
-              message="L'import des jours fériés depuis un fichier CSV sera disponible prochainement."
+            <ImportWizardModal
+              v-if="showAnnualImport"
+              :open="showAnnualImport"
+              :config="annualHolidayImportConfig"
               @close="showAnnualImport = false"
+              @imported="showAnnualImport = false"
             />
             <div class="overflow-x-auto">
               <table :class="dataTable">
@@ -94,10 +96,12 @@
                 </button>
               </div>
             </div>
-            <ImportComingSoon
-              :is-visible="showPonctualImport"
-              message="L'import des jours fériés depuis un fichier CSV sera disponible prochainement."
+            <ImportWizardModal
+              v-if="showPonctualImport"
+              :open="showPonctualImport"
+              :config="ponctualHolidayImportConfig"
               @close="showPonctualImport = false"
+              @imported="showPonctualImport = false"
             />
             <div class="overflow-x-auto">
               <table :class="dataTable">
@@ -136,10 +140,12 @@
                 </button>
               </div>
             </div>
-            <ImportComingSoon
-              :is-visible="showLeaveImport"
-              message="L'import des types de congés depuis un fichier CSV sera disponible prochainement."
+            <ImportWizardModal
+              v-if="showLeaveImport"
+              :open="showLeaveImport"
+              :config="leaveTypeImportConfig"
               @close="showLeaveImport = false"
+              @imported="showLeaveImport = false"
             />
             <div class="overflow-x-auto">
               <table :class="dataTable">
@@ -275,7 +281,10 @@ import {
 import LeaveTypeFormModal  from '../../components/configuration/LeaveTypeFormModal.vue'
 import WorkingDaysConfig   from '../../components/calendar/WorkingDaysConfig.vue'
 import ModalShell          from '../../components/ui/ModalShell.vue'
-import ImportComingSoon    from '../../components/ui/ImportComingSoon.vue'
+import ImportWizardModal from '../../components/shared/import/ImportWizardModal.vue'
+import { buildAnnualHolidayImportConfig } from '../../components/shared/import/configs/annualholidayimportconfig.ts'
+import { buildPonctualHolidayImportConfig } from '../../components/shared/import/configs/ponctualholidayimportconfig.ts'
+import { buildLeaveTypeImportConfig } from '../../components/shared/import/configs/leavetypeimportconfig.ts'
 import * as cls from '../../lib/formClasses'
 import * as L from '../../lib/listClasses'
 import { useAuthStore }       from '../../stores/auth'
@@ -415,6 +424,9 @@ function deleteHoliday(id: string) { if (confirm('Supprimer ce jour férié ?'))
 // ── Import CSV ────────────────────────────────────────────────
 const showAnnualImport   = ref(false)
 const showPonctualImport = ref(false)
+const annualHolidayImportConfig = buildAnnualHolidayImportConfig()
+const ponctualHolidayImportConfig = buildPonctualHolidayImportConfig()
+const leaveTypeImportConfig = buildLeaveTypeImportConfig()
 const showLeaveImport    = ref(false)
 
 const optDAYS = computed<DropdownItem[]>(() =>

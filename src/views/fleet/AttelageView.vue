@@ -89,9 +89,12 @@
           </div>
           <div>
             <label :class="L.fpFieldLabel">Date début *</label>
-            <input v-model="newAtt.dateDebut" type="date" :class="L.fpField" />
+            <input v-model="newAtt.dateDebut" type="date" :class="L.fpFieldInput" />
           </div>
         </div>
+        <p v-if="submitError" class="flex items-center gap-1.5 text-xs text-danger mt-3">
+          <AlertCircle class="w-3.5 h-3.5" /> {{ submitError }}
+        </p>
         <div class="flex gap-3 mt-4 justify-end">
           <button :class="L.btnOutline" @click="showForm = false; resetForm()">Annuler</button>
           <button :class="L.btnPrimary" :disabled="!canSubmit" @click="submitAtt">
@@ -146,7 +149,7 @@
         </p>
         <div class="mb-4">
           <label :class="L.fpFieldLabel">Date de fin *</label>
-          <input v-model="dateFin" type="date" :class="L.fpField" />
+          <input v-model="dateFin" type="date" :class="L.fpFieldInput" />
         </div>
         <div class="flex gap-3 justify-end">
           <button :class="L.btnOutline" @click="showDeteler = false">Annuler</button>
@@ -159,7 +162,7 @@
 
 <script setup lang="ts">
 import { ref, computed, reactive } from 'vue'
-import { Link2, Plus, History, Loader2 } from 'lucide-vue-next'
+import { Link2, Plus, History, Loader2, AlertCircle } from 'lucide-vue-next'
 import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
 import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { useAttelagesStore } from '../../stores/attelages'
@@ -168,28 +171,43 @@ import type { Attelage } from '../../types'
 import * as L from '../../lib/listClasses'
 
 const attStore = useAttelagesStore()
+/* `stores/vehicules.ts` est la donnée que lisent les 16 autres écrans
+   (Véhicules, Voyages, Maintenance, Carte, Assurances…) : c'est elle qui
+   doit être mise à jour ici, pas un magasin séparé, sous peine qu'un
+   attelage créé ici n'apparaisse nulle part ailleurs dans l'application.
+   `attelages.ts` reste la trace historique, déjà lue telle quelle par
+   VoyageFormModal.vue pour déduire la remorque attelée d'un voyage. */
 const vehStore = useVehiculesStore()
 
-const showForm   = ref(false)
+const showForm    = ref(false)
 const showDeteler = ref(false)
-const loading    = ref(false)
-const detelerAtt = ref<Attelage | null>(null)
-const dateFin    = ref('')
+const loading     = ref(false)
+const submitError = ref('')
+const detelerAtt  = ref<Attelage | null>(null)
+const dateFin     = ref('')
 
 const newAtt = reactive({ tracteurId: '', tracteurPlaque: '', remorqueId: '', remorquePlaque: '', dateDebut: '' })
 
-const actifs    = computed(() => attStore.attelages.filter(a => !a.dateFin))
+const actifs     = computed(() => attStore.attelages.filter(a => !a.dateFin))
 const historique = computed(() => attStore.attelages.filter(a => !!a.dateFin))
 
 const kpis = computed(() => [
-  { label: 'Attelages actifs',  value: actifs.value.length,                    color: 'text-primary'  },
-  { label: 'Tracteurs libres',  value: vehStore.getTracteurLibre().length,       color: 'text-success'  },
-  { label: 'Remorques libres',  value: vehStore.getRemorqueLibre().length,       color: 'text-gray-800' },
-  { label: 'Total historique',  value: historique.value.length,                 color: 'text-gray-500' },
+  { label: 'Attelages actifs',  value: actifs.value.length,                       color: 'text-primary'  },
+  { label: 'Tracteurs libres',  value: tracteursLibres.value.length,               color: 'text-success'  },
+  { label: 'Remorques libres',  value: remorquesLibres.value.length,               color: 'text-gray-800' },
+  { label: 'Total historique',  value: historique.value.length,                   color: 'text-gray-500' },
 ])
 
-const tracteursLibres = computed(() => vehStore.getTracteurLibre())
-const remorquesLibres = computed(() => vehStore.getRemorqueLibre())
+/* Un tracteur/une remorque n'est proposé(e) que s'il/elle est à la fois
+   sans lien sur sa propre fiche ET sans attelage actif dans l'historique
+   (attelages.ts) - les deux sources doivent être d'accord, pas une seule. */
+const tracteursOccupesIds = computed(() => new Set(actifs.value.map(a => a.tracteurId)))
+const remorquesOccupeesIds = computed(() => new Set(actifs.value.map(a => a.remorqueId)))
+
+const tracteursLibres = computed(() =>
+  vehStore.getTracteurLibre().filter(t => !tracteursOccupesIds.value.has(t.id)))
+const remorquesLibres = computed(() =>
+  vehStore.getRemorqueLibre().filter(r => !remorquesOccupeesIds.value.has(r.id)))
 
 const optionsTracteurs = computed<DropdownItem[]>(() =>
   tracteursLibres.value.map(t => ({
@@ -200,12 +218,11 @@ const optionsTracteurs = computed<DropdownItem[]>(() =>
 const optionsRemorques = computed<DropdownItem[]>(() =>
   remorquesLibres.value.map(r => ({
     id: r.id, label: r.plaque,
-    sublabel: [r.typeRemorque, r.capacite].filter(Boolean).join(' · '),
+    sublabel: [r.type ?? r.typeRemorque, r.capacite].filter(Boolean).join(' · '),
   })))
 
-
 function getRemorqueType(remorqueId: string) {
-  return vehStore.getById(remorqueId)?.typeRemorque ?? '-'
+  return vehStore.getById(remorqueId)?.type ?? vehStore.getById(remorqueId)?.typeRemorque ?? '-'
 }
 
 function onTracteurChange(id: string) {
@@ -223,11 +240,18 @@ const canSubmit = computed(() => !!newAtt.tracteurId && !!newAtt.remorqueId && !
 function submitAtt() {
   if (!canSubmit.value) return
   loading.value = true
+  submitError.value = ''
   try {
+    // 1. Trace l'attelage dans l'historique (US 2.3.3), déjà lu par
+    //    VoyageFormModal.vue pour déduire la remorque attelée.
     attStore.attacher(newAtt.tracteurId, newAtt.tracteurPlaque, newAtt.remorqueId, newAtt.remorquePlaque, newAtt.dateDebut)
+    // 2. Répercute l'attelage sur la fiche véhicule que lit le reste de
+    //    l'application (US 2.3.1).
     vehStore.atteler(newAtt.tracteurId, newAtt.remorqueId)
     resetForm()
     showForm.value = false
+  } catch (err: any) {
+    submitError.value = err?.message ?? "Une erreur est survenue, l'attelage n'a pas été enregistré."
   } finally {
     loading.value = false
   }
@@ -235,15 +259,20 @@ function submitAtt() {
 
 function resetForm() {
   Object.assign(newAtt, { tracteurId: '', tracteurPlaque: '', remorqueId: '', remorquePlaque: '', dateDebut: '' })
+  submitError.value = ''
 }
 
 function confirmDeteler() {
   if (!detelerAtt.value || !dateFin.value) return
-  attStore.detacher(detelerAtt.value.id, dateFin.value)
-  vehStore.desatteler(detelerAtt.value.tracteurId, detelerAtt.value.remorqueId)
-  showDeteler.value = false
-  dateFin.value = ''
-  detelerAtt.value = null
+  try {
+    attStore.detacher(detelerAtt.value.id, dateFin.value)
+    vehStore.desatteler(detelerAtt.value.tracteurId, detelerAtt.value.remorqueId)
+    showDeteler.value = false
+    dateFin.value = ''
+    detelerAtt.value = null
+  } catch (err: any) {
+    submitError.value = err?.message ?? 'Le dételage a échoué.'
+  }
 }
 
 function formatDate(d?: string) {

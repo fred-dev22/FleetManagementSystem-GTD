@@ -75,10 +75,12 @@
         </div>
       </div>
 
-      <ImportComingSoon
-        :is-visible="showImport"
-        message="L'import en masse des employés depuis un fichier Excel/CSV sera disponible prochainement."
+      <ImportWizardModal
+        v-if="showImport"
+        :open="showImport"
+        :config="employeeImportConfig"
         @close="showImport = false"
+        @imported="showImport = false"
       />
     </template>
 
@@ -239,7 +241,8 @@ import { ref, computed, watch } from 'vue'
 import SearchableDropdown from '../../components/ui/SearchableDropdown.vue'
 import type { DropdownItem } from '../../components/ui/SearchableDropdown.vue'
 import { UserPlus, Upload, Users, UserCheck, UserX, Truck } from 'lucide-vue-next'
-import ImportComingSoon from '../../components/ui/ImportComingSoon.vue'
+import ImportWizardModal from '../../components/shared/import/ImportWizardModal.vue'
+import { buildEmployeeImportConfig } from '../../components/shared/import/configs/employeeImportConfig'
 import { ListPageLayout } from '../../components'
 import type { ListColumn } from '../../components/shared/ListPageLayout.vue'
 import EmployeeFormModal from '../../components/employees/EmployeeFormModal.vue'
@@ -259,6 +262,7 @@ const kpiLbl  = 'text-xs text-muted-foreground mt-0.5'
 // ── Modal flags ───────────────────────────────────────────────────────────────
 const showCreate = ref(false)
 const showImport = ref(false)
+const employeeImportConfig = buildEmployeeImportConfig()
 const openCardId = ref<string | null>(null)
 
 function openCard(item: Employee) { openCardId.value = item.id }

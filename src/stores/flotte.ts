@@ -60,21 +60,21 @@ export const useFlotteStore = defineStore('flotte', () => {
 
   /* ══ US 2.2.4 - État de flotte quotidien ═══════════════════ */
   const etatFlotte = ref<LigneEtatFlotte[]>([
-    { vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX', citernePlaque: 'MG-1100-TR',
+    { vehiculeId: 'TRC-001', vehiculePlaque: '1234 TAN', citernePlaque: 'MG-1100-TR',
       chauffeurNom: 'Thierry Randriamanga', etat: 'ATT-ADM',
       codeIndispo: 'PNN', motifIndispo: 'Panne circuit d’air - dessiccateur',
       remiseEnServicePrevue: '2026-08-04', observation: 'En attente de la pièce commandée.' },
-    { vehiculeId: 'TRC-002', vehiculePlaque: 'MG-5671-TX', citernePlaque: 'MG-1102-TR',
+    { vehiculeId: 'TRC-002', vehiculePlaque: '2345 TNR', citernePlaque: 'MG-1102-TR',
       chauffeurNom: 'Fiona Mungroo', etat: 'TR-LIV', voyageRef: 'VOY-2026-0151' },
-    { vehiculeId: 'TRC-003', vehiculePlaque: 'MG-4410-TX',
+    { vehiculeId: 'TRC-003', vehiculePlaque: '3456 MJN',
       chauffeurNom: 'Jean-Luc Ravelo', etat: 'DEP-PRV', voyageRef: 'VOY-2026-0152' },
-    { vehiculeId: 'TRC-004', vehiculePlaque: 'MG-3356-TX',
+    { vehiculeId: 'TRC-004', vehiculePlaque: '4567 FIA',
       chauffeurNom: 'Hery Rasoanaivo', etat: 'ATT-ADM',
       codeIndispo: 'VET', motifIndispo: 'Vetting expiré - audit programmé',
       remiseEnServicePrevue: '2026-08-08' },
-    { vehiculeId: 'TRC-005', vehiculePlaque: 'MG-2201-TX',
+    { vehiculeId: 'TRC-005', vehiculePlaque: '5678 TAN',
       etat: 'ATT-CHG', observation: 'Présenté au dépôt GRT, en file de chargement.' },
-    { vehiculeId: 'TRC-006', vehiculePlaque: 'MG-9014-TX',
+    { vehiculeId: 'TRC-006', vehiculePlaque: '6789 TNR',
       chauffeurNom: 'Nirina Ratovo', etat: 'RET-VID', voyageRef: 'VOY-2026-0149' },
   ])
 
@@ -105,22 +105,22 @@ export const useFlotteStore = defineStore('flotte', () => {
     { id: 'EF-2026-07-31', date: '2026-07-31', produitPar: 'Naina Rakotobe',
       transmisLe: '2026-07-31T07:15:00Z', version: 1,
       lignes: [
-        { vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX', citernePlaque: 'MG-1100-TR',
+        { vehiculeId: 'TRC-001', vehiculePlaque: '1234 TAN', citernePlaque: 'MG-1100-TR',
           chauffeurNom: 'Thierry Randriamanga', etat: 'ATT-ADM',
           codeIndispo: 'PNN', motifIndispo: 'Panne circuit d’air - dessiccateur',
           remiseEnServicePrevue: '2026-08-04' },
-        { vehiculeId: 'TRC-002', vehiculePlaque: 'MG-5671-TX', citernePlaque: 'MG-1102-TR',
+        { vehiculeId: 'TRC-002', vehiculePlaque: '2345 TNR', citernePlaque: 'MG-1102-TR',
           chauffeurNom: 'Fiona Mungroo', etat: 'TR-CHG', voyageRef: 'VOY-2026-0151' },
-        { vehiculeId: 'TRC-004', vehiculePlaque: 'MG-3356-TX', etat: 'ATT-ADM',
+        { vehiculeId: 'TRC-004', vehiculePlaque: '4567 FIA', etat: 'ATT-ADM',
           codeIndispo: 'VET', motifIndispo: 'Vetting expiré', remiseEnServicePrevue: '2026-08-08' },
       ] },
     { id: 'EF-2026-07-30', date: '2026-07-30', produitPar: 'Naina Rakotobe',
       transmisLe: '2026-07-30T07:05:00Z', version: 1,
       lignes: [
-        { vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX', citernePlaque: 'MG-1100-TR',
+        { vehiculeId: 'TRC-001', vehiculePlaque: '1234 TAN', citernePlaque: 'MG-1100-TR',
           chauffeurNom: 'Thierry Randriamanga', etat: 'ATT-ADM',
           codeIndispo: 'PNN', motifIndispo: 'Panne circuit d’air' },
-        { vehiculeId: 'TRC-002', vehiculePlaque: 'MG-5671-TX', chauffeurNom: 'Fiona Mungroo', etat: 'DEP-REA' },
+        { vehiculeId: 'TRC-002', vehiculePlaque: '2345 TNR', chauffeurNom: 'Fiona Mungroo', etat: 'DEP-REA' },
       ] },
   ])
 
@@ -318,7 +318,7 @@ export const useFlotteStore = defineStore('flotte', () => {
   const autorisations = ref<AutorisationDepart[]>([
     {
       id: 'AUT-2026-0212', reference: 'AUT-2026-0212',
-      voyageRef: 'VOY-2026-0151', vehiculeId: 'TRC-002', vehiculePlaque: 'MG-5671-TX',
+      voyageRef: 'VOY-2026-0151', vehiculeId: 'TRC-002', vehiculePlaque: '2345 TNR',
       chauffeurNom: 'Fiona Mungroo', demandeeLe: '2026-07-29T05:05:00Z',
       controles: [
         { controle: 'checklist',           conforme: true },
@@ -332,7 +332,7 @@ export const useFlotteStore = defineStore('flotte', () => {
     },
     {
       id: 'AUT-2026-0213', reference: 'AUT-2026-0213',
-      voyageRef: 'VOY-2026-0152', vehiculeId: 'TRC-003', vehiculePlaque: 'MG-4410-TX',
+      voyageRef: 'VOY-2026-0152', vehiculeId: 'TRC-003', vehiculePlaque: '3456 MJN',
       chauffeurNom: 'Jean-Luc Ravelo', demandeeLe: '2026-08-01T05:02:00Z',
       controles: [
         { controle: 'checklist',           conforme: true },
@@ -345,7 +345,7 @@ export const useFlotteStore = defineStore('flotte', () => {
     },
     {
       id: 'AUT-2026-0211', reference: 'AUT-2026-0211',
-      vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX',
+      vehiculeId: 'TRC-001', vehiculePlaque: '1234 TAN',
       chauffeurNom: 'Thierry Randriamanga', demandeeLe: '2026-07-28T05:00:00Z',
       controles: [
         { controle: 'checklist',           conforme: false, detail: 'Anomalie flexible relevée au retour précédent.' },
@@ -379,22 +379,22 @@ export const useFlotteStore = defineStore('flotte', () => {
 
   /* ══ US 2.7.3 - Assurances et sinistres ═══════════════════ */
   const polices = ref<PoliceAssurance[]>([
-    { id: 'POL-001', vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX',
+    { id: 'POL-001', vehiculeId: 'TRC-001', vehiculePlaque: '1234 TAN',
       compagnie: 'ARO Madagascar', numeroPolice: 'ARO-2025-88401',
       couverture: 'Tous risques + responsabilité civile marchandises dangereuses',
       dateDebut: '2025-11-01', dateEcheance: '2026-10-31',
       primeAnnuelleAr: 8_400_000, franchiseAr: 1_500_000, statut: 'active' },
-    { id: 'POL-002', vehiculeId: 'TRC-002', vehiculePlaque: 'MG-5671-TX',
+    { id: 'POL-002', vehiculeId: 'TRC-002', vehiculePlaque: '2345 TNR',
       compagnie: 'ARO Madagascar', numeroPolice: 'ARO-2025-88402',
       couverture: 'Tous risques + responsabilité civile marchandises dangereuses',
       dateDebut: '2025-11-01', dateEcheance: '2026-10-31',
       primeAnnuelleAr: 8_400_000, franchiseAr: 1_500_000, statut: 'active' },
-    { id: 'POL-003', vehiculeId: 'TRC-004', vehiculePlaque: 'MG-3356-TX',
+    { id: 'POL-003', vehiculeId: 'TRC-004', vehiculePlaque: '4567 FIA',
       compagnie: 'NY HAVANA', numeroPolice: 'NH-2025-3320',
       couverture: 'Tiers étendu + marchandises dangereuses',
       dateDebut: '2024-09-15', dateEcheance: '2025-09-14',
       primeAnnuelleAr: 5_200_000, franchiseAr: 2_000_000, statut: 'expiree' },
-    { id: 'POL-004', vehiculeId: 'REM-001', vehiculePlaque: 'MG-1100-TR',
+    { id: 'POL-004', vehiculeId: 'REM-001', vehiculePlaque: '1234 TAR',
       compagnie: 'ARO Madagascar', numeroPolice: 'ARO-2025-88450',
       couverture: 'Tous risques citerne',
       dateDebut: '2025-11-01', dateEcheance: '2026-10-31',
@@ -412,7 +412,7 @@ export const useFlotteStore = defineStore('flotte', () => {
   const sinistres = ref<Sinistre[]>([
     {
       id: 'SIN-2026-004', reference: 'SIN-2026-004',
-      vehiculeId: 'REM-001', vehiculePlaque: 'MG-1100-TR',
+      vehiculeId: 'REM-001', vehiculePlaque: '1234 TAR',
       date: '2026-07-15T08:30:00Z', lieu: 'Dépôt GRT Toamasina, aire de dépotage',
       circonstances: 'Suintement au niveau de la vanne de fond constaté au dépotage. Épandage limité, confiné par les bacs de rétention du dépôt.',
       gravite: 'environnemental',
@@ -425,7 +425,7 @@ export const useFlotteStore = defineStore('flotte', () => {
     },
     {
       id: 'SIN-2026-003', reference: 'SIN-2026-003',
-      vehiculeId: 'TRC-003', vehiculePlaque: 'MG-4410-TX',
+      vehiculeId: 'TRC-003', vehiculePlaque: '3456 MJN',
       date: '2026-05-02T14:10:00Z', lieu: 'RN2, PK 155 - Ambatosenegaly',
       circonstances: 'Accrochage latéral avec un véhicule léger lors d’un dépassement. Aucun blessé.',
       gravite: 'materiel_leger',
@@ -439,7 +439,7 @@ export const useFlotteStore = defineStore('flotte', () => {
     },
     {
       id: 'SIN-2026-002', reference: 'SIN-2026-002',
-      vehiculeId: 'TRC-004', vehiculePlaque: 'MG-3356-TX',
+      vehiculeId: 'TRC-004', vehiculePlaque: '4567 FIA',
       date: '2026-02-18T05:45:00Z', lieu: 'Sortie de base TNR',
       circonstances: 'Sortie de route à basse vitesse sur chaussée glissante. Dommages au pare-chocs et au marchepied.',
       gravite: 'materiel_lourd',
