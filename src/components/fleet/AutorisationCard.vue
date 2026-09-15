@@ -62,16 +62,80 @@
           :default-open="true"
         >
           <div class="flex flex-col gap-1.5">
-            <div v-for="c in item.controles" :key="c.controle"
-              class="flex items-start gap-2.5 rounded-md px-3 py-2.5"
-              :class="c.conforme ? 'bg-background' : 'bg-danger-bg'">
-              <component :is="c.conforme ? CheckCircle2 : XCircle" class="w-4 h-4 shrink-0 mt-px"
-                :class="c.conforme ? 'text-success' : 'text-danger'" />
-              <div class="min-w-0 flex-1">
-                <p class="text-xs font-medium" :class="c.conforme ? 'text-foreground' : 'text-danger'">
-                  {{ LIB_CONTROLE_DEPART[c.controle] }}
-                </p>
-                <p v-if="c.detail" class="text-[11px] text-muted-foreground">{{ c.detail }}</p>
+            <div v-for="c in item.controles" :key="c.controle">
+              <!-- Le contrôle « checklist » ouvre la grille des 16 points -
+                   c'est celui que le client a signalé comme manquant :
+                   avant, seul un drapeau conforme/non-conforme s'affichait
+                   ici, sans le détail que fournit la checklist sur route. -->
+              <template v-if="c.controle === 'checklist'">
+                <button type="button"
+                  class="w-full flex items-start gap-2.5 rounded-md px-3 py-2.5 text-left cursor-pointer border-0"
+                  :class="c.conforme ? 'bg-background' : 'bg-danger-bg'"
+                  @click="checklistOuverte = !checklistOuverte">
+                  <component :is="c.conforme ? CheckCircle2 : XCircle" class="w-4 h-4 shrink-0 mt-px"
+                    :class="c.conforme ? 'text-success' : 'text-danger'" />
+                  <div class="min-w-0 flex-1">
+                    <p class="text-xs font-medium" :class="c.conforme ? 'text-foreground' : 'text-danger'">
+                      {{ LIB_CONTROLE_DEPART[c.controle] }}
+                    </p>
+                    <p v-if="c.detail" class="text-[11px] text-muted-foreground">{{ c.detail }}</p>
+                    <p v-else-if="!releveDepart" class="text-[11px] text-warning">Checklist avant départ non encore réalisée</p>
+                  </div>
+                  <ChevronDown class="w-3.5 h-3.5 text-muted-foreground shrink-0 transition-transform"
+                    :class="{ 'rotate-180': checklistOuverte }" />
+                </button>
+
+                <div v-if="checklistOuverte" class="mt-1.5 rounded-md border border-border p-3">
+                  <!-- Déjà réalisée : lecture seule -->
+                  <div v-if="releveDepart" class="grid grid-cols-2 gap-1.5">
+                    <div v-for="p in POINTS_CHECKLIST_ROUTE" :key="p.code"
+                      class="flex items-center gap-1.5 text-[11px]">
+                      <component :is="releveDepart.resultats[p.code] === 'conforme' ? CheckCircle2 : XCircle"
+                        class="w-3 h-3 shrink-0" :class="releveDepart.resultats[p.code] === 'conforme' ? 'text-success' : 'text-danger'" />
+                      <span :class="releveDepart.resultats[p.code] !== 'conforme' ? 'text-danger' : 'text-foreground'">{{ p.libelle }}</span>
+                    </div>
+                    <p class="col-span-2 text-[11px] text-muted-foreground mt-1">
+                      Réalisée le {{ fmtDateTime(releveDepart.horodatage) }}
+                    </p>
+                  </div>
+
+                  <!-- Pas encore réalisée : saisie, uniquement tant que
+                       l'autorisation n'est pas encore décidée. -->
+                  <template v-else-if="!item.decideLe">
+                    <p class="text-[11px] text-muted-foreground mb-2">
+                      Point par point, avant que le camion ne quitte l'atelier.
+                    </p>
+                    <div class="grid grid-cols-2 gap-1.5">
+                      <label v-for="p in POINTS_CHECKLIST_ROUTE" :key="p.code"
+                        class="flex items-center gap-1.5 text-[11px] cursor-pointer">
+                        <input type="checkbox" v-model="saisieChecklist[p.code]" class="shrink-0" />
+                        <span>{{ p.libelle }}</span>
+                      </label>
+                    </div>
+                    <button :class="Lc.btnOutline" class="mt-3 w-full justify-center"
+                      @click="validerChecklistDepart">
+                      Valider la checklist avant départ
+                    </button>
+                  </template>
+
+                  <p v-else class="text-[11px] text-muted-foreground">
+                    Aucune checklist avant départ n'a été saisie pour cette autorisation.
+                  </p>
+                </div>
+              </template>
+
+              <!-- Les trois autres contrôles : inchangés. -->
+              <div v-else
+                class="flex items-start gap-2.5 rounded-md px-3 py-2.5"
+                :class="c.conforme ? 'bg-background' : 'bg-danger-bg'">
+                <component :is="c.conforme ? CheckCircle2 : XCircle" class="w-4 h-4 shrink-0 mt-px"
+                  :class="c.conforme ? 'text-success' : 'text-danger'" />
+                <div class="min-w-0 flex-1">
+                  <p class="text-xs font-medium" :class="c.conforme ? 'text-foreground' : 'text-danger'">
+                    {{ LIB_CONTROLE_DEPART[c.controle] }}
+                  </p>
+                  <p v-if="c.detail" class="text-[11px] text-muted-foreground">{{ c.detail }}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -149,14 +213,14 @@
 
 <script setup lang="ts">
 /** US 2.4.1 - Fiche d'une autorisation de départ. */
-import { ref, computed } from 'vue'
-import { CheckCircle2, XCircle, Circle, AlertCircle } from 'lucide-vue-next'
+import { ref, computed, reactive } from 'vue'
+import { CheckCircle2, XCircle, Circle, AlertCircle, ChevronDown } from 'lucide-vue-next'
 import CardModalShell from '../shared/CardModalShell.vue'
 import FormSection    from '../ui/form-field/FormSection.vue'
 import { useFlotteStore } from '../../stores/flotte'
 import { useAuthStore } from '../../stores/auth'
-import { LIB_CONTROLE_DEPART } from '../../types/flotte'
-import type { AutorisationDepart } from '../../types/flotte'
+import { LIB_CONTROLE_DEPART, POINTS_CHECKLIST_ROUTE } from '../../types/flotte'
+import type { AutorisationDepart, ResultatPoint } from '../../types/flotte'
 import { fmtDateTime } from '../../lib/fmsUtils'
 import * as F  from '../../lib/formClasses'
 import * as Lc from '../../lib/listClasses'
@@ -185,6 +249,22 @@ const motif = ref('')
 function decider(accordee: boolean) {
   store.decider(item.value.id, accordee, auth.user?.name ?? 'Control Room', motif.value)
   motif.value = ''
+}
+
+/* ── Checklist avant départ (US 2.4.1 / retour client 02/09/2026) ── */
+const checklistOuverte = ref(false)
+const releveDepart = computed(() => store.checklistDepartDe(item.value))
+
+/** Tout coché par défaut - le chauffeur décoche ce qui est en anomalie. */
+const saisieChecklist = reactive<Record<string, boolean>>(
+  Object.fromEntries(POINTS_CHECKLIST_ROUTE.map(p => [p.code, true])))
+
+function validerChecklistDepart() {
+  const resultats: Record<string, ResultatPoint> = {}
+  POINTS_CHECKLIST_ROUTE.forEach(p => {
+    resultats[p.code] = saisieChecklist[p.code] ? 'conforme' : 'anomalie'
+  })
+  store.saisirChecklistDepart(item.value.id, resultats)
 }
 
 const liste = computed(() =>

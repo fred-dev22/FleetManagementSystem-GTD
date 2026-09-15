@@ -70,3 +70,35 @@ export interface SanctionRH {
   voyageId?: string
   voyageRef?: string
 }
+
+/* ══════════════════════════════════════════════════════════════
+   Bons carburant chauffeur
+
+   Retour client (réunion du 02/09/2026) : le système doit distinguer
+   le carburant destiné au véhicule (réservoir, suivi plein-à-plein
+   dans stores/carburant.ts) des bons de carburant remis au chauffeur
+   à titre d'avantage. D'après le client, ça fonctionne comme une
+   prime : « juste une ligne de plus dans le dossier RH du chauffeur,
+   comme la prime ». Ce type reste donc volontairement séparé de
+   `RechargeCarburant` - aucun bon ne doit jamais entrer dans le calcul
+   de consommation du véhicule.
+   ══════════════════════════════════════════════════════════════ */
+
+export type StatutBonCarburant = 'attribue' | 'remis'
+
+export const LIB_STATUT_BON: Record<StatutBonCarburant, string> = {
+  attribue: 'Attribué',
+  remis:    'Remis au chauffeur',
+}
+
+export interface BonCarburantChauffeur {
+  id: string
+  employeId: string
+  chauffeurNom: string
+  date: string
+  /** En litres - le mode de versement usuel d'un bon carburant. */
+  litres: number
+  motif: string
+  statut: StatutBonCarburant
+  attribuePar: string
+}

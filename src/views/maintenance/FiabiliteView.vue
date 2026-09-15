@@ -170,6 +170,89 @@
           <RouterLink :to="{ name: 'maintenance-parametres' }" class="underline">Paramétrer</RouterLink>
         </p>
       </div>
+
+      <div :class="L.card">
+        <div :class="L.cardHeader">
+          <h2 :class="L.cardTitle"><Wrench class="w-4 h-4 text-primary" /> Top véhicules à problèmes</h2>
+          <span class="text-[11px] text-muted-foreground">par nombre d'interventions</span>
+        </div>
+        <div v-if="!store.topVehiculesProblematiques.length" class="text-xs text-muted-foreground py-3">
+          Aucune intervention enregistrée.
+        </div>
+        <table v-else :class="L.table">
+          <thead><tr>
+            <th :class="L.th" class="cursor-default">Véhicule</th>
+            <th :class="L.th" class="cursor-default">Interventions</th>
+            <th :class="L.th" class="cursor-default">dont sur route</th>
+            <th :class="L.th" class="cursor-default">Jours immobilisé</th>
+          </tr></thead>
+          <tbody>
+            <tr v-for="v in store.topVehiculesProblematiques" :key="v.vehiculeId" :class="L.rowHover">
+              <td :class="L.td"><span class="font-mono text-xs">{{ v.plaque }}</span></td>
+              <td :class="L.td"><span class="text-xs font-semibold">{{ v.nb }}</span></td>
+              <td :class="L.td"><span class="text-xs" :class="v.surRoute ? 'text-warning' : ''">{{ v.surRoute }}</span></td>
+              <td :class="L.td"><span class="text-xs" :class="v.joursImmo > 5 ? 'text-danger font-medium' : ''">{{ v.joursImmo }} j</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div :class="L.card">
+        <div :class="L.cardHeader">
+          <h2 :class="L.cardTitle"><Truck class="w-4 h-4 text-primary" /> Pannes sur route vs atelier</h2>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="flex-1">
+            <p class="text-2xl font-bold" :class="(store.pannesSurRoute.pct ?? 0) > 30 ? 'text-warning' : 'text-foreground'">
+              {{ store.pannesSurRoute.pct != null ? store.pannesSurRoute.pct + ' %' : '-' }}
+            </p>
+            <p class="text-[11px] text-muted-foreground mt-0.5">
+              {{ store.pannesSurRoute.nb }} dépannage(s) équipe mobile sur {{ store.pannesSurRoute.total }} intervention(s) correctives
+            </p>
+          </div>
+          <div class="h-10 w-10 rounded-full flex items-center justify-center bg-warning-bg shrink-0">
+            <Truck class="w-5 h-5 text-warning" />
+          </div>
+        </div>
+        <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
+          Un dépannage sur route est une panne non anticipée, traitée en urgence par l'équipe mobile,
+          distinct d'une visite programmée à l'atelier. Un taux élevé signale un manque de préventif
+          plutôt qu'un simple aléa.
+        </p>
+      </div>
+
+      <div :class="L.card">
+        <div :class="L.cardHeader">
+          <h2 :class="L.cardTitle"><Gauge class="w-4 h-4 text-primary" /> Immobilisation rapportée au kilométrage</h2>
+          <span class="text-[11px] text-muted-foreground">jours perdus / 10 000 km (12 mois)</span>
+        </div>
+        <div v-if="!vehiculesAvecRatio.length" class="text-xs text-muted-foreground py-3">
+          Pas assez de relevés carburant sur 12 mois pour estimer un kilométrage annuel.
+        </div>
+        <table v-else :class="L.table">
+          <thead><tr>
+            <th :class="L.th" class="cursor-default">Véhicule</th>
+            <th :class="L.th" class="cursor-default">Km estimés (12 mois)</th>
+            <th :class="L.th" class="cursor-default">Jours perdus / 10 000 km</th>
+          </tr></thead>
+          <tbody>
+            <tr v-for="v in vehiculesAvecRatio" :key="v.vehiculeId" :class="L.rowHover">
+              <td :class="L.td"><span class="font-mono text-xs">{{ v.plaque }}</span></td>
+              <td :class="L.td"><span class="text-xs">{{ v.km!.toLocaleString('fr-FR') }} km</span></td>
+              <td :class="L.td">
+                <span class="text-xs font-semibold" :class="v.ratio! > 3 ? 'text-danger' : 'text-foreground'">
+                  {{ v.ratio }} j
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="text-[11px] text-muted-foreground mt-3 leading-relaxed">
+          Un véhicule qui roule peu accumule mécaniquement moins de jours perdus en valeur absolue :
+          ce ratio le remet à l'échelle de son usage réel plutôt que de le comparer en brut à un
+          véhicule qui parcourt deux fois plus de kilomètres.
+        </p>
+      </div>
     </div>
 
     <!-- ═══════════════════════════════════════════════════════
@@ -290,7 +373,7 @@
 import { ref, computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import {
-  Gauge, AlertTriangle, CalendarOff, Coins, FileQuestion,
+  Gauge, AlertTriangle, CalendarOff, Coins, FileQuestion, Wrench, Truck,
 } from 'lucide-vue-next'
 import { useMaintenanceStore } from '../../stores/maintenance'
 import MentionSimulation from '../../components/maintenance/MentionSimulation.vue'
@@ -342,6 +425,20 @@ function coutKm(vehiculeId: string): number | null {
 
 const maxPannes = computed(() =>
   Math.max(1, ...store.pannesParSousSysteme.map(p => p.nb)))
+
+/** Véhicules pour lesquels le kilométrage annuel a pu être estimé. */
+const vehiculesAvecRatio = computed(() => {
+  const vehiculeIds = new Set(store.ordres.map(o => o.vehiculeId))
+  return [...vehiculeIds]
+    .map(id => {
+      const km = store.kmAnnuelEstime(id)
+      const ratio = store.joursImmoPour10000km(id)
+      const plaque = store.ordresDuVehicule(id)[0]?.vehiculePlaque ?? id
+      return { vehiculeId: id, plaque, km, ratio }
+    })
+    .filter((v): v is { vehiculeId: string; plaque: string; km: number; ratio: number } => v.km != null && v.ratio != null)
+    .sort((a, b) => b.ratio - a.ratio)
+})
 
 const totalJours = computed(() =>
   Object.values(store.joursPerdusParFamille).reduce((s, v) => s + (v as number), 0))

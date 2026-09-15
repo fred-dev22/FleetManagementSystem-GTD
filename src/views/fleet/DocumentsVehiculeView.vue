@@ -155,13 +155,17 @@
             <label :class="L.fpFieldLabel">Entité *</label>
             <div class="flex gap-2 mb-2">
               <button v-for="et in ['vehicule','conducteur']" :key="et"
-                @click="form.entityType = et as any"
+                @click="onEntityTypeChange(et as 'vehicule' | 'conducteur')"
                 :class="form.entityType === et ? 'border-primary bg-primary/10 text-primary' : 'border-gray-200 text-gray-600'"
                 class="flex-1 py-1.5 rounded-lg border-2 text-sm font-medium capitalize transition-colors">
                 {{ et }}
               </button>
             </div>
-            <input v-model="form.entityId" :class="L.fpFieldInput" placeholder="ID (ex: TRC-001 ou CP-001)" />
+            <SearchableDropdown
+              v-model="form.entityId"
+              :items="entityOptions"
+              :placeholder="form.entityType === 'vehicule' ? 'Sélectionner un véhicule…' : 'Sélectionner un conducteur…'"
+            />
           </div>
           <div>
             <label :class="L.fpFieldLabel">Type de document *</label>
@@ -222,11 +226,23 @@ import { Plus, AlertTriangle, Clock, X } from 'lucide-vue-next'
 import { ListPageLayout } from '../../components'
 import { useDocumentsVehiculesStore } from '../../stores/documentsVehicules'
 import { useConfigurationStore } from '../../stores/configuration'
+import { useVehiculesStore } from '../../stores/vehicules'
+import { useConduceteursProfilesStore } from '../../stores/conducteursProfiles'
+import { useEmployeeStore } from '../../stores/employees'
 import type { DocumentVehicule } from '../../types'
 import { fmtDate } from '../../lib/fmsUtils'
 import * as L from '../../lib/listClasses'
 
 const store = useDocumentsVehiculesStore()
+/* Le champ Entité était un texte libre ("ID (ex: TRC-001 ou CP-001)") :
+   il fallait connaître et taper l'identifiant interne exact, ce qui, en
+   pratique, faisait qu'on ne créait jamais de document conducteur - le
+   bouton "conducteur" changeait le type, mais rien n'aidait à trouver
+   le bon ID. Remplacé par une vraie liste déroulante, qui change de
+   source selon le type d'entité choisi. */
+const vehiculeStore = useVehiculesStore()
+const profilsStore  = useConduceteursProfilesStore()
+const empStore      = useEmployeeStore()
 
 const search       = ref('')
 const filterEntity = ref('')
@@ -324,6 +340,25 @@ function clsEcheance(iso: string): string {
   if (j < 0) return 'bg-danger-bg text-danger'
   if (j <= PREAVIS_JOURS.value) return 'bg-warning-bg text-warning'
   return 'bg-success-bg text-success'
+}
+
+const entityOptions = computed<DropdownItem[]>(() => {
+  if (form.entityType === 'vehicule') {
+    return vehiculeStore.vehicules.map(v => ({
+      id: v.id, label: v.plaque,
+      sublabel: [v.marque, v.modele].filter(Boolean).join(' '),
+    }))
+  }
+  return profilsStore.profils.map(p => {
+    const emp = empStore.getById(p.employeId)
+    return { id: p.id, label: emp?.name ?? p.employeId, sublabel: p.id }
+  })
+})
+
+function onEntityTypeChange(et: 'vehicule' | 'conducteur') {
+  if (form.entityType === et) return
+  form.entityType = et
+  form.entityId = ''
 }
 
 const canSave = computed(() => !!form.entityId && !!form.type && !!form.dateEmission && !!form.entityType)

@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type {
   EquipementEmbarque, TypeEquipement, LigneEtatFlotte, CodeEtatFlotte,
-  ChecklistRoute, AuditConformite, AutorisationDepart, ResultatPoint,
+  ChecklistRoute, AuditConformite, AutorisationDepart, ResultatPoint, ReleveChecklist,
   PoliceAssurance, Sinistre, EtatFlotteArchive,
 } from '../types/flotte'
 import { POINTS_CHECKLIST_ROUTE, groupeDeLEtat } from '../types/flotte'
@@ -60,21 +60,21 @@ export const useFlotteStore = defineStore('flotte', () => {
 
   /* ══ US 2.2.4 - État de flotte quotidien ═══════════════════ */
   const etatFlotte = ref<LigneEtatFlotte[]>([
-    { vehiculeId: 'TRC-001', vehiculePlaque: '1234 TAN', citernePlaque: 'MG-1100-TR',
+    { vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX', citernePlaque: 'MG-1100-TR',
       chauffeurNom: 'Thierry Randriamanga', etat: 'ATT-ADM',
       codeIndispo: 'PNN', motifIndispo: 'Panne circuit d’air - dessiccateur',
       remiseEnServicePrevue: '2026-08-04', observation: 'En attente de la pièce commandée.' },
-    { vehiculeId: 'TRC-002', vehiculePlaque: '2345 TNR', citernePlaque: 'MG-1102-TR',
+    { vehiculeId: 'TRC-002', vehiculePlaque: 'MG-3356-TX', citernePlaque: 'MG-1102-TR',
       chauffeurNom: 'Fiona Mungroo', etat: 'TR-LIV', voyageRef: 'VOY-2026-0151' },
-    { vehiculeId: 'TRC-003', vehiculePlaque: '3456 MJN',
+    { vehiculeId: 'TRC-003', vehiculePlaque: 'MG-5671-TX',
       chauffeurNom: 'Jean-Luc Ravelo', etat: 'DEP-PRV', voyageRef: 'VOY-2026-0152' },
-    { vehiculeId: 'TRC-004', vehiculePlaque: '4567 FIA',
+    { vehiculeId: 'TRC-004', vehiculePlaque: 'MG-9023-TX',
       chauffeurNom: 'Hery Rasoanaivo', etat: 'ATT-ADM',
       codeIndispo: 'VET', motifIndispo: 'Vetting expiré - audit programmé',
       remiseEnServicePrevue: '2026-08-08' },
-    { vehiculeId: 'TRC-005', vehiculePlaque: '5678 TAN',
+    { vehiculeId: 'TRC-005', vehiculePlaque: 'MG-4410-TX',
       etat: 'ATT-CHG', observation: 'Présenté au dépôt GRT, en file de chargement.' },
-    { vehiculeId: 'TRC-006', vehiculePlaque: '6789 TNR',
+    { vehiculeId: 'TRC-006', vehiculePlaque: 'MG-2218-TX',
       chauffeurNom: 'Nirina Ratovo', etat: 'RET-VID', voyageRef: 'VOY-2026-0149' },
   ])
 
@@ -105,22 +105,22 @@ export const useFlotteStore = defineStore('flotte', () => {
     { id: 'EF-2026-07-31', date: '2026-07-31', produitPar: 'Naina Rakotobe',
       transmisLe: '2026-07-31T07:15:00Z', version: 1,
       lignes: [
-        { vehiculeId: 'TRC-001', vehiculePlaque: '1234 TAN', citernePlaque: 'MG-1100-TR',
+        { vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX', citernePlaque: 'MG-1100-TR',
           chauffeurNom: 'Thierry Randriamanga', etat: 'ATT-ADM',
           codeIndispo: 'PNN', motifIndispo: 'Panne circuit d’air - dessiccateur',
           remiseEnServicePrevue: '2026-08-04' },
-        { vehiculeId: 'TRC-002', vehiculePlaque: '2345 TNR', citernePlaque: 'MG-1102-TR',
+        { vehiculeId: 'TRC-002', vehiculePlaque: 'MG-3356-TX', citernePlaque: 'MG-1102-TR',
           chauffeurNom: 'Fiona Mungroo', etat: 'TR-CHG', voyageRef: 'VOY-2026-0151' },
-        { vehiculeId: 'TRC-004', vehiculePlaque: '4567 FIA', etat: 'ATT-ADM',
+        { vehiculeId: 'TRC-004', vehiculePlaque: 'MG-9023-TX', etat: 'ATT-ADM',
           codeIndispo: 'VET', motifIndispo: 'Vetting expiré', remiseEnServicePrevue: '2026-08-08' },
       ] },
     { id: 'EF-2026-07-30', date: '2026-07-30', produitPar: 'Naina Rakotobe',
       transmisLe: '2026-07-30T07:05:00Z', version: 1,
       lignes: [
-        { vehiculeId: 'TRC-001', vehiculePlaque: '1234 TAN', citernePlaque: 'MG-1100-TR',
+        { vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX', citernePlaque: 'MG-1100-TR',
           chauffeurNom: 'Thierry Randriamanga', etat: 'ATT-ADM',
           codeIndispo: 'PNN', motifIndispo: 'Panne circuit d’air' },
-        { vehiculeId: 'TRC-002', vehiculePlaque: '2345 TNR', chauffeurNom: 'Fiona Mungroo', etat: 'DEP-REA' },
+        { vehiculeId: 'TRC-002', vehiculePlaque: 'MG-3356-TX', chauffeurNom: 'Fiona Mungroo', etat: 'DEP-REA' },
       ] },
   ])
 
@@ -254,6 +254,66 @@ export const useFlotteStore = defineStore('flotte', () => {
   const checklistsDuVehicule = (vehiculeId: string) =>
     checklists.value.filter(c => c.vehiculeId === vehiculeId)
 
+  /**
+   * Checklist avant départ - même grille de 16 points que la checklist
+   * sur route (US 2.3.1), mais réalisée une seule fois, avant que le
+   * camion ne quitte l'atelier, et bloquante : un point en anomalie
+   * empêche l'autorisation de départ (retour client du 02/09/2026 -
+   * « les checklists avant départ sont essentielles pour valider la
+   * conformité du véhicule avant qu'il ne quitte l'atelier »).
+   * Réutilise `ChecklistRoute`/`ReleveChecklist` avec `pause: 0` pour
+   * rester dans le même modèle de données que la checklist sur route,
+   * plutôt que de dupliquer une structure séparée.
+   */
+  function checklistDepartDe(a: AutorisationDepart): ReleveChecklist | undefined {
+    const c = checklists.value.find(c => c.vehiculeId === a.vehiculeId
+      && (a.voyageId ? c.voyageId === a.voyageId : c.voyageRef === a.voyageRef))
+    return c?.releves.find(r => r.pause === 0)
+  }
+
+  function saisirChecklistDepart(
+    autorisationId: string,
+    resultats: Record<string, ResultatPoint>,
+    commentaire?: string,
+  ) {
+    const a = autorisations.value.find(x => x.id === autorisationId)
+    if (!a) return
+
+    let c = checklists.value.find(c => c.vehiculeId === a.vehiculeId
+      && (a.voyageId ? c.voyageId === a.voyageId : c.voyageRef === a.voyageRef))
+    if (!c) {
+      c = {
+        id: `CKL-${a.reference}`, reference: `CKL-${a.reference}`,
+        voyageId: a.voyageId, voyageRef: a.voyageRef,
+        vehiculeId: a.vehiculeId, tracteurPlaque: a.vehiculePlaque,
+        chauffeurId: a.chauffeurId, chauffeurNom: a.chauffeurNom,
+        dateDebut: new Date().toISOString(),
+        signeParChauffeur: true,
+        releves: [],
+      }
+      checklists.value.push(c)
+    }
+
+    const conformeGlobal = Object.values(resultats).every(r => r === 'conforme')
+    const releve: ReleveChecklist = {
+      pause: 0, horodatage: new Date().toISOString(), resultats, commentaire,
+    }
+    const idx = c.releves.findIndex(r => r.pause === 0)
+    if (idx === -1) c.releves.unshift(releve)
+    else c.releves[idx] = releve
+
+    // Répercute sur le contrôle « checklist » de l'autorisation : c'est
+    // ce contrôle, parmi les quatre, qui conditionne peutPartir().
+    const anomaliesListe = Object.entries(resultats)
+      .filter(([, r]) => r === 'anomalie')
+      .map(([code]) => POINTS_CHECKLIST_ROUTE.find(p => p.code === code)?.libelle ?? code)
+    const ctrl = a.controles.find(x => x.controle === 'checklist')
+    if (ctrl) {
+      ctrl.conforme = conformeGlobal
+      ctrl.detail = conformeGlobal ? undefined : anomaliesListe.join(', ')
+    }
+  }
+
   /** Anomalies relevées sur une checklist, tous relevés confondus. */
   function anomaliesDe(c: ChecklistRoute): { pause: number; code: string; libelle: string; commentaire?: string }[] {
     const out: { pause: number; code: string; libelle: string; commentaire?: string }[] = []
@@ -318,7 +378,7 @@ export const useFlotteStore = defineStore('flotte', () => {
   const autorisations = ref<AutorisationDepart[]>([
     {
       id: 'AUT-2026-0212', reference: 'AUT-2026-0212',
-      voyageRef: 'VOY-2026-0151', vehiculeId: 'TRC-002', vehiculePlaque: '2345 TNR',
+      voyageRef: 'VOY-2026-0151', vehiculeId: 'TRC-002', vehiculePlaque: 'MG-3356-TX',
       chauffeurNom: 'Fiona Mungroo', demandeeLe: '2026-07-29T05:05:00Z',
       controles: [
         { controle: 'checklist',           conforme: true },
@@ -332,7 +392,7 @@ export const useFlotteStore = defineStore('flotte', () => {
     },
     {
       id: 'AUT-2026-0213', reference: 'AUT-2026-0213',
-      voyageRef: 'VOY-2026-0152', vehiculeId: 'TRC-003', vehiculePlaque: '3456 MJN',
+      voyageRef: 'VOY-2026-0152', vehiculeId: 'TRC-003', vehiculePlaque: 'MG-5671-TX',
       chauffeurNom: 'Jean-Luc Ravelo', demandeeLe: '2026-08-01T05:02:00Z',
       controles: [
         { controle: 'checklist',           conforme: true },
@@ -345,7 +405,7 @@ export const useFlotteStore = defineStore('flotte', () => {
     },
     {
       id: 'AUT-2026-0211', reference: 'AUT-2026-0211',
-      vehiculeId: 'TRC-001', vehiculePlaque: '1234 TAN',
+      vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX',
       chauffeurNom: 'Thierry Randriamanga', demandeeLe: '2026-07-28T05:00:00Z',
       controles: [
         { controle: 'checklist',           conforme: false, detail: 'Anomalie flexible relevée au retour précédent.' },
@@ -379,17 +439,17 @@ export const useFlotteStore = defineStore('flotte', () => {
 
   /* ══ US 2.7.3 - Assurances et sinistres ═══════════════════ */
   const polices = ref<PoliceAssurance[]>([
-    { id: 'POL-001', vehiculeId: 'TRC-001', vehiculePlaque: '1234 TAN',
+    { id: 'POL-001', vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX',
       compagnie: 'ARO Madagascar', numeroPolice: 'ARO-2025-88401',
       couverture: 'Tous risques + responsabilité civile marchandises dangereuses',
       dateDebut: '2025-11-01', dateEcheance: '2026-10-31',
       primeAnnuelleAr: 8_400_000, franchiseAr: 1_500_000, statut: 'active' },
-    { id: 'POL-002', vehiculeId: 'TRC-002', vehiculePlaque: '2345 TNR',
+    { id: 'POL-002', vehiculeId: 'TRC-002', vehiculePlaque: 'MG-3356-TX',
       compagnie: 'ARO Madagascar', numeroPolice: 'ARO-2025-88402',
       couverture: 'Tous risques + responsabilité civile marchandises dangereuses',
       dateDebut: '2025-11-01', dateEcheance: '2026-10-31',
       primeAnnuelleAr: 8_400_000, franchiseAr: 1_500_000, statut: 'active' },
-    { id: 'POL-003', vehiculeId: 'TRC-004', vehiculePlaque: '4567 FIA',
+    { id: 'POL-003', vehiculeId: 'TRC-004', vehiculePlaque: 'MG-9023-TX',
       compagnie: 'NY HAVANA', numeroPolice: 'NH-2025-3320',
       couverture: 'Tiers étendu + marchandises dangereuses',
       dateDebut: '2024-09-15', dateEcheance: '2025-09-14',
@@ -425,7 +485,7 @@ export const useFlotteStore = defineStore('flotte', () => {
     },
     {
       id: 'SIN-2026-003', reference: 'SIN-2026-003',
-      vehiculeId: 'TRC-003', vehiculePlaque: '3456 MJN',
+      vehiculeId: 'TRC-003', vehiculePlaque: 'MG-5671-TX',
       date: '2026-05-02T14:10:00Z', lieu: 'RN2, PK 155 - Ambatosenegaly',
       circonstances: 'Accrochage latéral avec un véhicule léger lors d’un dépassement. Aucun blessé.',
       gravite: 'materiel_leger',
@@ -439,7 +499,7 @@ export const useFlotteStore = defineStore('flotte', () => {
     },
     {
       id: 'SIN-2026-002', reference: 'SIN-2026-002',
-      vehiculeId: 'TRC-004', vehiculePlaque: '4567 FIA',
+      vehiculeId: 'TRC-004', vehiculePlaque: 'MG-9023-TX',
       date: '2026-02-18T05:45:00Z', lieu: 'Sortie de base TNR',
       circonstances: 'Sortie de route à basse vitesse sur chaussée glissante. Dommages au pare-chocs et au marchepied.',
       gravite: 'materiel_lourd',
@@ -483,6 +543,7 @@ export const useFlotteStore = defineStore('flotte', () => {
     etatsArchives, archiverEtat, etatDuJour, versionsDuJour, joursArchives,
     estFige, marquerTransmis,
     checklists, checklistsDuVehicule, anomaliesDe, checklistsAvecAnomalie,
+    checklistDepartDe, saisirChecklistDepart,
     audits, auditsDuVehicule, auditsNonConformes,
     autorisations, autorisationsEnAttente, peutPartir, decider,
     polices, policeDuVehicule, policesDuVehicule, policesExpirees,

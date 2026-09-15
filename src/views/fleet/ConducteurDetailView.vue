@@ -157,6 +157,34 @@
             </div>
           </div>
         </div>
+        <!-- Bons carburant chauffeur - avantage RH, distinct du carburant
+             véhicule (stores/carburant.ts) : ne compte jamais dans la
+             consommation plein-à-plein du camion (retour client 02/09/2026). -->
+        <div :class="L.card">
+          <div :class="L.cardHeader">
+            <h2 :class="L.cardTitle"><Fuel class="w-4 h-4 text-primary" /> Bons carburant chauffeur</h2>
+            <span class="text-[11px] text-muted-foreground">{{ bonsCarburantStore.litresDuMois(chauffeurId) }} L ce mois-ci</span>
+          </div>
+          <p class="text-[11px] text-muted-foreground mb-3">
+            Avantage remis au chauffeur, séparé du carburant du véhicule - n'entre jamais dans le calcul
+            de consommation du camion.
+          </p>
+          <div v-if="!bonsConducteur.length" class="text-xs text-muted-foreground py-2">
+            Aucun bon carburant enregistré.
+          </div>
+          <ul v-else class="flex flex-col gap-1.5">
+            <li v-for="b in bonsConducteur" :key="b.id" class="flex items-center justify-between text-xs">
+              <span>{{ fmtDate(b.date) }} · {{ b.motif }}</span>
+              <span class="flex items-center gap-2 shrink-0">
+                <span class="font-semibold">{{ b.litres }} L</span>
+                <span class="text-[11px] font-medium px-2 py-0.5 rounded-full"
+                  :class="b.statut === 'remis' ? 'bg-success-bg text-success' : 'bg-warning-bg text-warning'">
+                  {{ LIB_STATUT_BON[b.statut] }}
+                </span>
+              </span>
+            </li>
+          </ul>
+        </div>
       </div>
 
       <!-- ══ SYNTHÈSE ═══════════════════════════════════════════ -->
@@ -602,6 +630,8 @@ import { useConfigurationStore } from '../../stores/configuration'
 import { useAbsenceStore } from '../../stores/absences'
 import { useSanctionsRHStore } from '../../stores/sanctionsRH'
 import { LIB_NATURE_SANCTION, LIB_TYPE_SANCTION, LIB_STATUT_SANCTION, CLS_STATUT_SANCTION } from '../../types/rh'
+import { useBonsCarburantStore } from '../../stores/bonsCarburant'
+import { LIB_STATUT_BON } from '../../types/rh'
 import { StatusPill } from '../../components'
 import { fmtAr, fmtL, fmtDate, fmtDateTime } from '../../lib/fmsUtils'
 import * as L from '../../lib/listClasses'
@@ -616,11 +646,13 @@ const profilsStore   = useConduceteursProfilesStore()
 const voyagesStore   = useVoyagesStore()
 const absencesStore  = useAbsenceStore()
 const sanctionsStore = useSanctionsRHStore()
+const bonsCarburantStore = useBonsCarburantStore()
 
 const chauffeurId = computed(() => String(route.params.id))
 const score = computed(() => scoresStore.getById(chauffeurId.value))
 
 const sanctionsConducteur = computed(() => sanctionsStore.sanctionsDeLEmploye(chauffeurId.value))
+const bonsConducteur = computed(() => bonsCarburantStore.bonsDeLEmploye(chauffeurId.value))
 const sanctionsEnCoursConducteur = computed(() => sanctionsConducteur.value.filter(s => s.statut === 'en_cours'))
 
 type OngletFiche = 'score' | 'itineraires' | 'carburant' | 'documents' | 'formations' | 'planning' | 'rh'

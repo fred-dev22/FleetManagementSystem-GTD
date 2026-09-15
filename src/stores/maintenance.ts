@@ -11,6 +11,7 @@ import type {
 import { familleDuCode } from '../types/maintenance'
 import { useConfigurationStore } from './configuration'
 import { useAchatsStore } from './achats'
+import { useCarburantStore } from './carburant'
 
 /**
  * Maintenance & Interventions - module 3.
@@ -146,7 +147,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
   const ordres = ref<OrdreTravail[]>([
     {
       id: 'OT-2026-0041', reference: 'OT-2026-0041',
-      vehiculeId: 'TRC-001', vehiculePlaque: '1234 TAN',
+      vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX',
       origine: 'remontee_chauffeur', declarePar: 'Thierry Randriamanga',
       declareLe: '2026-07-28T06:40:00Z',
       symptome: 'Perte de pression d’air constatée à la pause de Moramanga. Le manomètre descend sous 6 bars au ralenti.',
@@ -165,7 +166,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     },
     {
       id: 'OT-2026-0040', reference: 'OT-2026-0040',
-      vehiculeId: 'TRC-002', vehiculePlaque: '2345 TNR',
+      vehiculeId: 'TRC-002', vehiculePlaque: 'MG-3356-TX',
       origine: 'alerte_preventive', declarePar: 'Système',
       declareLe: '2026-07-24T05:00:00Z',
       symptome: 'Échéance des 45 000 km atteinte : vidange moteur, filtres à huile, à air et à carburant.',
@@ -200,7 +201,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
        ────────────────────────────────────────────────────────── */
     {
       id: 'OT-2026-0045', reference: 'OT-2026-0045',
-      vehiculeId: 'TRC-004', vehiculePlaque: '4567 FIA',
+      vehiculeId: 'TRC-004', vehiculePlaque: 'MG-9023-TX',
       origine: 'alerte_preventive', declarePar: 'Système',
       declareLe: '2026-08-03T05:00:00Z',
       symptome: 'Échéance dépassée : vidange moteur et filtres. Dernier passage à 350 000 km, compteur à 412 000.',
@@ -230,7 +231,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     },
     {
       id: 'OT-2026-0043', reference: 'OT-2026-0043',
-      vehiculeId: 'TRC-002', vehiculePlaque: '2345 TNR',
+      vehiculeId: 'TRC-002', vehiculePlaque: 'MG-3356-TX',
       origine: 'remontee_chauffeur', declarePar: 'Fiona Mungroo',
       declareLe: '2026-08-01T16:45:00Z',
       symptome: 'Alternateur : voyant de charge intermittent au ralenti, batterie faible au démarrage à froid.',
@@ -246,7 +247,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     },
     {
       id: 'OT-2026-0042', reference: 'OT-2026-0042',
-      vehiculeId: 'TRC-003', vehiculePlaque: '3456 MJN',
+      vehiculeId: 'TRC-003', vehiculePlaque: 'MG-5671-TX',
       origine: 'checklist', declarePar: 'Thierry Randriamanga',
       declareLe: '2026-07-31T12:00:00Z',
       symptome: 'Usure irrégulière du train avant relevée à la checklist, tirage à droite signalé par le chauffeur.',
@@ -261,7 +262,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     },
     {
       id: 'OT-2026-0039', reference: 'OT-2026-0039',
-      vehiculeId: 'TRC-003', vehiculePlaque: '3456 MJN',
+      vehiculeId: 'TRC-003', vehiculePlaque: 'MG-5671-TX',
       origine: 'checklist', declarePar: 'Jean-Luc Ravelo',
       declareLe: '2026-07-20T11:20:00Z',
       symptome: 'Frein de stationnement signalé défectueux à la checklist de la pause 3.',
@@ -381,18 +382,18 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
 
   /* ══ Indisponibilités - US 3.3.1 ═══════════════════════════ */
   const indisponibilites = ref<Indisponibilite[]>([
-    { id: 'IND-001', vehiculeId: 'TRC-001', vehiculePlaque: '1234 TAN',
+    { id: 'IND-001', vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX',
       code: 'PNN', famille: 'technique', debut: '2026-07-28T06:40:00Z',
       ordreTravailId: 'OT-2026-0041',
       commentaire: 'Immobilisé en attente du dessiccateur.' },
-    { id: 'IND-002', vehiculeId: 'TRC-004', vehiculePlaque: '4567 FIA',
+    { id: 'IND-002', vehiculeId: 'TRC-004', vehiculePlaque: 'MG-9023-TX',
       code: 'VET', famille: 'reglementaire', debut: '2026-07-22T08:00:00Z',
       commentaire: 'Vetting expiré, audit de conformité programmé.' },
-    { id: 'IND-003', vehiculeId: 'TRC-002', vehiculePlaque: '2345 TNR',
+    { id: 'IND-003', vehiculeId: 'TRC-002', vehiculePlaque: 'MG-3356-TX',
       code: 'MTN', famille: 'technique',
       debut: '2026-07-24T05:00:00Z', fin: '2026-07-24T15:30:00Z', dureeJours: 1,
       ordreTravailId: 'OT-2026-0040' },
-    { id: 'IND-004', vehiculeId: 'TRC-003', vehiculePlaque: '3456 MJN',
+    { id: 'IND-004', vehiculeId: 'TRC-003', vehiculePlaque: 'MG-5671-TX',
       code: 'PNN', famille: 'technique',
       debut: '2026-07-20T11:20:00Z', fin: '2026-07-21T17:00:00Z', dureeJours: 2,
       ordreTravailId: 'OT-2026-0039' },
@@ -812,7 +813,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
   /* ══ Interventions de l'équipe mobile - US 3.3.2 ═══════════ */
   const interventionsMobiles = ref<InterventionMobile[]>([
     { id: 'IM-001', reference: 'IM-2026-0012', type: 'depannage_mecanique',
-      vehiculeId: 'TRC-001', vehiculePlaque: '1234 TAN',
+      vehiculeId: 'TRC-001', vehiculePlaque: 'MG-7842-TX',
       lieu: 'RN2, PK 296 - Ampasimadinika', lat: -18.52, lng: 49.05,
       declencheLe: '2026-07-28T07:10:00Z', arriveeLe: '2026-07-28T08:35:00Z',
       clotureLe: '2026-07-28T10:20:00Z',
@@ -994,6 +995,83 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
   function coutParKmObserve(vehiculeId: string): number | null {
     const km = kmSurPeriodeObservee(vehiculeId)
     return km ? coutParKm(vehiculeId, km) : null
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     Indicateurs de fiabilité enrichis - retour client 02/09/2026 :
+       · « top véhicules » par fréquence de passage à l'atelier
+       · pannes sur route (équipe mobile) distinguées des visites
+         planifiées, pour ne pas les confondre dans un seul total
+       · immobilisation rapportée au kilométrage annuel, pour
+         expliquer si un véhicule est immobilisé "beaucoup" par
+         rapport à son usage réel, pas dans l'absolu
+     ═══════════════════════════════════════════════════════════ */
+
+  /**
+   * Classement des véhicules par nombre d'interventions, du plus
+   * sollicité au moins sollicité - identifie les « véhicules à
+   * problèmes » plutôt que de laisser le nombre brut d'OT noyé dans
+   * la liste complète.
+   */
+  const topVehiculesProblematiques = computed(() => {
+    const acc = new Map<string, { vehiculeId: string; plaque: string; nb: number; joursImmo: number; surRoute: number }>()
+    ordres.value.forEach(o => {
+      const e = acc.get(o.vehiculeId) ?? { vehiculeId: o.vehiculeId, plaque: o.vehiculePlaque, nb: 0, joursImmo: 0, surRoute: 0 }
+      e.nb += 1
+      if (o.origine === 'equipe_mobile') e.surRoute += 1
+      acc.set(o.vehiculeId, e)
+    })
+    indisponibilites.value.forEach(i => {
+      const e = acc.get(i.vehiculeId)
+      if (e) e.joursImmo += dureeIndispo(i)
+    })
+    return [...acc.values()].sort((a, b) => b.nb - a.nb).slice(0, 5)
+  })
+
+  /**
+   * Pannes sur route (équipe mobile) vs interventions planifiées à
+   * l'atelier - deux réalités différentes (dépannage en urgence sur
+   * corridor vs visite programmée) que le seul total d'OT confondait.
+   */
+  const pannesSurRoute = computed(() => {
+    const correctifs = ordres.value.filter(o => o.typeMaintenance === 'correctif')
+    const surRoute = correctifs.filter(o => o.origine === 'equipe_mobile')
+    return {
+      nb: surRoute.length,
+      total: correctifs.length,
+      pct: correctifs.length ? Math.round((surRoute.length / correctifs.length) * 100) : null,
+    }
+  })
+
+  /**
+   * Kilométrage estimé sur les 12 derniers mois, à partir des relevés
+   * d'odomètre du carburant (US 5.1) - plus fréquents et plus fiables
+   * que les seuls relevés portés par les ordres de travail.
+   * @returns null si moins de deux relevés sur la période : pas de base fiable.
+   */
+  function kmAnnuelEstime(vehiculeId: string): number | null {
+    const carbStore = useCarburantStore()
+    const depuis = Date.now() - 365 * 86_400_000
+    const releves = carbStore.rechargesDuVehicule(vehiculeId)
+      .filter(r => +new Date(r.date) >= depuis)
+      .map(r => r.odometre)
+    if (releves.length < 2) return null
+    const ecart = Math.max(...releves) - Math.min(...releves)
+    return ecart > 0 ? ecart : null
+  }
+
+  /**
+   * Jours d'immobilisation rapportés au kilométrage annuel, exprimés
+   * pour 10 000 km parcourus - un véhicule qui roule peu accumule
+   * moins de jours perdus en valeur absolue, ce ratio le remet à
+   * l'échelle de son usage réel plutôt que de le comparer en brut à
+   * un véhicule qui roule deux fois plus.
+   */
+  function joursImmoPour10000km(vehiculeId: string): number | null {
+    const km = kmAnnuelEstime(vehiculeId)
+    if (!km) return null
+    const jours = indisposDuVehicule(vehiculeId).reduce((s, i) => s + dureeIndispo(i), 0)
+    return Number(((jours / km) * 10_000).toFixed(1))
   }
 
   /**
@@ -1238,6 +1316,7 @@ export const useMaintenanceStore = defineStore('maintenance', () => {
     tarifRenseigne, coutImmoRenseigne, coutMainOeuvreTotal,
     mtbfParSousSysteme, tauxDisponibilite, tauxRealisationPreventif,
     coutParKm, coutParKmObserve, kmSurPeriodeObservee, coutCumuleParVehicule, piecesProbables, validerCloture,
+    topVehiculesProblematiques, pannesSurRoute, kmAnnuelEstime, joursImmoPour10000km,
     creerOT, diagnostiquer, ajouterPiece, ajouterPanne, cloturer,
   }
 })
